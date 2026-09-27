@@ -172,6 +172,11 @@ export default function App() {
   function handleReorderGlobalColumns(draggedId, targetId) {
     setGlobalColumns((prev) => reorderWithinCategory(prev, draggedId, targetId))
   }
+  // `newColumns` are already fully-formed column objects (built by
+  // planColumnImport via newColumn()) - appended directly, not re-wrapped.
+  function handleImportGlobalColumns(newColumns) {
+    setGlobalColumns((prev) => [...prev, ...newColumns])
+  }
 
   // ---- Company columns ----
   function handleAddCompanyColumn(col) {
@@ -188,6 +193,9 @@ export default function App() {
   }
   function handleReorderCompanyColumns(draggedId, targetId) {
     updateCompany(activeCompanyId, (c) => ({ ...c, columns: reorderWithinCategory(c.columns, draggedId, targetId) }))
+  }
+  function handleImportCompanyColumns(newColumns) {
+    updateCompany(activeCompanyId, (c) => ({ ...c, columns: [...c.columns, ...newColumns] }))
   }
 
   // ---- Column scope conversion (Global <-> Company-specific) ----
@@ -403,6 +411,7 @@ export default function App() {
                     onEdit={handleEditGlobalColumn}
                     onDelete={handleDeleteGlobalColumn}
                     onReorder={handleReorderGlobalColumns}
+                    onImportColumns={handleImportGlobalColumns}
                     scope="global"
                     crossScopeExistingKeys={companyScopeKnownKeys}
                     totalCompanyCount={companies.length}
@@ -425,9 +434,11 @@ export default function App() {
                   onEdit={handleEditCompanyColumn}
                   onDelete={handleDeleteCompanyColumn}
                   onReorder={handleReorderCompanyColumns}
+                  onImportColumns={handleImportCompanyColumns}
                   scope="company"
                   crossScopeExistingKeys={globalKnownKeys}
                   crossScopeAvailableKeys={globalColumns.map((c) => c.key)}
+                  targetCompanyName={activeCompany.name}
                   onChangeScope={handleChangeColumnScope}
                 />
               )}

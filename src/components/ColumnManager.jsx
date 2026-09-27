@@ -1,7 +1,9 @@
-import { useState } from 'react'
+import { useRef, useState } from 'react'
 import ColumnFormModal from './ColumnFormModal'
 import ConfirmDialog from './ConfirmDialog'
+import ColumnSetupImportModal from './ColumnSetupImportModal'
 import { SELECTABLE_CATEGORIES, DEFAULT_CATEGORY } from '../lib/categories'
+import { buildColumnSetupExport, buildColumnSetupFilename, downloadColumnSetup, parseColumnSetupFile } from '../lib/columnSetup'
 
 function CategorySection({ category, ownColumns, otherColumns, onEdit, onDelete, onDragStart, onDrop, draggingId }) {
   return (
@@ -113,6 +115,7 @@ export default function ColumnManager({
   onEdit,
   onDelete,
   onReorder,
+  onImportColumns,
   scope,
   crossScopeExistingKeys = [],
   crossScopeAvailableKeys = null,
@@ -123,6 +126,9 @@ export default function ColumnManager({
   const [editing, setEditing] = useState(null) // 'new' | column | null
   const [deleting, setDeleting] = useState(null)
   const [draggingId, setDraggingId] = useState(null)
+  const [importPreview, setImportPreview] = useState(null) // { scope, companyName, columns } | null
+  const [importError, setImportError] = useState(null)
+  const importInputRef = useRef(null)
 
   const allKeysInScope = [...reservedKeys, ...otherScopeColumns.map((c) => c.key), ...columns.map((c) => c.key)]
 
@@ -158,6 +164,40 @@ export default function ColumnManager({
     return col.category ?? DEFAULT_CATEGORY
   }
 
+  function handleExportColumns() {
+    const exportObj = buildColumnSetupExport(columns, scope, targetCompanyName)
+    downloadColumnSetup(exportObj, buildColumnSetupFilename(scope, targetCompanyName))
+  }
+
+  function handleImportClick() {
+    importInputRef.current?.click()
+  }
+
+  async function handleImportFileSelected(e) {
+    const file = e.target.files?.[0]
+    e.target.value = '' // allow re-selecting the same file later
+    if (!file) return
+
+    const result = await parseColumnSetupFile(file)
+    if (!result.valid) {
+      setImportError(result.error)
+      return
+    }
+    if (result.scope !== scope) {
+      const fileTabLabel = result.scope === 'global' ? 'Global Columns' : 'Company Columns'
+      setImportError(`This file contains ${result.scope === 'global' ? 'Global' : 'Company'} columns - open it from the ${fileTabLabel} tab instead.`)
+      return
+    }
+
+    setImportError(null)
+    setImportPreview(result)
+  }
+
+  function handleConfirmImport(newColumnsToAdd) {
+    onImportColumns(newColumnsToAdd)
+    setImportPreview(null)
+  }
+
   return (
     <div>
       <div className="mb-4 flex items-start justify-between">
@@ -165,13 +205,44 @@ export default function ColumnManager({
           <h2 className="text-lg font-semibold text-slate-800">{title}</h2>
           {description && <p className="text-sm text-slate-500">{description}</p>}
         </div>
-        <button
-          onClick={() => setEditing('new')}
-          className="rounded-md bg-indigo-600 px-3 py-1.5 text-sm font-medium text-white hover:bg-indigo-700"
-        >
-          + Add Column
-        </button>
+        <div className="flex gap-2">
+          <input
+            ref={importInputRef}
+            type="file"
+            accept=".json"
+            className="hidden"
+            onChange={handleImportFileSelected}
+          />
+          <button
+            onClick={handleImportClick}
+            className="rounded-md border border-slate-300 bg-white px-3 py-1.5 text-sm font-medium text-slate-700 hover:bg-slate-50"
+          >
+            Import Column Setup
+          </button>
+          <button
+            onClick={handleExportColumns}
+            disabled={columns.length === 0}
+            className="rounded-md border border-slate-300 bg-white px-3 py-1.5 text-sm font-medium text-slate-700 hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-40 disabled:hover:bg-white"
+          >
+            Export Column Setup
+          </button>
+          <button
+            onClick={() => setEditing('new')}
+            className="rounded-md bg-indigo-600 px-3 py-1.5 text-sm font-medium text-white hover:bg-indigo-700"
+          >
+            + Add Column
+          </button>
+        </div>
       </div>
+
+      {importError && (
+        <div className="mb-4 flex items-start justify-between gap-3 rounded-md border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700">
+          <span>{importError}</span>
+          <button onClick={() => setImportError(null)} className="text-red-400 hover:text-red-600">
+            ✕
+          </button>
+        </div>
+      )}
 
       {SELECTABLE_CATEGORIES.map((cat) => (
         <CategorySection
@@ -215,6 +286,17 @@ export default function ColumnManager({
             onDelete(deleting.id)
             setDeleting(null)
           }}
+        />
+      )}
+
+      {importPreview && (
+        <ColumnSetupImportModal
+          fileScope={importPreview.scope}
+          fileCompanyName={importPreview.companyName}
+          fileColumns={importPreview.columns}
+          existingKeys={allKeysInScope}
+          onConfirm={handleConfirmImport}
+          onCancel={() => setImportPreview(null)}
         />
       )}
     </div>
