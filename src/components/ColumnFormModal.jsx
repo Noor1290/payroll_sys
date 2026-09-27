@@ -3,13 +3,16 @@ import Modal from './Modal'
 import ConfirmDialog from './ConfirmDialog'
 import TieredFormulaBuilder from './TieredFormulaBuilder'
 import CompareColumnsBuilder from './CompareColumnsBuilder'
+import ProgressiveBracketsBuilder from './ProgressiveBracketsBuilder'
 import { slugify, isValidKey } from '../lib/slugify'
 import { validateFormulaSyntax, detectCircularReference } from '../lib/formulaEngine'
 import { compileTieredFormula, compileCompareFormula } from '../lib/tieredFormula'
+import { compileProgressiveFormula } from '../lib/progressiveFormula'
 import { SELECTABLE_CATEGORIES, DEFAULT_CATEGORY, generateUniqueKey, labelColumnsForHelper } from '../lib/categories'
 
 const DEFAULT_TIERED_STATE = { baseKey: null, tiers: [{ operator: 'below', threshold: 0, rate: 0 }], cap: null }
 const DEFAULT_COMPARE_STATE = { columnAKey: null, operator: '>', columnBKey: null, trueExpr: '0', falseExpr: '0' }
+const DEFAULT_PROGRESSIVE_STATE = { baseKey: null, brackets: [{ width: 0, rate: 0 }, { width: 0, rate: 0 }] }
 
 // Shared add/edit form for both global and company-scoped columns.
 //
@@ -45,6 +48,7 @@ export default function ColumnFormModal({
   const [formula, setFormula] = useState(initial?.formula ?? '')
   const [tieredState, setTieredState] = useState(initial?.tiered ?? DEFAULT_TIERED_STATE)
   const [compareState, setCompareState] = useState(initial?.compare ?? DEFAULT_COMPARE_STATE)
+  const [progressiveState, setProgressiveState] = useState(initial?.progressive ?? DEFAULT_PROGRESSIVE_STATE)
   const [scope, setScope] = useState(currentScope ?? 'company')
   const [pendingScopeChange, setPendingScopeChange] = useState(null) // { patch, to } | null
   const [error, setError] = useState(null)
@@ -94,6 +98,10 @@ export default function ColumnFormModal({
         }
       } else if (tieredState.baseKey) {
         setFormula(compileTieredFormula(tieredState))
+      }
+    } else if (mode === 'simple' && builderMode === 'progressive') {
+      if (progressiveState.baseKey) {
+        setFormula(compileProgressiveFormula(progressiveState))
       }
     }
     setBuilderMode(mode)
@@ -153,6 +161,7 @@ export default function ColumnFormModal({
         tieredKind: undefined,
         tiered: undefined,
         compare: undefined,
+        progressive: undefined,
       })
     }
 
@@ -172,6 +181,15 @@ export default function ColumnFormModal({
       if (invalidTier) return setError('Every tier needs a threshold amount and a rate')
       if (tieredState.cap === '') return setError('Enter a cap amount, or uncheck the cap option')
       finalFormula = compileTieredFormula(tieredState)
+    } else if (builderMode === 'progressive') {
+      if (!progressiveState.baseKey) return setError('Pick a base value column for the progressive rule')
+      const invalidBracket = progressiveState.brackets.find((b, i) => {
+        if (b.rate === '') return true
+        const isLast = i === progressiveState.brackets.length - 1
+        return !isLast && b.width === ''
+      })
+      if (invalidBracket) return setError('Every bracket needs a rate, and a width (except the final "Remainder" bracket)')
+      finalFormula = compileProgressiveFormula(progressiveState)
     }
 
     const result = validateFormulaSyntax(finalFormula, availableKeys)
@@ -206,6 +224,7 @@ export default function ColumnFormModal({
       tieredKind: builderMode === 'tiered' ? tieredKind : undefined,
       tiered: builderMode === 'tiered' && tieredKind === 'threshold' ? tieredState : undefined,
       compare: builderMode === 'tiered' && tieredKind === 'compare' ? compareState : undefined,
+      progressive: builderMode === 'progressive' ? progressiveState : undefined,
     })
   }
 
@@ -408,13 +427,24 @@ export default function ColumnFormModal({
                 >
                   Tiered / Conditional
                 </button>
+                <button
+                  type="button"
+                  onClick={() => switchBuilderMode('progressive')}
+                  className={`rounded-md border px-3 py-1.5 text-sm ${
+                    builderMode === 'progressive'
+                      ? 'border-indigo-600 bg-indigo-50 text-indigo-700'
+                      : 'border-slate-300 text-slate-600 hover:bg-slate-50'
+                  }`}
+                >
+                  Progressive Brackets
+                </button>
               </div>
               {builderMode === 'simple' && (
                 <p className="mt-1 text-xs text-slate-400">
                   A single expression referencing column keys, e.g. basicSalary + bonus.
                 </p>
               )}
-              {builderMode === 'tiered' && (
+              {(builderMode === 'tiered' || builderMode === 'progressive') && (
                 <p className="mt-1 text-xs text-slate-400">
                   Switching to Simple will show the compiled expression this rule produces.
                 </p>
@@ -482,6 +512,13 @@ export default function ColumnFormModal({
                   </div>
                 </div>
               </div>
+            ) : builderMode === 'progressive' ? (
+              <ProgressiveBracketsBuilder
+                availableColumns={labeledAvailableColumns}
+                baseKey={progressiveState.baseKey}
+                brackets={progressiveState.brackets}
+                onChange={setProgressiveState}
+              />
             ) : tieredKind === 'compare' ? (
               <CompareColumnsBuilder
                 availableColumns={labeledAvailableColumns}

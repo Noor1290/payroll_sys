@@ -53,11 +53,11 @@ function FormulaBody({ trace }) {
 
   return (
     <div className="space-y-3">
-      {trace.tiered || trace.compare ? (
+      {trace.tiered || trace.compare || trace.progressive ? (
         <div>
           <p className="text-xs font-medium uppercase tracking-wide text-slate-400">How this was calculated</p>
           <p className="mt-0.5 rounded bg-indigo-50 px-2 py-1.5 text-sm text-indigo-900">
-            {(trace.tiered ?? trace.compare).sentence}
+            {(trace.tiered ?? trace.compare ?? trace.progressive).sentence}
           </p>
         </div>
       ) : (

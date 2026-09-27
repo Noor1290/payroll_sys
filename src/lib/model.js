@@ -21,7 +21,20 @@ export function newEmployee() {
   return { id: makeId(), values: {} }
 }
 
-export function newColumn({ name, key, type, formula, builderMode, tieredKind, tiered, compare, category, valueType, decimals }) {
+export function newColumn({
+  name,
+  key,
+  type,
+  formula,
+  builderMode,
+  tieredKind,
+  tiered,
+  compare,
+  progressive,
+  category,
+  valueType,
+  decimals,
+}) {
   const resolvedValueType = type === 'input' ? (valueType ?? 'number') : undefined
   const isNumeric = type === 'formula' || (type === 'input' && resolvedValueType !== 'text')
   return {
@@ -37,6 +50,7 @@ export function newColumn({ name, key, type, formula, builderMode, tieredKind, t
     tieredKind: type === 'formula' ? tieredKind : undefined,
     tiered: type === 'formula' ? tiered : undefined,
     compare: type === 'formula' ? compare : undefined,
+    progressive: type === 'formula' ? progressive : undefined,
   }
 }
 

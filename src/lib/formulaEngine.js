@@ -3,6 +3,7 @@
 // references, and builds a full substitution trace for the breakdown view.
 
 import { buildTieredExplanation, buildCompareExplanation } from './tieredFormula'
+import { buildProgressiveExplanation } from './progressiveFormula'
 import { formatDecimal } from './format'
 
 // Identifiers that are safe to leave unresolved in an expression (global
@@ -200,6 +201,7 @@ export function computeCell(key, employee, columnsByKey, memo, visiting = new Se
 
   let tiered
   let compare
+  let progressive
   if (!error && col.builderMode === 'tiered') {
     if (col.tieredKind === 'compare' && col.compare) {
       const { columnAKey, columnBKey } = col.compare
@@ -216,6 +218,11 @@ export function computeCell(key, employee, columnsByKey, memo, visiting = new Se
       const baseDecimals = columnsByKey[col.tiered.baseKey]?.decimals ?? 2
       tiered = buildTieredExplanation(col.tiered, baseValue, baseName, value, baseDecimals, decimals)
     }
+  } else if (!error && col.builderMode === 'progressive' && col.progressive) {
+    const baseValue = depValues[col.progressive.baseKey] ?? 0
+    const baseName = columnsByKey[col.progressive.baseKey]?.name ?? col.progressive.baseKey
+    const baseDecimals = columnsByKey[col.progressive.baseKey]?.decimals ?? 2
+    progressive = buildProgressiveExplanation(col.progressive, baseValue, baseName, value, baseDecimals, decimals)
   }
 
   const result = {
@@ -232,6 +239,7 @@ export function computeCell(key, employee, columnsByKey, memo, visiting = new Se
       dependencies: depTraces,
       tiered,
       compare,
+      progressive,
     },
   }
   memo.set(key, result)
