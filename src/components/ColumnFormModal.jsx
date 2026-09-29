@@ -4,10 +4,12 @@ import ConfirmDialog from './ConfirmDialog'
 import TieredFormulaBuilder from './TieredFormulaBuilder'
 import CompareColumnsBuilder from './CompareColumnsBuilder'
 import ProgressiveBracketsBuilder from './ProgressiveBracketsBuilder'
+import ExemptionConditionBuilder from './ExemptionConditionBuilder'
 import { slugify, isValidKey } from '../lib/slugify'
 import { validateFormulaSyntax, detectCircularReference } from '../lib/formulaEngine'
-import { compileTieredFormula, compileCompareFormula } from '../lib/tieredFormula'
-import { compileProgressiveFormula } from '../lib/progressiveFormula'
+import { compileTieredFormula, compileCompareFormula, describeTieredRule, describeCompareRule } from '../lib/tieredFormula'
+import { compileProgressiveFormula, describeProgressiveRule } from '../lib/progressiveFormula'
+import { compileExemptionWrapper, defaultExemptionState } from '../lib/exemptionCondition'
 import { SELECTABLE_CATEGORIES, DEFAULT_CATEGORY, generateUniqueKey, labelColumnsForHelper } from '../lib/categories'
 
 const DEFAULT_TIERED_STATE = { baseKey: null, tiers: [{ operator: 'below', threshold: 0, rate: 0 }], cap: null }
@@ -49,6 +51,8 @@ export default function ColumnFormModal({
   const [tieredState, setTieredState] = useState(initial?.tiered ?? DEFAULT_TIERED_STATE)
   const [compareState, setCompareState] = useState(initial?.compare ?? DEFAULT_COMPARE_STATE)
   const [progressiveState, setProgressiveState] = useState(initial?.progressive ?? DEFAULT_PROGRESSIVE_STATE)
+  const [exemptionState, setExemptionState] = useState(initial?.exemption ?? defaultExemptionState())
+  const [includeInExport, setIncludeInExport] = useState(!initial?.excludeFromExport)
   const [scope, setScope] = useState(currentScope ?? 'company')
   const [pendingScopeChange, setPendingScopeChange] = useState(null) // { patch, to } | null
   const [error, setError] = useState(null)
@@ -56,6 +60,29 @@ export default function ColumnFormModal({
 
   const availableKeys = useMemo(() => availableColumns.map((c) => c.key), [availableColumns])
   const labeledAvailableColumns = useMemo(() => labelColumnsForHelper(availableColumns), [availableColumns])
+  const columnsByKeyForNames = useMemo(() => Object.fromEntries(availableColumns.map((c) => [c.key, c])), [availableColumns])
+
+  // Live plain-language description of whichever base builder mode is
+  // currently active, so the Exemption/Condition section can show a
+  // combined "If X, use Y. Otherwise: <this>." summary regardless of mode.
+  const baseSummary = useMemo(() => {
+    if (builderMode === 'progressive') {
+      const baseCol = labeledAvailableColumns.find((c) => c.key === progressiveState.baseKey)
+      return baseCol ? describeProgressiveRule(progressiveState.brackets) : 'the progressive brackets rule'
+    }
+    if (builderMode === 'tiered' && tieredKind === 'compare') {
+      const colA = labeledAvailableColumns.find((c) => c.key === compareState.columnAKey)
+      const colB = labeledAvailableColumns.find((c) => c.key === compareState.columnBKey)
+      return colA && colB
+        ? describeCompareRule(colA.name, colB.name, compareState.operator, compareState.trueExpr, compareState.falseExpr)
+        : 'the comparison rule'
+    }
+    if (builderMode === 'tiered') {
+      const baseCol = labeledAvailableColumns.find((c) => c.key === tieredState.baseKey)
+      return baseCol ? describeTieredRule(baseCol.name, tieredState.tiers, tieredState.cap) : 'the tiered rule'
+    }
+    return formula.trim() || 'the entered formula'
+  }, [builderMode, tieredKind, tieredState, compareState, progressiveState, formula, labeledAvailableColumns])
 
   function autoKeyFor(nameValue, categoryValue) {
     return generateUniqueKey(slugify(nameValue), categoryValue, existingKeys)
@@ -155,13 +182,15 @@ export default function ColumnFormModal({
         type,
         category,
         valueType,
-        decimals: valueType === 'text' ? undefined : decimals,
+        decimals: valueType === 'number' ? decimals : undefined,
+        excludeFromExport: !includeInExport,
         formula: undefined,
         builderMode: undefined,
         tieredKind: undefined,
         tiered: undefined,
         compare: undefined,
         progressive: undefined,
+        exemption: undefined,
       })
     }
 
@@ -192,6 +221,23 @@ export default function ColumnFormModal({
       finalFormula = compileProgressiveFormula(progressiveState)
     }
 
+    if (exemptionState.enabled) {
+      const invalidCondition = exemptionState.conditions.find((c) => {
+        if (!c.columnKey) return true
+        if (c.type === 'compare' && c.compareToType === 'column' && !c.compareToColumnKey) return true
+        if (c.type === 'compare' && c.compareToType === 'value' && c.compareToValue === '') return true
+        return false
+      })
+      if (invalidCondition) return setError('Every exemption condition needs a column selected (and a comparison value/column, if applicable)')
+      if (exemptionState.resultType === 'column' && !exemptionState.resultColumnKey) {
+        return setError('Pick a column for the exemption result, or switch it to a fixed value')
+      }
+      if (exemptionState.resultType === 'fixed' && exemptionState.resultValue === '') {
+        return setError('Enter a fixed result value for the exemption, or switch it to a column')
+      }
+      finalFormula = compileExemptionWrapper(exemptionState, finalFormula)
+    }
+
     const result = validateFormulaSyntax(finalFormula, availableKeys)
     if (!result.valid) return setError(result.error)
 
@@ -219,12 +265,14 @@ export default function ColumnFormModal({
       category,
       valueType: undefined,
       decimals,
+      excludeFromExport: !includeInExport,
       formula: finalFormula.trim(),
       builderMode,
       tieredKind: builderMode === 'tiered' ? tieredKind : undefined,
       tiered: builderMode === 'tiered' && tieredKind === 'threshold' ? tieredState : undefined,
       compare: builderMode === 'tiered' && tieredKind === 'compare' ? compareState : undefined,
       progressive: builderMode === 'progressive' ? progressiveState : undefined,
+      exemption: exemptionState.enabled ? exemptionState : undefined,
     })
   }
 
@@ -346,6 +394,18 @@ export default function ColumnFormModal({
           </div>
         </div>
 
+        <div>
+          <label className="flex items-center gap-2 text-sm text-slate-700">
+            <input type="checkbox" checked={includeInExport} onChange={(e) => setIncludeInExport(e.target.checked)} />
+            Include in Excel export
+          </label>
+          <p className="mt-1 text-xs text-slate-400">
+            {includeInExport
+              ? 'Appears in the Export Preview and the downloaded file, like any other column.'
+              : "Stays hidden from the Export Preview, the visible spreadsheet, and payslips - it still shows in the app's Employee Table, marked as not exported. If a Live-Formula export still needs its value, it's written as a hidden column."}
+          </p>
+        </div>
+
         {type === 'input' && (
           <div>
             <label className="mb-1 block text-xs font-medium text-slate-600">Value type</label>
@@ -372,9 +432,22 @@ export default function ColumnFormModal({
               >
                 Text
               </button>
+              <button
+                type="button"
+                onClick={() => setValueType('checkbox')}
+                className={`rounded-md border px-3 py-1.5 text-sm ${
+                  valueType === 'checkbox'
+                    ? 'border-indigo-600 bg-indigo-50 text-indigo-700'
+                    : 'border-slate-300 text-slate-600 hover:bg-slate-50'
+                }`}
+              >
+                Checkbox (Yes/No)
+              </button>
             </div>
             <p className="mt-1 text-xs text-slate-400">
-              Use Text for non-numeric values like "Full Time" / "Part Time" - it won't be coerced to 0.
+              {valueType === 'checkbox'
+                ? 'A yes/no flag, shown as a checkbox in the Employee Table. Available in formulas as 1 (ticked) or 0 (not ticked).'
+                : 'Use Text for non-numeric values like "Full Time" / "Part Time" - it won\'t be coerced to 0.'}
             </p>
           </div>
         )}
@@ -451,6 +524,14 @@ export default function ColumnFormModal({
               )}
             </div>
 
+            <ExemptionConditionBuilder
+              availableColumns={labeledAvailableColumns}
+              exemption={exemptionState}
+              onChange={setExemptionState}
+              baseSummary={baseSummary}
+              columnsByKey={columnsByKeyForNames}
+            />
+
             {builderMode === 'tiered' && (
               <div>
                 <label className="mb-1 block text-xs font-medium text-slate-600">Tiered rule type</label>
@@ -506,7 +587,8 @@ export default function ColumnFormModal({
                         className="rounded border border-slate-200 bg-slate-100 px-2 py-0.5 font-mono text-xs text-slate-700 hover:bg-slate-200"
                         title={c.helperLabel}
                       >
-                        {c.helperLabel} → {c.key}
+                        {c.helperLabel}
+                        {c.valueType === 'checkbox' && <span className="text-slate-400"> (checkbox)</span>} → {c.key}
                       </button>
                     ))}
                   </div>

@@ -48,6 +48,14 @@ export default function TotalsTable({ identityFields, idFieldKey, effectiveColum
                   {col.type === 'formula' && (
                     <span className="rounded bg-violet-100 px-1 py-0.5 text-[10px] font-semibold text-violet-700">fx</span>
                   )}
+                  {col.excludeFromExport && (
+                    <span
+                      title="Not included in Excel exports or payslips"
+                      className="rounded bg-slate-200 px-1 py-0.5 text-[10px] font-semibold text-slate-500"
+                    >
+                      not exported
+                    </span>
+                  )}
                 </span>
               </th>
             ))}
@@ -66,6 +74,13 @@ export default function TotalsTable({ identityFields, idFieldKey, effectiveColum
                   return (
                     <td key={col.key} className="px-3 py-1.5 text-slate-700">
                       {emp.values?.[col.key] ?? ''}
+                    </td>
+                  )
+                }
+                if (col.valueType === 'checkbox') {
+                  return (
+                    <td key={col.key} className="px-3 py-1.5 text-slate-700">
+                      {emp.values?.[col.key] ? 'Yes' : 'No'}
                     </td>
                   )
                 }

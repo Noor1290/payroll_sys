@@ -2,7 +2,8 @@ import { useState } from 'react'
 import Modal from './Modal'
 import { formatDecimal } from '../lib/format'
 
-function formatValue(v, decimals) {
+function formatValue(v, decimals, valueType) {
+  if (valueType === 'checkbox') return v === 1 || v === true ? 'Yes' : 'No'
   if (typeof v === 'string') return v || '—'
   if (typeof v !== 'number' || Number.isNaN(v)) return '—'
   return formatDecimal(v, decimals ?? 2)
@@ -33,7 +34,7 @@ function DependencyRow({ trace }) {
           )}
         </span>
         <span className={`font-mono text-sm ${trace.error ? 'text-red-600' : 'text-slate-800'}`}>
-          {trace.error ? 'Error' : formatValue(trace.value, trace.decimals)}
+          {trace.error ? 'Error' : formatValue(trace.value, trace.decimals, trace.valueType)}
         </span>
       </button>
 
@@ -53,25 +54,32 @@ function FormulaBody({ trace }) {
 
   return (
     <div className="space-y-3">
-      {trace.tiered || trace.compare || trace.progressive ? (
+      {trace.exemption && (
         <div>
-          <p className="text-xs font-medium uppercase tracking-wide text-slate-400">How this was calculated</p>
-          <p className="mt-0.5 rounded bg-indigo-50 px-2 py-1.5 text-sm text-indigo-900">
-            {(trace.tiered ?? trace.compare ?? trace.progressive).sentence}
-          </p>
+          <p className="text-xs font-medium uppercase tracking-wide text-slate-400">Exemption / condition</p>
+          <p className="mt-0.5 rounded bg-amber-50 px-2 py-1.5 text-sm text-amber-900">{trace.exemption.sentence}</p>
         </div>
-      ) : (
-        <>
-          <div>
-            <p className="text-xs font-medium uppercase tracking-wide text-slate-400">Formula</p>
-            <p className="mt-0.5 rounded bg-slate-50 px-2 py-1 font-mono text-sm text-slate-700">{trace.formula}</p>
-          </div>
-          <div>
-            <p className="text-xs font-medium uppercase tracking-wide text-slate-400">Substituted</p>
-            <p className="mt-0.5 rounded bg-slate-50 px-2 py-1 font-mono text-sm text-slate-700">{trace.substituted}</p>
-          </div>
-        </>
       )}
+      {(!trace.exemption || !trace.exemption.matched) &&
+        (trace.tiered || trace.compare || trace.progressive ? (
+          <div>
+            <p className="text-xs font-medium uppercase tracking-wide text-slate-400">How this was calculated</p>
+            <p className="mt-0.5 rounded bg-indigo-50 px-2 py-1.5 text-sm text-indigo-900">
+              {(trace.tiered ?? trace.compare ?? trace.progressive).sentence}
+            </p>
+          </div>
+        ) : (
+          <>
+            <div>
+              <p className="text-xs font-medium uppercase tracking-wide text-slate-400">Formula</p>
+              <p className="mt-0.5 rounded bg-slate-50 px-2 py-1 font-mono text-sm text-slate-700">{trace.formula}</p>
+            </div>
+            <div>
+              <p className="text-xs font-medium uppercase tracking-wide text-slate-400">Substituted</p>
+              <p className="mt-0.5 rounded bg-slate-50 px-2 py-1 font-mono text-sm text-slate-700">{trace.substituted}</p>
+            </div>
+          </>
+        ))}
       <div>
         <p className="text-xs font-medium uppercase tracking-wide text-slate-400">Result</p>
         <p className="mt-0.5 font-mono text-base font-semibold text-indigo-700">{formatValue(trace.value, trace.decimals)}</p>

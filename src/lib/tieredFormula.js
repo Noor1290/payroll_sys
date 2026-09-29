@@ -93,6 +93,21 @@ export function resolveMatchedTier(tiers, value) {
 // Compiles { baseKey, tiers, cap } into a plain JS-like expression, e.g.
 // "(Math.min(basicSalary, 29710)) * (basicSalary >= 0 ? 0.01 : 0)"
 export function compileTieredFormula({ baseKey, tiers, cap }) {
+  const hasCap = cap !== null && cap !== undefined && cap !== ''
+  const valueExpr = hasCap ? `Math.min(${baseKey}, ${Number(cap)})` : baseKey
+
+  // A single tier + a cap is the "flat rate up to a maximum" shape (e.g.
+  // "1% of Gross Pay, up to a maximum of 29,710" - see describeTieredRule's
+  // matching special case, and the Cap checkbox's own label: "apply the
+  // rate to a maximum of..."). The rate always applies; only the BASE is
+  // capped. The tier's own operator/threshold don't gate anything here -
+  // using them would wrongly zero out the rate once the base exceeds the
+  // cap, which is exactly the bug this guards against.
+  if (tiers.length === 1 && hasCap) {
+    const rate = (Number(tiers[0].rate) || 0) / 100
+    return `(${valueExpr}) * (${rate})`
+  }
+
   const ordered = resolvePriorityOrder(tiers)
   let rateExpr = '0'
   for (let i = ordered.length - 1; i >= 0; i--) {
@@ -102,8 +117,6 @@ export function compileTieredFormula({ baseKey, tiers, cap }) {
     const cond = tierConditionExpr(tier.operator, baseKey, threshold)
     rateExpr = `${cond} ? ${rate} : ${rateExpr}`
   }
-  const hasCap = cap !== null && cap !== undefined && cap !== ''
-  const valueExpr = hasCap ? `Math.min(${baseKey}, ${Number(cap)})` : baseKey
   return `(${valueExpr}) * (${rateExpr})`
 }
 
@@ -139,11 +152,16 @@ export function describeTieredRule(baseName, tiers, cap) {
 // the sentence rounds to its own column's setting.
 export function buildTieredExplanation(tieredConfig, baseValue, baseName, resultValue, baseDecimals = 2, resultDecimals = 2) {
   const { tiers, cap } = tieredConfig
-  const matched = resolveMatchedTier(tiers, baseValue)
   const hasCap = cap !== null && cap !== undefined && cap !== ''
+  // Mirrors compileTieredFormula's own special case: a single tier + a cap
+  // always applies that tier's rate (the cap only limits the base), so the
+  // breakdown must resolve the rate the same way the compiled expression
+  // actually did, not via the normal below/above tier lookup.
+  const isFlatRateWithCap = tiers.length === 1 && hasCap
+  const matched = isFlatRateWithCap ? tiers[0] : resolveMatchedTier(tiers, baseValue)
   const isCapped = hasCap && baseValue > Number(cap)
   const appliedValue = isCapped ? Number(cap) : baseValue
-  const rate = matched ? Number(matched.rate) || 0 : 0
+  const rate = isFlatRateWithCap ? Number(tiers[0].rate) || 0 : matched ? Number(matched.rate) || 0 : 0
 
   const parts = [`${baseName}: ${formatNum(baseValue, baseDecimals)}.`]
 

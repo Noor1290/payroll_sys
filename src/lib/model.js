@@ -12,9 +12,22 @@ export function makeId() {
 // `viewMonth` just remember which month this company was last looking at,
 // defaulting to the current real-world month, so switching companies in
 // the sidebar returns you to where you left off.
+//
+// `details` holds the company's own info (address/BRN/custom fields) -
+// Company Name isn't duplicated in here, it's just `company.name` itself,
+// since the details form edits that same field directly (renaming there
+// renames the company everywhere).
+export function newCompanyDetails() {
+  return { address: '', brn: '', customFields: [] }
+}
+
+export function newCustomField({ label = '', value = '' } = {}) {
+  return { id: makeId(), label, value }
+}
+
 export function newCompany(name) {
   const { year, month } = getCurrentPeriod()
-  return { id: makeId(), name, columns: [], columnWidths: {}, viewYear: year, viewMonth: month }
+  return { id: makeId(), name, columns: [], columnWidths: {}, viewYear: year, viewMonth: month, details: newCompanyDetails() }
 }
 
 export function newEmployee() {
@@ -31,12 +44,16 @@ export function newColumn({
   tiered,
   compare,
   progressive,
+  exemption,
   category,
   valueType,
   decimals,
+  excludeFromExport,
 }) {
   const resolvedValueType = type === 'input' ? (valueType ?? 'number') : undefined
-  const isNumeric = type === 'formula' || (type === 'input' && resolvedValueType !== 'text')
+  // Checkboxes are booleans, not decimal quantities - no decimal-places
+  // setting applies to them any more than it does to a Text column.
+  const isNumeric = type === 'formula' || (type === 'input' && resolvedValueType === 'number')
   return {
     id: makeId(),
     name,
@@ -51,6 +68,10 @@ export function newColumn({
     tiered: type === 'formula' ? tiered : undefined,
     compare: type === 'formula' ? compare : undefined,
     progressive: type === 'formula' ? progressive : undefined,
+    exemption: type === 'formula' ? exemption : undefined,
+    // Default ON (included) - only ever stored when explicitly turned off,
+    // so most columns carry no extra field at all.
+    excludeFromExport: excludeFromExport ? true : undefined,
   }
 }
 

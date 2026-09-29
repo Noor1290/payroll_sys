@@ -15,7 +15,7 @@ import { computeGridForEmployees } from './formulaEngine'
 // existing Excel export/preview pipeline.
 export function computeTotals(periods, effectiveColumns, columnsByKey, idFieldKey) {
   const numericColumns = effectiveColumns.filter(
-    (c) => (c.type === 'input' || c.type === 'formula') && c.valueType !== 'text'
+    (c) => (c.type === 'input' || c.type === 'formula') && c.valueType !== 'text' && c.valueType !== 'checkbox'
   )
 
   const groups = new Map() // groupKey -> { id, values, sums: {colKey: number} }

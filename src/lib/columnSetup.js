@@ -33,17 +33,23 @@ function toPortableColumn(col) {
     tiered: col.tiered,
     compare: col.compare,
     progressive: col.progressive,
+    exemption: col.exemption,
+    excludeFromExport: col.excludeFromExport,
   }
 }
 
 // Builds the JSON-serializable export object for a scope's current columns.
-export function buildColumnSetupExport(columns, scope, companyName) {
+// `companyDetails` (only meaningful for scope==='company') is carried
+// through purely so nothing's lost if this file is inspected or
+// re-imported later - not currently auto-applied by any import flow.
+export function buildColumnSetupExport(columns, scope, companyName, companyDetails) {
   return {
     _meta: {
       app: COLUMN_SETUP_APP_ID,
       version: COLUMN_SETUP_VERSION,
       scope,
       companyName: companyName ?? null,
+      companyDetails: scope === 'company' ? (companyDetails ?? null) : null,
       exportedAt: new Date().toISOString(),
     },
     columns: columns.map(toPortableColumn),

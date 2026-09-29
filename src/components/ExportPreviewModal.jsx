@@ -1,11 +1,14 @@
 import { useState } from 'react'
 import Modal from './Modal'
-import { downloadExportPlan } from '../lib/excelExport'
+import { downloadExportPlan, formatCompanyDetailsLine } from '../lib/excelExport'
 import { formatDecimal } from '../lib/format'
 
+function isTextLikeColumn(col) {
+  return col.kind === 'identity' || col.valueType === 'text' || col.valueType === 'checkbox'
+}
+
 function formatCell(value, col) {
-  const isText = col.kind === 'identity' || col.valueType === 'text'
-  if (isText) return value === '' || value === undefined ? '' : String(value)
+  if (isTextLikeColumn(col)) return value === '' || value === undefined ? '' : String(value)
   const n = typeof value === 'number' ? value : Number(value) || 0
   return formatDecimal(n, col.decimals ?? 2)
 }
@@ -13,12 +16,14 @@ function formatCell(value, col) {
 export default function ExportPreviewModal({ plan, onClose }) {
   const [downloading, setDownloading] = useState(false)
   const [error, setError] = useState(null)
+  const detailsLine = formatCompanyDetailsLine(plan.companyDetails)
+  const [includeDetails, setIncludeDetails] = useState(Boolean(detailsLine))
 
   async function handleDownload() {
     setDownloading(true)
     setError(null)
     try {
-      await downloadExportPlan(plan)
+      await downloadExportPlan({ ...plan, showCompanyDetails: includeDetails })
       onClose()
     } catch (e) {
       console.error('Failed to export workbook:', e)
@@ -37,10 +42,24 @@ export default function ExportPreviewModal({ plan, onClose }) {
           included. Columns shaded violet are calculated (formula) columns.
         </p>
 
+        <label className={`flex items-center gap-2 text-sm ${detailsLine ? 'text-slate-700' : 'text-slate-400'}`}>
+          <input
+            type="checkbox"
+            checked={includeDetails}
+            disabled={!detailsLine}
+            onChange={(e) => setIncludeDetails(e.target.checked)}
+          />
+          Include company details in header
+          {!detailsLine && <span className="text-xs">(add an address or BRN in Company Details first)</span>}
+        </label>
+
         <div className="overflow-auto rounded-lg border border-slate-200" style={{ maxHeight: '60vh' }}>
           <div className="min-w-max bg-white p-2 font-serif">
             <div className="text-center text-base font-bold text-slate-800">{plan.companyName}</div>
             <div className="text-center text-sm italic text-slate-500">{plan.exportDateLabel}</div>
+            {includeDetails && detailsLine && (
+              <div className="text-center text-xs italic text-slate-500">{detailsLine}</div>
+            )}
             <div className="h-2" />
             <table className="border-collapse text-xs">
               <thead className="sticky top-0">
@@ -73,7 +92,7 @@ export default function ExportPreviewModal({ plan, onClose }) {
                   <tr key={rIdx} className={rIdx % 2 === 1 ? 'bg-slate-100' : 'bg-white'}>
                     {row.map((value, cIdx) => {
                       const col = plan.columns[cIdx]
-                      const isText = col.kind === 'identity' || col.valueType === 'text'
+                      const isText = isTextLikeColumn(col)
                       return (
                         <td
                           key={col.key}
@@ -98,7 +117,7 @@ export default function ExportPreviewModal({ plan, onClose }) {
                   <tr className="bg-[#DCE3EC] font-bold text-slate-800">
                     {plan.totalsRow.map((value, cIdx) => {
                       const col = plan.columns[cIdx]
-                      const isText = col.kind === 'identity' || col.valueType === 'text'
+                      const isText = isTextLikeColumn(col)
                       return (
                         <td
                           key={col.key}

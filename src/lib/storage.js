@@ -65,6 +65,15 @@ function migrateCompanyLegacyEmployees(company) {
   return rest
 }
 
+function migrateCompanyDetails(details) {
+  const d = details && typeof details === 'object' ? details : {}
+  return {
+    address: typeof d.address === 'string' ? d.address : '',
+    brn: typeof d.brn === 'string' ? d.brn : '',
+    customFields: Array.isArray(d.customFields) ? d.customFields : [],
+  }
+}
+
 function migrateCompany(company) {
   const { year, month } = getCurrentPeriod()
   return migrateCompanyLegacyEmployees({
@@ -73,6 +82,7 @@ function migrateCompany(company) {
     columnWidths: company.columnWidths && typeof company.columnWidths === 'object' ? company.columnWidths : {},
     viewYear: company.viewYear ?? year,
     viewMonth: company.viewMonth ?? month,
+    details: migrateCompanyDetails(company.details),
   })
 }
 

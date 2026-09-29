@@ -4,6 +4,7 @@
 
 import { buildTieredExplanation, buildCompareExplanation } from './tieredFormula'
 import { buildProgressiveExplanation } from './progressiveFormula'
+import { evaluateExemptionCondition, buildExemptionExplanation } from './exemptionCondition'
 import { formatDecimal } from './format'
 
 // Identifiers that are safe to leave unresolved in an expression (global
@@ -161,6 +162,14 @@ export function computeCell(key, employee, columnsByKey, memo, visiting = new Se
       return result
     }
 
+    if (col.valueType === 'checkbox') {
+      const checked = raw === true || raw === 1 || raw === '1' || raw === 'true'
+      const value = checked ? 1 : 0
+      const result = { value, trace: { key, name: col.name, type: 'input', valueType: 'checkbox', checked, value } }
+      memo.set(key, result)
+      return result
+    }
+
     const value = raw === '' || raw === undefined || raw === null || Number.isNaN(Number(raw)) ? 0 : Number(raw)
     const result = { value, trace: { key, name: col.name, type: 'input', decimals: col.decimals ?? 2, value } }
     memo.set(key, result)
@@ -202,27 +211,49 @@ export function computeCell(key, employee, columnsByKey, memo, visiting = new Se
   let tiered
   let compare
   let progressive
-  if (!error && col.builderMode === 'tiered') {
-    if (col.tieredKind === 'compare' && col.compare) {
-      const { columnAKey, columnBKey } = col.compare
-      const valueA = depValues[columnAKey] ?? 0
-      const valueB = depValues[columnBKey] ?? 0
-      const columnAName = columnsByKey[columnAKey]?.name ?? columnAKey
-      const columnBName = columnsByKey[columnBKey]?.name ?? columnBKey
-      const aDecimals = columnsByKey[columnAKey]?.decimals ?? 2
-      const bDecimals = columnsByKey[columnBKey]?.decimals ?? 2
-      compare = buildCompareExplanation(col.compare, columnAName, columnBName, valueA, valueB, value, aDecimals, bDecimals, decimals)
-    } else if (col.tiered) {
-      const baseValue = depValues[col.tiered.baseKey] ?? 0
-      const baseName = columnsByKey[col.tiered.baseKey]?.name ?? col.tiered.baseKey
-      const baseDecimals = columnsByKey[col.tiered.baseKey]?.decimals ?? 2
-      tiered = buildTieredExplanation(col.tiered, baseValue, baseName, value, baseDecimals, decimals)
+  let exemption
+  let exemptionMatched = false
+
+  if (!error && col.exemption?.enabled) {
+    exemptionMatched = evaluateExemptionCondition(col.exemption, depValues)
+    exemption = buildExemptionExplanation({
+      exemption: col.exemption,
+      columnsByKey,
+      depValues,
+      matched: exemptionMatched,
+      resultValue: value,
+      resultDecimals: decimals,
+      columnLabel: col.name,
+    })
+  }
+
+  // The underlying Tiered/Progressive/Compare explanation is only
+  // meaningful (and only correct) when the outer `value` actually came
+  // from that calculation - i.e. the exemption didn't short-circuit it to
+  // an override result instead.
+  if (!error && !exemptionMatched) {
+    if (col.builderMode === 'tiered') {
+      if (col.tieredKind === 'compare' && col.compare) {
+        const { columnAKey, columnBKey } = col.compare
+        const valueA = depValues[columnAKey] ?? 0
+        const valueB = depValues[columnBKey] ?? 0
+        const columnAName = columnsByKey[columnAKey]?.name ?? columnAKey
+        const columnBName = columnsByKey[columnBKey]?.name ?? columnBKey
+        const aDecimals = columnsByKey[columnAKey]?.decimals ?? 2
+        const bDecimals = columnsByKey[columnBKey]?.decimals ?? 2
+        compare = buildCompareExplanation(col.compare, columnAName, columnBName, valueA, valueB, value, aDecimals, bDecimals, decimals)
+      } else if (col.tiered) {
+        const baseValue = depValues[col.tiered.baseKey] ?? 0
+        const baseName = columnsByKey[col.tiered.baseKey]?.name ?? col.tiered.baseKey
+        const baseDecimals = columnsByKey[col.tiered.baseKey]?.decimals ?? 2
+        tiered = buildTieredExplanation(col.tiered, baseValue, baseName, value, baseDecimals, decimals)
+      }
+    } else if (col.builderMode === 'progressive' && col.progressive) {
+      const baseValue = depValues[col.progressive.baseKey] ?? 0
+      const baseName = columnsByKey[col.progressive.baseKey]?.name ?? col.progressive.baseKey
+      const baseDecimals = columnsByKey[col.progressive.baseKey]?.decimals ?? 2
+      progressive = buildProgressiveExplanation(col.progressive, baseValue, baseName, value, baseDecimals, decimals)
     }
-  } else if (!error && col.builderMode === 'progressive' && col.progressive) {
-    const baseValue = depValues[col.progressive.baseKey] ?? 0
-    const baseName = columnsByKey[col.progressive.baseKey]?.name ?? col.progressive.baseKey
-    const baseDecimals = columnsByKey[col.progressive.baseKey]?.decimals ?? 2
-    progressive = buildProgressiveExplanation(col.progressive, baseValue, baseName, value, baseDecimals, decimals)
   }
 
   const result = {
@@ -240,6 +271,7 @@ export function computeCell(key, employee, columnsByKey, memo, visiting = new Se
       tiered,
       compare,
       progressive,
+      exemption,
     },
   }
   memo.set(key, result)

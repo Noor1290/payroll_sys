@@ -10,6 +10,7 @@ import ImportMappingModal from './components/ImportMappingModal'
 import ExportPreviewModal from './components/ExportPreviewModal'
 import ExportSplitButton from './components/ExportSplitButton'
 import ConfirmDialog from './components/ConfirmDialog'
+import CompanyDetailsModal from './components/CompanyDetailsModal'
 import { loadState, saveState, loadPeriod, savePeriod } from './lib/storage'
 import {
   newCompany,
@@ -54,6 +55,7 @@ export default function App() {
   const [importData, setImportData] = useState(null) // { headers, rows } | null
   const [exportPlan, setExportPlan] = useState(null)
   const [confirmingDeleteAll, setConfirmingDeleteAll] = useState(false)
+  const [detailsCompanyId, setDetailsCompanyId] = useState(null)
   const [loaded, setLoaded] = useState(false)
   const fileInputRef = useRef(null)
 
@@ -126,6 +128,9 @@ export default function App() {
     setCompanies((prev) => [...prev, company])
     setActiveCompanyId(company.id)
     setActiveTab('employees')
+    // Straight into the details form so the user can fill in the real name/
+    // address/BRN right away - Cancel just skips it, same as any other time.
+    setDetailsCompanyId(company.id)
   }
 
   function handleRenameCompany(id, name) {
@@ -135,6 +140,11 @@ export default function App() {
   function handleDeleteCompany(id) {
     setCompanies((prev) => prev.filter((c) => c.id !== id))
     if (activeCompanyId === id) setActiveCompanyId(null)
+  }
+
+  function handleSaveCompanyDetails(id, { name, details }) {
+    updateCompany(id, (c) => ({ ...c, name, details }))
+    setDetailsCompanyId(null)
   }
 
   function handleChangeMonth(year, month) {
@@ -251,7 +261,7 @@ export default function App() {
       const recognized = isRecognizedExport(meta, activeCompanyId, allCurrentKeys)
       const initialMapping = resolveImportMapping(systemFields, headers, meta)
       const autoNote = recognized ? null : describeUnrecognizedMeta(meta, activeCompanyId, allCurrentKeys)
-      setImportData({ headers, rows, systemFields, initialMapping, recognized, autoNote })
+      setImportData({ headers, rows, systemFields, initialMapping, recognized, autoNote, meta })
     } catch (err) {
       console.error('Failed to read Excel file:', err)
       window.alert('Could not read that file. Please make sure it is a valid .xlsx file.')
@@ -265,6 +275,7 @@ export default function App() {
       systemFields: importData.systemFields,
       mapping,
       makeId,
+      meta: importData.meta,
     })
     setPeriodEmployees((prev) => [...prev, ...imported])
     setImportData(null)
@@ -277,6 +288,7 @@ export default function App() {
       buildExportPlan({
         title: activeCompany.name,
         companyId: activeCompany.id,
+        companyDetails: activeCompany.details,
         kind: 'period',
         exportMode,
         employees: periodEmployees,
@@ -293,6 +305,7 @@ export default function App() {
       buildExportPlan({
         title: `${activeCompany.name} — Totals (${rangeLabel})`,
         companyId: activeCompany.id,
+        companyDetails: activeCompany.details,
         kind: 'totals',
         employees: totalsEmployees,
         identityFields,
@@ -327,6 +340,7 @@ export default function App() {
         onAddCompany={handleAddCompany}
         onRenameCompany={handleRenameCompany}
         onDeleteCompany={handleDeleteCompany}
+        onOpenDetails={setDetailsCompanyId}
       />
 
       <main className="flex-1 overflow-hidden p-6">
@@ -439,6 +453,7 @@ export default function App() {
                   crossScopeExistingKeys={globalKnownKeys}
                   crossScopeAvailableKeys={globalColumns.map((c) => c.key)}
                   targetCompanyName={activeCompany.name}
+                  companyDetails={activeCompany.details}
                   onChangeScope={handleChangeColumnScope}
                 />
               )}
@@ -505,6 +520,20 @@ export default function App() {
           onConfirm={handleDeleteAllEmployees}
         />
       )}
+
+      {detailsCompanyId &&
+        (() => {
+          const detailsCompany = companies.find((c) => c.id === detailsCompanyId)
+          if (!detailsCompany) return null
+          return (
+            <CompanyDetailsModal
+              company={detailsCompany}
+              otherCompanies={companies.filter((c) => c.id !== detailsCompanyId)}
+              onSave={(patch) => handleSaveCompanyDetails(detailsCompanyId, patch)}
+              onClose={() => setDetailsCompanyId(null)}
+            />
+          )
+        })()}
     </div>
   )
 }

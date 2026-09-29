@@ -177,6 +177,14 @@ export default function EmployeeTable({
                         fx
                       </span>
                     )}
+                    {col.excludeFromExport && (
+                      <span
+                        title="Not included in Excel exports or payslips"
+                        className="shrink-0 rounded bg-slate-200 px-1 py-0.5 text-[10px] font-semibold text-slate-500"
+                      >
+                        not exported
+                      </span>
+                    )}
                   </div>
                   <ResizeHandle
                     onResizeStart={(e) => handleResizeStart(e, col.key, getWidth(col.key, DEFAULT_COLUMN_WIDTH))}
@@ -213,6 +221,18 @@ export default function EmployeeTable({
                     const cell = computedGrid[emp.id]?.[col.key]
                     if (col.type === 'input') {
                       const raw = emp.values?.[col.key] ?? ''
+                      if (col.valueType === 'checkbox') {
+                        return (
+                          <td key={col.key} className="overflow-hidden px-2 py-1 text-center">
+                            <input
+                              type="checkbox"
+                              className="h-4 w-4 accent-indigo-600"
+                              checked={Boolean(raw)}
+                              onChange={(e) => onUpdateValue(emp.id, col.key, e.target.checked)}
+                            />
+                          </td>
+                        )
+                      }
                       if (col.valueType === 'text') {
                         return (
                           <td key={col.key} className="overflow-hidden px-2 py-1">

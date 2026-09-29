@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import ConfirmDialog from './ConfirmDialog'
 
-export default function Sidebar({ companies, activeCompanyId, onSelect, onAddCompany, onRenameCompany, onDeleteCompany }) {
+export default function Sidebar({ companies, activeCompanyId, onSelect, onAddCompany, onRenameCompany, onDeleteCompany, onOpenDetails }) {
   const [renamingId, setRenamingId] = useState(null)
   const [renameValue, setRenameValue] = useState('')
   const [deletingCompany, setDeletingCompany] = useState(null)
@@ -57,6 +57,19 @@ export default function Sidebar({ companies, activeCompanyId, onSelect, onAddCom
                   title={company.name}
                 >
                   {company.name}
+                </button>
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation()
+                    onOpenDetails(company.id)
+                  }}
+                  className={`ml-1 shrink-0 rounded px-1 text-xs ${
+                    company.id === activeCompanyId ? 'opacity-100 hover:bg-indigo-500' : 'opacity-0 hover:bg-slate-300 group-hover:opacity-100'
+                  }`}
+                  aria-label={`${company.name} details`}
+                  title="Company details"
+                >
+                  ⓘ
                 </button>
                 <button
                   onClick={(e) => {

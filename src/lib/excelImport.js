@@ -3,10 +3,11 @@ import * as XLSX from 'xlsx'
 const META_SHEET_NAME = '_meta'
 const META_GENERATOR = 'payroll-sys'
 // The exact 0-indexed row where the real column headers sit in a system
-// export's fixed layout (title, subtitle, blank spacer, category-group
-// header, THEN column headers - see excelExport.js's COLUMN_ROW). Only
-// valid for meta.version 1's layout.
-const SYSTEM_EXPORT_HEADER_ROW_INDEX = { 1: 4 }
+// export's fixed layout (title, subtitle, [company-details line], blank
+// spacer, category-group header, THEN column headers - see excelExport.js's
+// COLUMN_ROW). Version 1 had no company-details row; version 2 added one
+// (always reserved, even when left blank), shifting everything down by 1.
+const SYSTEM_EXPORT_HEADER_ROW_INDEX = { 1: 4, 2: 5 }
 
 function isNonEmptyCell(cell) {
   return cell !== '' && cell !== undefined && cell !== null
@@ -71,9 +72,16 @@ export async function parseWorkbookFile(file) {
     return label.length > 0 ? label : `Column ${i + 1}`
   })
 
+  // A system export always ends with its own trailing totals row (see
+  // excelExport.js), whose very first cell is the literal string "TOTAL" -
+  // real employee data, never that. Only filtered for a RECOGNIZED system
+  // export (meta truthy): a genuinely external file could coincidentally
+  // have an employee literally named/ID'd "TOTAL", and this must never
+  // silently eat a real row from one of those.
   const rows = allRows
     .slice(headerRowIndex + 1)
     .filter((r) => r.some(isNonEmptyCell))
+    .filter((r) => !(meta && r[0] === 'TOTAL'))
 
   if (import.meta.env.DEV) {
     const sample = rows.slice(0, 3).map((row) => Object.fromEntries(headers.map((h, i) => [h, row[i]])))
@@ -173,23 +181,43 @@ export function projectRows(rows, systemFields, mapping) {
   })
 }
 
+// Interprets a checkbox cell's raw value as ticked/unticked. Recognizes
+// Yes/No, Y/N, True/False, 1/0, X/blank, case-insensitively; anything
+// missing or unrecognized defaults to unticked.
+export function parseCheckboxValue(raw) {
+  if (raw === undefined || raw === null || raw === '') return false
+  const s = String(raw).trim().toLowerCase()
+  return s === 'yes' || s === 'y' || s === 'true' || s === '1' || s === 'x'
+}
+
 // Turns mapped rows into new employee records, defaulting unmapped/missing
-// values (empty string for identity fields, 0 for input columns). Duplicate
-// ID detection is computed live wherever the table is displayed (see
-// EmployeeTable), so it stays correct even after rows are edited later.
-export function buildImportedEmployees({ rows, systemFields, mapping, makeId }) {
+// values (empty string for identity fields, unticked for checkboxes, 0 for
+// other input columns). Duplicate ID detection is computed live wherever
+// the table is displayed (see EmployeeTable), so it stays correct even
+// after rows are edited later.
+//
+// `meta` (a recognized system export's hidden _meta, if any) supplies
+// values for fields excluded from export - they were never written as a
+// visible/mapped column, so `mapping`/`projectRows` alone can't see them;
+// this falls back to the value the exporter stashed for that exact row.
+export function buildImportedEmployees({ rows, systemFields, mapping, makeId, meta }) {
   const projected = projectRows(rows, systemFields, mapping)
 
-  return projected.map((row) => {
+  return projected.map((row, rowIndex) => {
     const values = {}
     for (const field of systemFields) {
-      const raw = row[field.key]
+      let raw = row[field.key]
+      if (mapping[field.key] === null && meta?.excludedValues?.[field.key]) {
+        raw = meta.excludedValues[field.key][rowIndex]
+      }
       // Text-based fields (identity fields, and Input columns explicitly
       // typed as Text) import the raw value as-is - never forced through a
       // numeric parser, so non-numeric text like "Full Time" survives
       // instead of silently becoming 0.
       if (field.kind === 'identity' || field.valueType === 'text') {
         values[field.key] = raw === undefined || raw === null ? '' : String(raw)
+      } else if (field.valueType === 'checkbox') {
+        values[field.key] = parseCheckboxValue(raw)
       } else {
         values[field.key] = raw === undefined || raw === null || raw === '' ? 0 : Number(raw) || 0
       }

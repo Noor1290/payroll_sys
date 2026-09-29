@@ -121,6 +121,7 @@ export default function ColumnManager({
   crossScopeAvailableKeys = null,
   totalCompanyCount,
   targetCompanyName,
+  companyDetails,
   onChangeScope,
 }) {
   const [editing, setEditing] = useState(null) // 'new' | column | null
@@ -165,7 +166,7 @@ export default function ColumnManager({
   }
 
   function handleExportColumns() {
-    const exportObj = buildColumnSetupExport(columns, scope, targetCompanyName)
+    const exportObj = buildColumnSetupExport(columns, scope, targetCompanyName, companyDetails)
     downloadColumnSetup(exportObj, buildColumnSetupFilename(scope, targetCompanyName))
   }
 
