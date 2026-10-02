@@ -9,6 +9,7 @@ import FormulaBreakdownModal from './components/FormulaBreakdownModal'
 import ImportMappingModal from './components/ImportMappingModal'
 import ExportPreviewModal from './components/ExportPreviewModal'
 import ExportSplitButton from './components/ExportSplitButton'
+import PdfFillExportModal from './components/PdfFillExportModal'
 import ConfirmDialog from './components/ConfirmDialog'
 import CompanyDetailsModal from './components/CompanyDetailsModal'
 import { loadState, saveState, loadPeriod, savePeriod } from './lib/storage'
@@ -54,6 +55,7 @@ export default function App() {
   const [breakdownTrace, setBreakdownTrace] = useState(null)
   const [importData, setImportData] = useState(null) // { headers, rows } | null
   const [exportPlan, setExportPlan] = useState(null)
+  const [pdfFillFormat, setPdfFillFormat] = useState(null) // 'csv' | 'json' | null
   const [confirmingDeleteAll, setConfirmingDeleteAll] = useState(false)
   const [detailsCompanyId, setDetailsCompanyId] = useState(null)
   const [loaded, setLoaded] = useState(false)
@@ -381,7 +383,7 @@ export default function App() {
                   >
                     Import from Excel
                   </button>
-                  <ExportSplitButton onExport={handleOpenExportPreview} />
+                  <ExportSplitButton onExport={handleOpenExportPreview} onExportPdfFill={setPdfFillFormat} />
                   <button
                     onClick={() => setConfirmingDeleteAll(true)}
                     disabled={periodEmployees.length === 0}
@@ -508,6 +510,20 @@ export default function App() {
       )}
 
       {exportPlan && <ExportPreviewModal plan={exportPlan} onClose={() => setExportPlan(null)} />}
+
+      {pdfFillFormat && activeCompany && selectedYear && selectedMonth && (
+        <PdfFillExportModal
+          format={pdfFillFormat}
+          identityFields={identityFields}
+          effectiveColumns={effectiveColumns}
+          employees={periodEmployees}
+          computedGrid={computedGrid}
+          companyName={activeCompany.name}
+          year={selectedYear}
+          month={selectedMonth}
+          onClose={() => setPdfFillFormat(null)}
+        />
+      )}
 
       {confirmingDeleteAll && activeCompany && selectedYear && selectedMonth && (
         <ConfirmDialog

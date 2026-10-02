@@ -1,9 +1,10 @@
 import { useEffect, useRef, useState } from 'react'
 
 // Main button click = "Export with Values" (the existing/default behavior,
-// unchanged). The chevron opens a small menu offering both options
-// explicitly, including the new "Export with Live Formulas".
-export default function ExportSplitButton({ onExport }) {
+// unchanged). The chevron opens a small menu offering both xlsx options
+// plus the "PDF fill" CSV/JSON exports, which go through a separate
+// column-picker flow (onExportPdfFill) instead of straight to a download.
+export default function ExportSplitButton({ onExport, onExportPdfFill }) {
   const [open, setOpen] = useState(false)
   const containerRef = useRef(null)
 
@@ -18,6 +19,11 @@ export default function ExportSplitButton({ onExport }) {
   function choose(mode) {
     setOpen(false)
     onExport(mode)
+  }
+
+  function choosePdfFill(format) {
+    setOpen(false)
+    onExportPdfFill(format)
   }
 
   return (
@@ -51,6 +57,21 @@ export default function ExportSplitButton({ onExport }) {
           >
             Export with Live Formulas
             <span className="block text-xs font-normal text-slate-400">Formula columns as working Excel formulas</span>
+          </button>
+          <div className="my-1 border-t border-slate-100" />
+          <button
+            onClick={() => choosePdfFill('csv')}
+            className="block w-full px-3 py-2 text-left text-sm text-slate-700 hover:bg-slate-50"
+          >
+            Export for PDF fill (CSV)
+            <span className="block text-xs font-normal text-slate-400">Pick columns, one row per employee, plain-name headers</span>
+          </button>
+          <button
+            onClick={() => choosePdfFill('json')}
+            className="block w-full px-3 py-2 text-left text-sm text-slate-700 hover:bg-slate-50"
+          >
+            Export for PDF fill (JSON)
+            <span className="block text-xs font-normal text-slate-400">Pick columns, one object per employee, plain-name keys</span>
           </button>
         </div>
       )}
