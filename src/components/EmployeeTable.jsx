@@ -5,9 +5,13 @@ import { formatDecimal } from '../lib/format'
 
 const MIN_COLUMN_WIDTH = 64
 const MAX_COLUMN_WIDTH = 600
-const DEFAULT_ID_WIDTH = 96
-const DEFAULT_IDENTITY_WIDTH = 128
-const DEFAULT_COLUMN_WIDTH = 112
+// Wide enough that typical values don't truncate on first render, before
+// any manual resizing - identity fields (ID/Surname/Other Names) get the
+// most room since they tend to hold the longest free-text values; numeric/
+// text columns get enough for e.g. "123,456.78" or "Part Time" unclipped.
+const DEFAULT_ID_WIDTH = 140
+const DEFAULT_IDENTITY_WIDTH = 160
+const DEFAULT_COLUMN_WIDTH = 120
 const DEFAULT_ACTIONS_WIDTH = 88
 const GROUP_HEADER_HEIGHT = 28
 

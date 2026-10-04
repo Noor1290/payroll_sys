@@ -1,11 +1,12 @@
-import { useRef, useState } from 'react'
+import { useMemo, useRef, useState } from 'react'
 import ColumnFormModal from './ColumnFormModal'
 import ConfirmDialog from './ConfirmDialog'
 import ColumnSetupImportModal from './ColumnSetupImportModal'
-import { SELECTABLE_CATEGORIES, DEFAULT_CATEGORY } from '../lib/categories'
+import { SELECTABLE_CATEGORIES, DEFAULT_CATEGORY, labelColumnsForHelper } from '../lib/categories'
 import { buildColumnSetupExport, buildColumnSetupFilename, downloadColumnSetup, parseColumnSetupFile } from '../lib/columnSetup'
+import { formatFormulaForDisplay } from '../lib/formulaEngine'
 
-function CategorySection({ category, ownColumns, otherColumns, onEdit, onDelete, onDragStart, onDrop, draggingId }) {
+function CategorySection({ category, ownColumns, otherColumns, onEdit, onDelete, onDragStart, onDrop, draggingId, formulaLabels }) {
   return (
     <div className="mb-5">
       <h3 className="mb-2 text-sm font-semibold text-slate-600">{category.label}</h3>
@@ -28,7 +29,7 @@ function CategorySection({ category, ownColumns, otherColumns, onEdit, onDelete,
                 <td className="px-4 py-2">{col.name}</td>
                 <td className="px-4 py-2 font-mono text-xs">{col.key}</td>
                 <td className="px-4 py-2 capitalize">{col.type}</td>
-                <td className="px-4 py-2 font-mono text-xs">{col.formula ?? '—'}</td>
+                <td className="px-4 py-2 font-mono text-xs">{col.formula ? formatFormulaForDisplay(col.formula, formulaLabels) : '—'}</td>
                 <td className="px-4 py-2 text-right text-xs italic">inherited</td>
               </tr>
             ))}
@@ -57,7 +58,9 @@ function CategorySection({ category, ownColumns, otherColumns, onEdit, onDelete,
                     </span>
                   )}
                 </td>
-                <td className="px-4 py-2 font-mono text-xs text-slate-500">{col.formula ?? '—'}</td>
+                <td className="px-4 py-2 font-mono text-xs text-slate-500">
+                  {col.formula ? formatFormulaForDisplay(col.formula, formulaLabels) : '—'}
+                </td>
                 <td className="px-4 py-2 text-right">
                   <button
                     onClick={() => onEdit(col)}
@@ -132,6 +135,15 @@ export default function ColumnManager({
   const importInputRef = useRef(null)
 
   const allKeysInScope = [...reservedKeys, ...otherScopeColumns.map((c) => c.key), ...columns.map((c) => c.key)]
+
+  // key -> readable label (name, or "Name (Category)" when another column
+  // shares that name) for every column a formula here could reference -
+  // display-only, purely for rendering the Formula column readably below;
+  // the stored expression/keys are never touched.
+  const formulaLabels = useMemo(() => {
+    const labeled = labelColumnsForHelper(Object.values(allColumnsForCycleCheck))
+    return Object.fromEntries(labeled.map((c) => [c.key, c.helperLabel]))
+  }, [allColumnsForCycleCheck])
 
   function existingKeysExcluding(col) {
     return allKeysInScope.filter((k) => k !== col?.key)
@@ -259,6 +271,7 @@ export default function ColumnManager({
             if (draggingId) onReorder?.(draggingId, targetId)
             setDraggingId(null)
           }}
+          formulaLabels={formulaLabels}
         />
       ))}
 

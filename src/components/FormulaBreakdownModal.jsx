@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import Modal from './Modal'
 import { formatDecimal } from '../lib/format'
+import { formatFormulaForDisplay } from '../lib/formulaEngine'
 
 function formatValue(v, decimals, valueType) {
   if (valueType === 'checkbox') return v === 1 || v === true ? 'Yes' : 'No'
@@ -9,7 +10,7 @@ function formatValue(v, decimals, valueType) {
   return formatDecimal(v, decimals ?? 2)
 }
 
-function DependencyRow({ trace }) {
+function DependencyRow({ trace, labelByKey }) {
   const [open, setOpen] = useState(false)
   const isFormula = trace.type === 'formula'
 
@@ -40,14 +41,14 @@ function DependencyRow({ trace }) {
 
       {isFormula && open && (
         <div className="border-t border-slate-100 px-3 py-2">
-          <FormulaBody trace={trace} />
+          <FormulaBody trace={trace} labelByKey={labelByKey} />
         </div>
       )}
     </div>
   )
 }
 
-function FormulaBody({ trace }) {
+function FormulaBody({ trace, labelByKey }) {
   if (trace.error) {
     return <p className="text-sm text-red-600">Error: {trace.error}</p>
   }
@@ -72,7 +73,9 @@ function FormulaBody({ trace }) {
           <>
             <div>
               <p className="text-xs font-medium uppercase tracking-wide text-slate-400">Formula</p>
-              <p className="mt-0.5 rounded bg-slate-50 px-2 py-1 font-mono text-sm text-slate-700">{trace.formula}</p>
+              <p className="mt-0.5 rounded bg-slate-50 px-2 py-1 font-mono text-sm text-slate-700">
+                {formatFormulaForDisplay(trace.formula, labelByKey)}
+              </p>
             </div>
             <div>
               <p className="text-xs font-medium uppercase tracking-wide text-slate-400">Substituted</p>
@@ -90,7 +93,7 @@ function FormulaBody({ trace }) {
           <p className="mb-1 text-xs font-medium uppercase tracking-wide text-slate-400">Depends on</p>
           <div className="space-y-1.5">
             {trace.dependencies.map((dep) => (
-              <DependencyRow key={dep.key} trace={dep} />
+              <DependencyRow key={dep.key} trace={dep} labelByKey={labelByKey} />
             ))}
           </div>
         </div>
@@ -99,10 +102,10 @@ function FormulaBody({ trace }) {
   )
 }
 
-export default function FormulaBreakdownModal({ trace, onClose }) {
+export default function FormulaBreakdownModal({ trace, labelByKey = {}, onClose }) {
   return (
     <Modal title={`Breakdown: ${trace.name}`} onClose={onClose} width="max-w-xl">
-      <FormulaBody trace={trace} />
+      <FormulaBody trace={trace} labelByKey={labelByKey} />
     </Modal>
   )
 }

@@ -36,6 +36,24 @@ export function getDependencies(expr, availableKeys) {
   })
 }
 
+// Display-only: renders a formula with each referenced column's KEY swapped
+// for its readable LABEL (e.g. "newBasicSalary" -> "New Basic Salary", or
+// "CSG (Employee Contribution)" when disambiguated), for read-only list
+// views like ColumnManager. Never used for anything that actually computes
+// or edits the formula - the stored expression, the builder, the engine,
+// and the Excel export all keep using the real keys untouched.
+//
+// A single alternation-based pass (not one replace() call per key) so a
+// label that happens to contain another column's key as a substring can
+// never get double-substituted.
+export function formatFormulaForDisplay(expr, labelByKey) {
+  if (!expr) return expr
+  const keys = Object.keys(labelByKey)
+  if (keys.length === 0) return expr
+  const pattern = new RegExp(`\\b(${keys.map(escapeRegExp).join('|')})\\b`, 'g')
+  return expr.replace(pattern, (match) => labelByKey[match] ?? match)
+}
+
 // Validates that a formula only references known columns / allowed globals,
 // and is syntactically valid JS. Returns { valid, error, dependencies }.
 export function validateFormulaSyntax(expr, availableKeys) {

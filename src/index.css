@@ -1,1 +1,13 @@
 @import "tailwindcss";
+
+/* Hide the native up/down spinner on number inputs app-wide - typing,
+   pasting, and numeric validation all keep working exactly as before,
+   this only removes the browser's spinner UI clutter. */
+input[type='number']::-webkit-outer-spin-button,
+input[type='number']::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+input[type='number'] {
+  -moz-appearance: textfield;
+}

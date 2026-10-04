@@ -12,6 +12,7 @@ import ExportSplitButton from './components/ExportSplitButton'
 import PdfFillExportModal from './components/PdfFillExportModal'
 import ConfirmDialog from './components/ConfirmDialog'
 import CompanyDetailsModal from './components/CompanyDetailsModal'
+import CopyPreviousMonthModal from './components/CopyPreviousMonthModal'
 import { loadState, saveState, loadPeriod, savePeriod } from './lib/storage'
 import {
   newCompany,
@@ -25,8 +26,8 @@ import {
   getCompanyScopeKnownKeys,
   makeId,
 } from './lib/model'
-import { reorderWithinCategory } from './lib/categories'
-import { formatPeriodLabel } from './lib/periods'
+import { reorderWithinCategory, labelColumnsForHelper } from './lib/categories'
+import { formatPeriodLabel, shiftPeriod } from './lib/periods'
 import { useComputedGrid } from './hooks/useComputedGrid'
 import { buildExportPlan } from './lib/excelExport'
 import {
@@ -58,6 +59,7 @@ export default function App() {
   const [pdfFillFormat, setPdfFillFormat] = useState(null) // 'csv' | 'json' | null
   const [confirmingDeleteAll, setConfirmingDeleteAll] = useState(false)
   const [detailsCompanyId, setDetailsCompanyId] = useState(null)
+  const [copyPreviousMonthData, setCopyPreviousMonthData] = useState(null) // { employees, year, month } | null
   const [loaded, setLoaded] = useState(false)
   const fileInputRef = useRef(null)
 
@@ -66,6 +68,11 @@ export default function App() {
   // (company, year, month) period, not on the company itself.
   const [periodEmployees, setPeriodEmployees] = useState([])
   const [periodLoaded, setPeriodLoaded] = useState(false)
+
+  // No-op unless this app is running inside the Payroll Hub dashboard's iframe.
+  useEffect(() => {
+    window.PayrollHubBridge.init({ appId: 'payroll' })
+  }, [])
 
   useEffect(() => {
     const saved = loadState()
@@ -112,12 +119,41 @@ export default function App() {
     savePeriod(activeCompanyId, selectedYear, selectedMonth, { employees: periodEmployees })
   }, [periodLoaded, activeCompanyId, selectedYear, selectedMonth, periodEmployees])
 
+  // Whether "Copy from Previous Month" has anything to offer right now -
+  // read fresh (not kept in React state) each time it's relevant, since
+  // it's only ever consulted right before the user might click the button.
+  const previousPeriodHasData = useMemo(() => {
+    if (!activeCompanyId || !selectedYear || !selectedMonth) return false
+    const prev = shiftPeriod(selectedYear, selectedMonth, -1)
+    return loadPeriod(activeCompanyId, prev.year, prev.month).employees.length > 0
+  }, [activeCompanyId, selectedYear, selectedMonth])
+
+  function handleOpenCopyPreviousMonth() {
+    if (!activeCompanyId || !selectedYear || !selectedMonth) return
+    const prev = shiftPeriod(selectedYear, selectedMonth, -1)
+    const { employees } = loadPeriod(activeCompanyId, prev.year, prev.month)
+    setCopyPreviousMonthData({ employees, year: prev.year, month: prev.month })
+  }
+
+  function handleConfirmCopyPreviousMonth(nextEmployees) {
+    setPeriodEmployees(nextEmployees)
+    setCopyPreviousMonthData(null)
+  }
+
   const effectiveColumns = useMemo(
     () => (activeCompany ? getEffectiveColumns(activeCompany, globalColumns) : []),
     [activeCompany, globalColumns]
   )
 
   const columnsByKey = useMemo(() => getColumnsByKey(effectiveColumns), [effectiveColumns])
+
+  // key -> readable label (name, or "Name (Category)" when another column
+  // shares that name) for the breakdown modal's display-only formula
+  // rendering - never touches the stored expression/keys themselves.
+  const formulaDisplayLabels = useMemo(() => {
+    const labeled = labelColumnsForHelper(Object.values(columnsByKey))
+    return Object.fromEntries(labeled.map((c) => [c.key, c.helperLabel]))
+  }, [columnsByKey])
 
   const computedGrid = useComputedGrid(periodEmployees, effectiveColumns)
 
@@ -385,6 +421,14 @@ export default function App() {
                   </button>
                   <ExportSplitButton onExport={handleOpenExportPreview} onExportPdfFill={setPdfFillFormat} />
                   <button
+                    onClick={handleOpenCopyPreviousMonth}
+                    disabled={!previousPeriodHasData}
+                    title={previousPeriodHasData ? undefined : 'No data in the previous month for this company'}
+                    className="rounded-md border border-slate-300 bg-white px-3 py-1.5 text-sm font-medium text-slate-700 hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-40 disabled:hover:bg-white"
+                  >
+                    Copy from Previous Month
+                  </button>
+                  <button
                     onClick={() => setConfirmingDeleteAll(true)}
                     disabled={periodEmployees.length === 0}
                     className="rounded-md border border-red-300 bg-white px-3 py-1.5 text-sm font-medium text-red-600 hover:bg-red-50 disabled:cursor-not-allowed disabled:opacity-40 disabled:hover:bg-white"
@@ -493,7 +537,7 @@ export default function App() {
       </main>
 
       {breakdownTrace && (
-        <FormulaBreakdownModal trace={breakdownTrace} onClose={() => setBreakdownTrace(null)} />
+        <FormulaBreakdownModal trace={breakdownTrace} labelByKey={formulaDisplayLabels} onClose={() => setBreakdownTrace(null)} />
       )}
 
       {importData && (
@@ -519,9 +563,24 @@ export default function App() {
           employees={periodEmployees}
           computedGrid={computedGrid}
           companyName={activeCompany.name}
+          companyDetails={activeCompany.details}
           year={selectedYear}
           month={selectedMonth}
           onClose={() => setPdfFillFormat(null)}
+        />
+      )}
+
+      {copyPreviousMonthData && activeCompany && selectedYear && selectedMonth && (
+        <CopyPreviousMonthModal
+          previousEmployees={copyPreviousMonthData.employees}
+          currentEmployees={periodEmployees}
+          identityFields={identityFields}
+          idFieldKey={idFieldKey}
+          effectiveColumns={effectiveColumns}
+          previousPeriodLabel={formatPeriodLabel(copyPreviousMonthData.year, copyPreviousMonthData.month)}
+          currentPeriodLabel={formatPeriodLabel(selectedYear, selectedMonth)}
+          onConfirm={handleConfirmCopyPreviousMonth}
+          onCancel={() => setCopyPreviousMonthData(null)}
         />
       )}
 
