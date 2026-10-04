@@ -375,7 +375,8 @@ input[type='number'] {
   .choice-active,
   .choice-active:hover {
     border-color: color-mix(in srgb, var(--accent) 55%, transparent);
-    background: color-mix(in srgb, var(--accent) 12%, transparent);
+    /* 8% keeps accent-coloured text above 4.5:1 on this tint in the light theme. */
+    background: color-mix(in srgb, var(--accent) 8%, transparent);
     color: var(--accent);
   }
   .choice-active::before {
@@ -513,6 +514,13 @@ input[type='number'] {
   .rise-in {
     animation: rise-in 180ms ease-out;
   }
+}
+
+/* The focus ring appears at once in the accent colour: colour transitions on a
+   control must not fade the ring in from the text colour. Unlayered on purpose,
+   so it applies over the transition utilities. */
+:focus-visible {
+  transition-property: background-color, border-color, color, box-shadow, opacity, transform;
 }
 
 @keyframes aurora-drift {
