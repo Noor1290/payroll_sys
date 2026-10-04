@@ -513,14 +513,6 @@ input[type='number'] {
   .rise-in {
     animation: rise-in 180ms ease-out;
   }
-
-  /* TEMPORARY, removed once every screen is restyled: keeps a screen or
-     dialog that hasn't been redesigned yet looking exactly as it did. */
-  .legacy-light {
-    color-scheme: light;
-    color: var(--color-slate-900);
-    font-size: 1rem;
-  }
 }
 
 @keyframes aurora-drift {

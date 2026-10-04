@@ -218,8 +218,8 @@ export default function EmployeeTable({
                           onChange={(e) => onUpdateValue(emp.id, field.key, e.target.value)}
                         />
                         {idFieldKey === field.key && isDuplicate && (
-                          <span title="Duplicate ID" className="shrink-0 cursor-help text-warn">
-                            <TriangleAlert className="h-4 w-4" aria-label="Duplicate ID" />
+                          <span title="Duplicate ID" role="img" aria-label="Duplicate ID" className="shrink-0 cursor-help text-warn">
+                            <TriangleAlert className="h-4 w-4" aria-hidden="true" />
                           </span>
                         )}
                       </div>

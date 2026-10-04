@@ -28,7 +28,7 @@ export default function ColumnSetupImportModal({ fileScope, fileCompanyName, fil
   const skipCount = plan.filter((p) => p.action === 'skip').length
 
   return (
-    <Modal title="Import Column Setup" onClose={onCancel} width="max-w-2xl" redesigned icon={<FileJson />}>
+    <Modal title="Import Column Setup" onClose={onCancel} width="max-w-2xl" icon={<FileJson />}>
       <div className="space-y-4">
         <p className="text-sm text-muted">
           This file contains {fileColumns.length} {fileScope === 'global' ? 'Global' : 'Company'} column

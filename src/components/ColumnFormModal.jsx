@@ -281,7 +281,7 @@ export default function ColumnFormModal({
 
   return (
     <>
-    <Modal title={isEdit ? 'Edit column' : 'Add column'} onClose={onClose} width="max-w-2xl" redesigned icon={<Columns3 />}>
+    <Modal title={isEdit ? 'Edit column' : 'Add column'} onClose={onClose} width="max-w-2xl" icon={<Columns3 />}>
       <div className="space-y-4">
         <div>
           <label className="label">Name</label>

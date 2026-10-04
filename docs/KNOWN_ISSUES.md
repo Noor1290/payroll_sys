@@ -95,6 +95,18 @@ Measured on the form before and after its restyle; both behave the same.
 **To decide.** Whether the form should keep the un-wrapped expression separately, so
 saving again does not wrap it twice.
 
+## 5. Export Preview: the title lines can sit off-screen on a wide sheet
+
+**What happens.** In the Export Preview dialog the company name, export date and
+company details line are centred over the full width of the sheet. When the sheet is
+wider than the dialog, they are out of view until you scroll right, and the top of
+the preview looks blank. The downloaded Excel file is not affected.
+
+**Evidence.** The fake company with 24 columns: the preview opens showing an empty
+white band above the column headers. Same before and after the redesign.
+
+**To decide.** Whether the preview should keep the title lines in view.
+
 ## Possible later feature: on-screen grand total
 
 The Totals screen shows one row per employee and no grand-total row; only the Excel

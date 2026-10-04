@@ -8,7 +8,6 @@ export default function ConfirmDialog({ title = 'Are you sure?', message, confir
       description={message}
       onClose={onCancel}
       width="max-w-sm"
-      redesigned
       icon={<TriangleAlert />}
       iconTone="danger"
     >

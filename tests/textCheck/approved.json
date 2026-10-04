@@ -1,0 +1,39 @@
+{
+  "added": [
+    { "text": "text: No employees this month", "why": "approved: empty-month state" },
+    { "text": "text: Add an employee, import from Excel, or copy from the previous month.", "why": "approved: empty-month state" },
+    { "text": "text: Try again", "why": "approved: button on the import error panel" },
+    { "text": "text: Could not read that file. Please make sure it is a valid .xlsx file.", "why": "approved: same message, now shown in a panel instead of a browser alert" },
+    { "text": "aria-label: Dismiss", "why": "approved: screen-reader label on the close button of an error panel" },
+    { "text": "aria-label: Open company list", "why": "approved: screen-reader label on the narrow-width menu button" },
+    { "text": "aria-label: Close company list", "why": "approved: screen-reader label on the drawer's close button" },
+    { "text": "aria-label: Switch to light theme", "why": "approved: theme toggle" },
+    { "text": "title: Switch to light theme", "why": "approved: theme toggle" },
+    { "text": "aria-label: Switch to dark theme", "why": "approved: theme toggle" },
+    { "text": "title: Switch to dark theme", "why": "approved: theme toggle" },
+    { "text": "aria-label: Company name", "why": "approved: screen-reader label on the company rename box" },
+    { "text": "aria-label: Duplicate ID", "why": "approved: the duplicate warning icon announces the same words as its existing tooltip (it replaced the ⚠ character)" },
+    { "text": "aria-label: ID", "why": "approved: table input labelled with its own column name" },
+    { "text": "aria-label: Surname", "why": "approved: table input labelled with its own column name" },
+    { "text": "aria-label: Other names", "why": "approved: table input labelled with its own column name" },
+    { "text": "aria-label: Basic Salary", "why": "approved: table input labelled with its own column name" },
+    { "text": "aria-label: Govt Increment", "why": "approved: table input labelled with its own column name" },
+    { "text": "aria-label: Full time / Part time", "why": "approved: table input labelled with its own column name" },
+    { "text": "aria-label: Allowances", "why": "approved: table input labelled with its own column name" },
+    { "text": "aria-label: Travelling", "why": "approved: table input labelled with its own column name" },
+    { "text": "aria-label: Age 60+", "why": "approved: table input labelled with its own column name" },
+    { "text": "aria-label: EDF", "why": "approved: table input labelled with its own column name" },
+    { "text": "aria-label: Internal Note", "why": "approved: table input labelled with its own column name" }
+  ],
+  "removed": [
+    { "text": "text: ⓘ", "why": "approved: replaced by bundled icons (company details button, aria-label and tooltip unchanged)" },
+    { "text": "text: ✕", "why": "approved: replaced by bundled icons (close, delete and dismiss buttons, aria-labels unchanged)" },
+    { "text": "text: ▾", "why": "approved: replaced by bundled icons (export menu button, aria-label unchanged; breakdown expander)" },
+    { "text": "text: ▸", "why": "approved: replaced by bundled icons (breakdown expander, now also announces expanded/collapsed)" },
+    { "text": "text: ⚠", "why": "approved: replaced by bundled icons (duplicate ID warning, same tooltip)" },
+    { "text": "text: ⠿", "why": "approved: replaced by bundled icons (drag handle, same tooltip)" },
+    { "text": "text: ▲", "why": "approved: replaced by bundled icons (move up button, aria-label unchanged)" },
+    { "text": "text: ▼", "why": "approved: replaced by bundled icons (move down button, aria-label unchanged)" },
+    { "text": "alert/error message: Could not read that file. Please make sure it is a valid .xlsx file.", "why": "approved: same message, now shown in a panel instead of a browser alert" }
+  ]
+}

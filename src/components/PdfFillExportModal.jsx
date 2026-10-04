@@ -1,4 +1,5 @@
 import { useMemo, useState } from 'react'
+import { FileOutput } from 'lucide-react'
 import Modal from './Modal'
 import {
   buildPdfFillColumnGroups,
@@ -75,29 +76,29 @@ export default function PdfFillExportModal({
   }
 
   return (
-    <Modal title={`Export for PDF fill (${FORMAT_LABEL[format]})`} onClose={onClose} width="max-w-lg">
+    <Modal title={`Export for PDF fill (${FORMAT_LABEL[format]})`} onClose={onClose} width="max-w-lg" icon={<FileOutput />}>
       <div className="space-y-4">
-        <p className="text-sm text-slate-600">
+        <p className="text-sm leading-relaxed text-muted">
           Choose which columns to include. The file will have one row per employee, headered by each column's plain
           name (not its internal key), ready to match against an external PDF form.
         </p>
 
         <div className="flex gap-2">
-          <button onClick={selectAll} className="rounded-md border border-slate-300 px-2 py-1 text-xs text-slate-600 hover:bg-slate-50">
+          <button onClick={selectAll} className="btn btn-secondary btn-sm text-xs">
             Select All
           </button>
-          <button onClick={selectNone} className="rounded-md border border-slate-300 px-2 py-1 text-xs text-slate-600 hover:bg-slate-50">
+          <button onClick={selectNone} className="btn btn-secondary btn-sm text-xs">
             Select None
           </button>
         </div>
 
-        <div className="max-h-96 space-y-4 overflow-y-auto rounded-md border border-slate-200 p-3">
+        <div className="max-h-80 space-y-4 overflow-y-auto rounded-xl border border-line bg-surface p-3">
           {groups.map((group) => (
             <div key={group.label}>
-              <h3 className="mb-1 text-xs font-semibold uppercase tracking-wide text-slate-500">{group.label}</h3>
-              <div className="space-y-1">
+              <h3 className="mb-1.5 text-[11px] font-medium uppercase tracking-wider text-subtle">{group.label}</h3>
+              <div className="space-y-1.5">
                 {group.columns.map((col) => (
-                  <label key={col.key} className="flex items-center gap-2 text-sm text-slate-700">
+                  <label key={col.key} className="flex items-center gap-2 text-sm text-fg">
                     <input type="checkbox" checked={selected.has(col.key)} onChange={() => toggle(col.key)} />
                     {col.name}
                   </label>
@@ -105,16 +106,16 @@ export default function PdfFillExportModal({
               </div>
             </div>
           ))}
-          {groups.length === 0 && <p className="text-sm text-slate-400">No columns defined yet.</p>}
+          {groups.length === 0 && <p className="text-sm text-muted">No columns defined yet.</p>}
 
-          <div>
-            <h3 className="mb-1 text-xs font-semibold uppercase tracking-wide text-slate-500">Company Details</h3>
-            <p className="mb-1 text-xs text-slate-400">
+          <div className="border-t border-line pt-3">
+            <h3 className="mb-1 text-[11px] font-medium uppercase tracking-wider text-subtle">Company Details</h3>
+            <p className="mb-1.5 text-xs text-muted">
               Repeats the same value on every row - off by default.
             </p>
-            <div className="space-y-1">
+            <div className="space-y-1.5">
               {companyFields.map((field) => (
-                <label key={field.key} className="flex items-center gap-2 text-sm text-slate-700">
+                <label key={field.key} className="flex items-center gap-2 text-sm text-fg">
                   <input
                     type="checkbox"
                     checked={selectedCompanyFields.has(field.key)}
@@ -127,21 +128,17 @@ export default function PdfFillExportModal({
           </div>
         </div>
 
-        <p className="text-xs text-slate-500">
+        <p className="text-xs text-muted">
           {selectedCount} column{selectedCount === 1 ? '' : 's'}
           {selectedCompanyFields.size > 0 ? ` + ${selectedCompanyFields.size} company detail field${selectedCompanyFields.size === 1 ? '' : 's'}` : ''} selected
           · {employees.length} employee{employees.length === 1 ? '' : 's'} will be exported.
         </p>
 
-        <div className="flex justify-end gap-2 border-t border-slate-100 pt-3">
-          <button onClick={onClose} className="rounded-md border border-slate-300 px-3 py-1.5 text-sm text-slate-700 hover:bg-slate-50">
+        <div className="flex justify-end gap-2 border-t border-line pt-4">
+          <button onClick={onClose} className="btn btn-secondary">
             Cancel
           </button>
-          <button
-            onClick={handleExport}
-            disabled={selectedCount === 0}
-            className="rounded-md bg-indigo-600 px-3 py-1.5 text-sm font-medium text-white hover:bg-indigo-700 disabled:cursor-not-allowed disabled:opacity-50"
-          >
+          <button onClick={handleExport} disabled={selectedCount === 0} className="btn btn-primary">
             Export {FORMAT_LABEL[format]}
           </button>
         </div>

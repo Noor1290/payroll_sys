@@ -32,7 +32,7 @@ export default function IdentityFieldFormModal({ initial, existingKeys, onSave, 
   }
 
   return (
-    <Modal title={isEdit ? 'Edit identity field' : 'Add identity field'} onClose={onClose} width="max-w-md" redesigned icon={<IdCard />}>
+    <Modal title={isEdit ? 'Edit identity field' : 'Add identity field'} onClose={onClose} width="max-w-md" icon={<IdCard />}>
       <div className="space-y-4">
         <div>
           <label className="label">Name</label>
