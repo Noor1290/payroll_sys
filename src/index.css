@@ -127,6 +127,13 @@
   ::placeholder {
     color: var(--subtle);
   }
+
+  input[type='checkbox'] {
+    width: 16px;
+    height: 16px;
+    flex-shrink: 0;
+    accent-color: var(--accent);
+  }
 }
 
 /* Hide the native up/down spinner on number inputs app-wide - typing,
@@ -318,6 +325,99 @@ input[type='number'] {
     border-radius: 6px;
     box-shadow: none;
   }
+  textarea.field {
+    height: auto;
+    padding: 10px 12px;
+    line-height: 1.5;
+  }
+  select.field {
+    padding-right: 8px;
+  }
+  /* Visible label above a control, and the small help text under it. */
+  .label {
+    display: block;
+    margin-bottom: 6px;
+    color: var(--muted);
+    font-size: 12px;
+    font-weight: 500;
+  }
+  .hint {
+    margin-top: 6px;
+    color: var(--muted);
+    font-size: 12px;
+    line-height: 1.5;
+  }
+
+  /* One-of-several choice buttons (Input / Formula, Simple / Tiered, ...).
+     The chosen one gets a tick as well as the accent colour. */
+  .choice {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    min-height: 40px;
+    padding: 0 14px;
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    background: var(--surface);
+    box-shadow: var(--inner-glow);
+    color: var(--muted);
+    font-size: 14px;
+    font-weight: 500;
+    transition:
+      background-color 150ms,
+      border-color 150ms,
+      color 150ms;
+  }
+  .choice:hover {
+    border-color: var(--line-strong);
+    color: var(--fg);
+  }
+  .choice-active,
+  .choice-active:hover {
+    border-color: color-mix(in srgb, var(--accent) 55%, transparent);
+    background: color-mix(in srgb, var(--accent) 12%, transparent);
+    color: var(--accent);
+  }
+  .choice-active::before {
+    content: '✓';
+    font-size: 12px;
+  }
+
+  /* Small clickable tokens (insert a column into a formula). */
+  .chip {
+    padding: 3px 8px;
+    border: 1px solid var(--line);
+    border-radius: 6px;
+    background: var(--surface);
+    color: var(--fg);
+    font-size: 12px;
+    transition:
+      background-color 150ms,
+      border-color 150ms;
+  }
+  .chip:hover {
+    border-color: var(--line-strong);
+    background: var(--surface-hover);
+  }
+
+  /* Plain-language summaries and notices inside forms. */
+  .note {
+    --note: var(--muted);
+    padding: 10px 12px;
+    border: 1px solid color-mix(in srgb, var(--note) 35%, transparent);
+    border-radius: 12px;
+    background: color-mix(in srgb, var(--note) 10%, transparent);
+    color: var(--fg);
+    font-size: 14px;
+    line-height: 1.5;
+  }
+  .note-accent {
+    --note: var(--accent);
+  }
+  .note-warn {
+    --note: var(--warn);
+  }
+
   /* Every number, id and date: mono, tabular. */
   .num {
     font-family: var(--font-mono);

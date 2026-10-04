@@ -73,6 +73,28 @@ ZIP signature followed by junk bytes: the error message appeared as expected.
 **To decide.** Whether to check that the file really is an `.xlsx` workbook before
 reading it.
 
+## 4. Re-saving a Simple formula that has an exemption nests the exemption again
+
+**What happens.** For a column using the Simple builder with an exemption, the stored
+formula already includes the exemption. Opening the column and pressing Save wraps it
+in the same exemption a second time, and again on every later save. The calculated
+value does not change (the outer condition decides first), but the formula text shown
+in the column list and written to a Live-Formulas Excel export keeps growing. Tiered,
+Compare and Progressive columns are not affected: their formula is rebuilt from the
+builder settings on each save.
+
+**Evidence.** Fake column PRGF (Simple formula `emoluments * 0.045`, exemption
+"Emoluments > 200,000 or Basic Salary < Allowances, use Travelling"). Opened and saved
+with no changes:
+
+- Before: `((emoluments > 200000) || (basicSalary < allowances)) ? (travelling) : (emoluments * 0.045)`
+- After: `((emoluments > 200000) || (basicSalary < allowances)) ? (travelling) : (((emoluments > 200000) || (basicSalary < allowances)) ? (travelling) : (emoluments * 0.045))`
+
+Measured on the form before and after its restyle; both behave the same.
+
+**To decide.** Whether the form should keep the un-wrapped expression separately, so
+saving again does not wrap it twice.
+
 ## Possible later feature: on-screen grand total
 
 The Totals screen shows one row per employee and no grand-total row; only the Excel

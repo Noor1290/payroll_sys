@@ -42,7 +42,7 @@ export default function Modal({ title, onClose, children, width = 'max-w-lg', re
         aria-label={title}
         className={`rise-in w-full ${width} rounded-2xl border border-line-strong bg-elevated shadow-pop`}
       >
-        <div className="flex items-start gap-3 px-5 pt-5">
+        <div className="flex items-start gap-3 px-6 pt-5">
           {icon && (
             <span className={`icon-tile icon-tile-round ${iconTone === 'danger' ? 'icon-tile-danger' : ''}`} aria-hidden="true">
               {icon}
@@ -56,7 +56,8 @@ export default function Modal({ title, onClose, children, width = 'max-w-lg', re
             <X aria-hidden="true" />
           </button>
         </div>
-        <div className="max-h-[75vh] overflow-y-auto px-5 pb-5 pt-4">{children}</div>
+        {/* Side padding is wide enough that a primary button's glow isn't clipped by the scroll area. */}
+        <div className="max-h-[75vh] overflow-y-auto px-6 pb-6 pt-4">{children}</div>
       </div>
     </div>
   )

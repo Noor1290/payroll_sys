@@ -28,15 +28,15 @@ export default function CompareColumnsBuilder({ availableColumns, columnAKey, op
 
   return (
     <div className="space-y-4">
-      <div className="rounded-md border border-indigo-200 bg-indigo-50 px-3 py-2 text-sm text-indigo-800">{summary}</div>
+      <div className="note note-accent">{summary}</div>
 
-      <div className="grid grid-cols-3 items-end gap-2">
+      <div className="grid items-end gap-2 sm:grid-cols-3">
         <div>
-          <label className="mb-1 block text-xs font-medium text-slate-600">Column A</label>
+          <label className="label">Column A</label>
           <select
             value={columnAKey ?? ''}
             onChange={(e) => patch({ columnAKey: e.target.value || null })}
-            className="w-full rounded-md border border-slate-300 px-2 py-1.5 text-sm focus:border-indigo-500 focus:outline-none"
+            className="field"
           >
             <option value="">— Select —</option>
             {availableColumns.map((c) => (
@@ -48,11 +48,11 @@ export default function CompareColumnsBuilder({ availableColumns, columnAKey, op
         </div>
 
         <div>
-          <label className="mb-1 block text-xs font-medium text-slate-600">Comparison</label>
+          <label className="label">Comparison</label>
           <select
             value={operator}
             onChange={(e) => patch({ operator: e.target.value })}
-            className="w-full rounded-md border border-slate-300 px-2 py-1.5 text-sm focus:border-indigo-500 focus:outline-none"
+            className="field"
           >
             {COMPARE_OPERATORS.map((op) => (
               <option key={op} value={op}>
@@ -63,11 +63,11 @@ export default function CompareColumnsBuilder({ availableColumns, columnAKey, op
         </div>
 
         <div>
-          <label className="mb-1 block text-xs font-medium text-slate-600">Column B</label>
+          <label className="label">Column B</label>
           <select
             value={columnBKey ?? ''}
             onChange={(e) => patch({ columnBKey: e.target.value || null })}
-            className="w-full rounded-md border border-slate-300 px-2 py-1.5 text-sm focus:border-indigo-500 focus:outline-none"
+            className="field"
           >
             <option value="">— Select —</option>
             {availableColumns.map((c) => (
@@ -80,25 +80,25 @@ export default function CompareColumnsBuilder({ availableColumns, columnAKey, op
       </div>
 
       <div>
-        <label className="mb-1 block text-xs font-medium text-slate-600">Result if TRUE</label>
+        <label className="label">Result if TRUE</label>
         <input
           value={trueExpr}
           onChange={(e) => patch({ trueExpr: e.target.value })}
           placeholder="e.g. 0, or Column B - Column A"
-          className="w-full rounded-md border border-slate-300 px-3 py-1.5 font-mono text-sm focus:border-indigo-500 focus:outline-none"
+          className="field font-mono"
         />
         <div className="mt-1 flex items-center gap-1.5">
           <button
             type="button"
             onClick={() => insertPlaceholder('trueExpr', 'Column A')}
-            className="rounded border border-slate-200 bg-slate-100 px-2 py-0.5 text-xs text-slate-700 hover:bg-slate-200"
+            className="chip"
           >
             + Column A
           </button>
           <button
             type="button"
             onClick={() => insertPlaceholder('trueExpr', 'Column B')}
-            className="rounded border border-slate-200 bg-slate-100 px-2 py-0.5 text-xs text-slate-700 hover:bg-slate-200"
+            className="chip"
           >
             + Column B
           </button>
@@ -106,30 +106,30 @@ export default function CompareColumnsBuilder({ availableColumns, columnAKey, op
       </div>
 
       <div>
-        <label className="mb-1 block text-xs font-medium text-slate-600">Result if FALSE</label>
+        <label className="label">Result if FALSE</label>
         <input
           value={falseExpr}
           onChange={(e) => patch({ falseExpr: e.target.value })}
           placeholder="e.g. 0, or Column B - Column A"
-          className="w-full rounded-md border border-slate-300 px-3 py-1.5 font-mono text-sm focus:border-indigo-500 focus:outline-none"
+          className="field font-mono"
         />
         <div className="mt-1 flex items-center gap-1.5">
           <button
             type="button"
             onClick={() => insertPlaceholder('falseExpr', 'Column A')}
-            className="rounded border border-slate-200 bg-slate-100 px-2 py-0.5 text-xs text-slate-700 hover:bg-slate-200"
+            className="chip"
           >
             + Column A
           </button>
           <button
             type="button"
             onClick={() => insertPlaceholder('falseExpr', 'Column B')}
-            className="rounded border border-slate-200 bg-slate-100 px-2 py-0.5 text-xs text-slate-700 hover:bg-slate-200"
+            className="chip"
           >
             + Column B
           </button>
         </div>
-        <p className="mt-1 text-xs text-slate-400">
+        <p className="hint">
           Enter a number, or an expression using "Column A" / "Column B" as placeholders for the two columns above.
         </p>
       </div>

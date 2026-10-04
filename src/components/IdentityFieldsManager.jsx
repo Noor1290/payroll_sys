@@ -23,61 +23,51 @@ export default function IdentityFieldsManager({ identityFields, idFieldKey, exis
   }
 
   return (
-    <div className="mb-6">
-      <div className="mb-3 flex items-start justify-between">
-        <div>
-          <h3 className="text-sm font-semibold uppercase tracking-wide text-slate-500">Identity Fields</h3>
-          <p className="text-xs text-slate-400">
+    <div className="mb-8">
+      <section className="card overflow-hidden">
+      <div className="flex flex-wrap items-center justify-between gap-x-4 gap-y-2 border-b border-line px-4 py-3">
+        <div className="min-w-0">
+          <h3 className="text-base font-semibold text-fg">Identity Fields</h3>
+          <p className="mt-0.5 text-xs text-muted">
             Always leftmost in the Employee Table, plain text, shared by every company.
           </p>
         </div>
-        <button
-          onClick={() => setEditing('new')}
-          className="rounded-md border border-slate-300 px-3 py-1 text-xs font-medium text-slate-600 hover:bg-slate-50"
-        >
+        <button onClick={() => setEditing('new')} className="btn btn-secondary btn-sm">
           + Add Identity Field
         </button>
       </div>
 
-      <div className="overflow-hidden rounded-lg border border-slate-200">
-        <table className="w-full text-sm">
-          <thead className="bg-slate-50 text-left text-xs font-medium uppercase tracking-wide text-slate-500">
-            <tr>
-              <th className="px-4 py-2">Name</th>
-              <th className="px-4 py-2">Key</th>
-              <th className="px-4 py-2">ID Field</th>
-              <th className="px-4 py-2 text-right">Actions</th>
+      <div className="overflow-x-auto">
+        <table className="w-full min-w-120 text-sm">
+          <thead className="text-left text-xs font-medium text-muted">
+            <tr className="border-b border-line">
+              <th className="px-4 py-2.5">Name</th>
+              <th className="px-4 py-2.5">Key</th>
+              <th className="px-4 py-2.5">ID Field</th>
+              <th className="px-4 py-2.5 text-right">Actions</th>
             </tr>
           </thead>
-          <tbody className="divide-y divide-slate-100">
+          <tbody className="divide-y divide-line">
             {identityFields.map((field) => (
-              <tr key={field.id}>
-                <td className="px-4 py-2 font-medium text-slate-700">{field.name}</td>
-                <td className="px-4 py-2 font-mono text-xs text-slate-500">{field.key}</td>
-                <td className="px-4 py-2">
+              <tr key={field.id} className="transition-colors hover:bg-surface-hover">
+                <td className="px-4 py-2.5 font-medium text-fg">{field.name}</td>
+                <td className="num px-4 py-2.5 text-xs text-muted">{field.key}</td>
+                <td className="px-4 py-2.5">
                   <button
                     onClick={() => onSetIdField(idFieldKey === field.key ? null : field.key)}
-                    className={`rounded-full border px-2 py-0.5 text-xs ${
-                      idFieldKey === field.key
-                        ? 'border-amber-400 bg-amber-100 text-amber-700'
-                        : 'border-slate-200 text-slate-400 hover:bg-slate-50'
+                    className={`badge normal-case transition-colors ${
+                      idFieldKey === field.key ? 'badge-warn' : 'hover:border-line-strong hover:text-fg'
                     }`}
                     title="Used for duplicate detection when importing from Excel"
                   >
                     {idFieldKey === field.key ? 'ID field ✓' : 'Set as ID field'}
                   </button>
                 </td>
-                <td className="px-4 py-2 text-right">
-                  <button
-                    onClick={() => setEditing(field)}
-                    className="mr-2 rounded px-2 py-1 text-xs text-indigo-600 hover:bg-indigo-50"
-                  >
+                <td className="whitespace-nowrap px-4 py-2.5 text-right">
+                  <button onClick={() => setEditing(field)} className="btn btn-ghost btn-sm text-xs text-accent">
                     Edit
                   </button>
-                  <button
-                    onClick={() => setDeleting(field)}
-                    className="rounded px-2 py-1 text-xs text-red-600 hover:bg-red-50"
-                  >
+                  <button onClick={() => setDeleting(field)} className="btn btn-ghost btn-sm text-xs text-danger">
                     Delete
                   </button>
                 </td>
@@ -85,7 +75,7 @@ export default function IdentityFieldsManager({ identityFields, idFieldKey, exis
             ))}
             {identityFields.length === 0 && (
               <tr>
-                <td colSpan={4} className="px-4 py-6 text-center text-slate-400">
+                <td colSpan={4} className="px-4 py-6 text-center text-muted">
                   No identity fields yet.
                 </td>
               </tr>
@@ -93,6 +83,7 @@ export default function IdentityFieldsManager({ identityFields, idFieldKey, exis
           </tbody>
         </table>
       </div>
+      </section>
 
       {editing && (
         <IdentityFieldFormModal

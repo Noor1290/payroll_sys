@@ -1,4 +1,5 @@
 import { useMemo, useRef, useState } from 'react'
+import { CircleAlert, Download, GripVertical, Upload, X } from 'lucide-react'
 import ColumnFormModal from './ColumnFormModal'
 import ConfirmDialog from './ConfirmDialog'
 import ColumnSetupImportModal from './ColumnSetupImportModal'
@@ -8,29 +9,33 @@ import { formatFormulaForDisplay } from '../lib/formulaEngine'
 
 function CategorySection({ category, ownColumns, otherColumns, onEdit, onDelete, onDragStart, onDrop, draggingId, formulaLabels }) {
   return (
-    <div className="mb-5">
-      <h3 className="mb-2 text-sm font-semibold text-slate-600">{category.label}</h3>
-      <div className="overflow-hidden rounded-lg border border-slate-200">
-        <table className="w-full text-sm">
-          <thead className="bg-slate-50 text-left text-xs font-medium uppercase tracking-wide text-slate-500">
-            <tr>
-              <th className="w-6 px-2 py-2"></th>
-              <th className="px-4 py-2">Name</th>
-              <th className="px-4 py-2">Key</th>
-              <th className="px-4 py-2">Type</th>
-              <th className="px-4 py-2">Formula</th>
-              <th className="px-4 py-2 text-right">Actions</th>
+    <section className="card mb-5 overflow-hidden">
+      <div className="border-b border-line px-4 py-3">
+        <h3 className="text-base font-semibold text-fg">{category.label}</h3>
+      </div>
+      <div className="overflow-x-auto">
+        <table className="w-full min-w-160 text-sm">
+          <thead className="text-left text-xs font-medium text-muted">
+            <tr className="border-b border-line">
+              <th className="w-8 px-2 py-2.5"></th>
+              <th className="px-4 py-2.5">Name</th>
+              <th className="px-4 py-2.5">Key</th>
+              <th className="px-4 py-2.5">Type</th>
+              <th className="px-4 py-2.5">Formula</th>
+              <th className="px-4 py-2.5 text-right">Actions</th>
             </tr>
           </thead>
-          <tbody className="divide-y divide-slate-100">
+          <tbody className="divide-y divide-line">
             {otherColumns.map((col) => (
-              <tr key={col.id} className="bg-slate-50/60 text-slate-400">
-                <td className="px-2 py-2"></td>
-                <td className="px-4 py-2">{col.name}</td>
-                <td className="px-4 py-2 font-mono text-xs">{col.key}</td>
-                <td className="px-4 py-2 capitalize">{col.type}</td>
-                <td className="px-4 py-2 font-mono text-xs">{col.formula ? formatFormulaForDisplay(col.formula, formulaLabels) : '—'}</td>
-                <td className="px-4 py-2 text-right text-xs italic">inherited</td>
+              <tr key={col.id} className="text-subtle">
+                <td className="px-2 py-2.5"></td>
+                <td className="px-4 py-2.5">{col.name}</td>
+                <td className="num px-4 py-2.5 text-xs">{col.key}</td>
+                <td className="px-4 py-2.5 capitalize">{col.type}</td>
+                <td className="num px-4 py-2.5 text-xs">{col.formula ? formatFormulaForDisplay(col.formula, formulaLabels) : '—'}</td>
+                <td className="px-4 py-2.5 text-right">
+                  <span className="badge normal-case">inherited</span>
+                </td>
               </tr>
             ))}
             {ownColumns.map((col) => (
@@ -43,35 +48,25 @@ function CategorySection({ category, ownColumns, otherColumns, onEdit, onDelete,
                   e.preventDefault()
                   onDrop(col.id)
                 }}
-                className={draggingId === col.id ? 'bg-indigo-50 opacity-60' : ''}
+                className={`transition-colors hover:bg-surface-hover ${draggingId === col.id ? 'bg-accent/10 opacity-60' : ''}`}
               >
-                <td className="cursor-grab px-2 py-2 text-center text-slate-300 active:cursor-grabbing" title="Drag to reorder">
-                  ⠿
+                <td className="cursor-grab px-2 py-2.5 text-center text-subtle active:cursor-grabbing" title="Drag to reorder">
+                  <GripVertical className="mx-auto h-4 w-4" aria-hidden="true" />
                 </td>
-                <td className="px-4 py-2 font-medium text-slate-700">{col.name}</td>
-                <td className="px-4 py-2 font-mono text-xs text-slate-500">{col.key}</td>
-                <td className="px-4 py-2 capitalize text-slate-600">
+                <td className="px-4 py-2.5 font-medium text-fg">{col.name}</td>
+                <td className="num px-4 py-2.5 text-xs text-muted">{col.key}</td>
+                <td className="whitespace-nowrap px-4 py-2.5 capitalize text-muted">
                   {col.type}
-                  {col.builderMode === 'tiered' && (
-                    <span className="ml-1 rounded bg-indigo-100 px-1 py-0.5 text-[10px] font-semibold normal-case text-indigo-700">
-                      tiered
-                    </span>
-                  )}
+                  {col.builderMode === 'tiered' && <span className="badge badge-glow ml-1.5 normal-case">tiered</span>}
                 </td>
-                <td className="px-4 py-2 font-mono text-xs text-slate-500">
+                <td className="num px-4 py-2.5 text-xs text-muted">
                   {col.formula ? formatFormulaForDisplay(col.formula, formulaLabels) : '—'}
                 </td>
-                <td className="px-4 py-2 text-right">
-                  <button
-                    onClick={() => onEdit(col)}
-                    className="mr-2 rounded px-2 py-1 text-xs text-indigo-600 hover:bg-indigo-50"
-                  >
+                <td className="whitespace-nowrap px-4 py-2.5 text-right">
+                  <button onClick={() => onEdit(col)} className="btn btn-ghost btn-sm text-xs text-accent">
                     Edit
                   </button>
-                  <button
-                    onClick={() => onDelete(col)}
-                    className="rounded px-2 py-1 text-xs text-red-600 hover:bg-red-50"
-                  >
+                  <button onClick={() => onDelete(col)} className="btn btn-ghost btn-sm text-xs text-danger">
                     Delete
                   </button>
                 </td>
@@ -79,7 +74,7 @@ function CategorySection({ category, ownColumns, otherColumns, onEdit, onDelete,
             ))}
             {ownColumns.length === 0 && otherColumns.length === 0 && (
               <tr>
-                <td colSpan={6} className="px-4 py-4 text-center text-slate-400">
+                <td colSpan={6} className="px-4 py-5 text-center text-muted">
                   No columns in this category yet.
                 </td>
               </tr>
@@ -87,7 +82,7 @@ function CategorySection({ category, ownColumns, otherColumns, onEdit, onDelete,
           </tbody>
         </table>
       </div>
-    </div>
+    </section>
   )
 }
 
@@ -213,12 +208,12 @@ export default function ColumnManager({
 
   return (
     <div>
-      <div className="mb-4 flex items-start justify-between">
-        <div>
-          <h2 className="text-lg font-semibold text-slate-800">{title}</h2>
-          {description && <p className="text-sm text-slate-500">{description}</p>}
+      <div className="mb-4 flex flex-wrap items-start justify-between gap-x-4 gap-y-3">
+        <div className="min-w-0">
+          <h2 className="text-2xl font-semibold tracking-tight text-fg">{title}</h2>
+          {description && <p className="mt-1 text-sm text-muted">{description}</p>}
         </div>
-        <div className="flex gap-2">
+        <div className="flex flex-wrap gap-2">
           <input
             ref={importInputRef}
             type="file"
@@ -226,33 +221,26 @@ export default function ColumnManager({
             className="hidden"
             onChange={handleImportFileSelected}
           />
-          <button
-            onClick={handleImportClick}
-            className="rounded-md border border-slate-300 bg-white px-3 py-1.5 text-sm font-medium text-slate-700 hover:bg-slate-50"
-          >
+          <button onClick={handleImportClick} className="btn btn-secondary">
+            <Upload aria-hidden="true" />
             Import Column Setup
           </button>
-          <button
-            onClick={handleExportColumns}
-            disabled={columns.length === 0}
-            className="rounded-md border border-slate-300 bg-white px-3 py-1.5 text-sm font-medium text-slate-700 hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-40 disabled:hover:bg-white"
-          >
+          <button onClick={handleExportColumns} disabled={columns.length === 0} className="btn btn-secondary">
+            <Download aria-hidden="true" />
             Export Column Setup
           </button>
-          <button
-            onClick={() => setEditing('new')}
-            className="rounded-md bg-indigo-600 px-3 py-1.5 text-sm font-medium text-white hover:bg-indigo-700"
-          >
+          <button onClick={() => setEditing('new')} className="btn btn-primary">
             + Add Column
           </button>
         </div>
       </div>
 
       {importError && (
-        <div className="mb-4 flex items-start justify-between gap-3 rounded-md border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700">
-          <span>{importError}</span>
-          <button onClick={() => setImportError(null)} className="text-red-400 hover:text-red-600">
-            ✕
+        <div role="alert" className="panel panel-danger mb-4 items-center text-sm">
+          <CircleAlert aria-hidden="true" />
+          <span className="min-w-0 flex-1">{importError}</span>
+          <button onClick={() => setImportError(null)} className="btn btn-ghost btn-icon btn-sm" aria-label="Dismiss">
+            <X aria-hidden="true" />
           </button>
         </div>
       )}

@@ -504,14 +504,7 @@ export default function App() {
               </div>
             )}
 
-            {/* TEMPORARY: screens not restyled yet keep their old light look
-                inside a panel, so nothing is unreadable in the meantime. */}
-            <div
-              key={activeTab}
-              className={`rise-in min-h-0 flex-1 overflow-auto ${
-                activeTab === 'employees' || activeTab === 'totals' ? '' : 'legacy-light rounded-2xl bg-slate-100 p-4'
-              }`}
-            >
+            <div key={activeTab} className="rise-in min-h-0 flex-1 overflow-auto">
               {activeTab === 'global' && (
                 <>
                   <IdentityFieldsManager
