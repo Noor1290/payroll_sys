@@ -1,0 +1,81 @@
+{
+  "autoMapping": {
+    "ID": "id",
+    "Surname": "Surname",
+    "Other names": "Other Names",
+    "Basic Salary": "— Skip —",
+    "Govt Increment": "GOVT INCREMENT",
+    "Full time / Part time": "Full time / Part time",
+    "Allowances": "Allowances",
+    "Travelling": "Travelling",
+    "Age 60+": "Age 60+",
+    "EDF": "EDF",
+    "Internal Note": "— Skip —"
+  },
+  "employees": [
+    {
+      "id": "<new>",
+      "values": {
+        "id": "F101",
+        "surname": "Importee",
+        "otherNames": "Uno Fake",
+        "basicSalary": 21000,
+        "govtIncrement": 0,
+        "fullTimePartTime": "Full time",
+        "allowances": 1500.5,
+        "travelling": 800,
+        "aged60": false,
+        "edf": 390000,
+        "internalNote": "first"
+      }
+    },
+    {
+      "id": "<new>",
+      "values": {
+        "id": "F102",
+        "surname": "Importee, Jr",
+        "otherNames": "Dos \"D\" Fake",
+        "basicSalary": 34500.75,
+        "govtIncrement": 250,
+        "fullTimePartTime": "Part time",
+        "allowances": 0,
+        "travelling": 0,
+        "aged60": true,
+        "edf": 0,
+        "internalNote": ""
+      }
+    },
+    {
+      "id": "<new>",
+      "values": {
+        "id": "F103",
+        "surname": "Importee",
+        "otherNames": "Tres Fake",
+        "basicSalary": 0,
+        "govtIncrement": 0,
+        "fullTimePartTime": "",
+        "allowances": 0,
+        "travelling": 0,
+        "aged60": true,
+        "edf": 130000,
+        "internalNote": "not a number"
+      }
+    },
+    {
+      "id": "<new>",
+      "values": {
+        "id": "F104",
+        "surname": "Importee",
+        "otherNames": "Cuatro Fake",
+        "basicSalary": 60000,
+        "govtIncrement": 0,
+        "fullTimePartTime": "Full time",
+        "allowances": 2500,
+        "travelling": 1200,
+        "aged60": true,
+        "edf": 500000,
+        "internalNote": ""
+      }
+    }
+  ]
+}

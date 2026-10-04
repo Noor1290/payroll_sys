@@ -1,0 +1,98 @@
+[
+  {
+    "id": "<new>",
+    "values": {
+      "id": "F001",
+      "surname": "Testeur",
+      "otherNames": "Alpha Fake",
+      "basicSalary": 18115,
+      "govtIncrement": 0,
+      "fullTimePartTime": "Full time",
+      "allowances": 2000,
+      "travelling": 1500,
+      "aged60": false,
+      "edf": 390000,
+      "internalNote": ""
+    }
+  },
+  {
+    "id": "<new>",
+    "values": {
+      "id": "F002",
+      "surname": "Exemple, Jr",
+      "otherNames": "Beta \"B\" Fake",
+      "basicSalary": 48000,
+      "govtIncrement": 500,
+      "fullTimePartTime": "Full time",
+      "allowances": 1500,
+      "travelling": 0,
+      "aged60": false,
+      "edf": 0,
+      "internalNote": "check, \"quoted\""
+    }
+  },
+  {
+    "id": "<new>",
+    "values": {
+      "id": "F003",
+      "surname": "Specimen",
+      "otherNames": "Gamma Fake",
+      "basicSalary": 250000,
+      "govtIncrement": 0,
+      "fullTimePartTime": "Full time",
+      "allowances": 10000.555,
+      "travelling": 0,
+      "aged60": false,
+      "edf": 500000,
+      "internalNote": ""
+    }
+  },
+  {
+    "id": "<new>",
+    "values": {
+      "id": "F004",
+      "surname": "Dummy",
+      "otherNames": "Delta Fake",
+      "basicSalary": 30000.005,
+      "govtIncrement": 635,
+      "fullTimePartTime": "Part time",
+      "allowances": 0,
+      "travelling": 750.5,
+      "aged60": true,
+      "edf": 1000000,
+      "internalNote": "part time"
+    }
+  },
+  {
+    "id": "<new>",
+    "values": {
+      "id": "F005",
+      "surname": "Placeholder",
+      "otherNames": "Epsilon Fake",
+      "basicSalary": 0,
+      "govtIncrement": 0,
+      "fullTimePartTime": "",
+      "allowances": 5000,
+      "travelling": 300,
+      "aged60": true,
+      "edf": 0,
+      "internalNote": ""
+    }
+  },
+  {
+    "id": "<new>",
+    "values": {
+      "id": "F006",
+      "surname": "Blank",
+      "otherNames": "Zeta Fake",
+      "basicSalary": 0,
+      "govtIncrement": 0,
+      "fullTimePartTime": "",
+      "allowances": 0,
+      "travelling": 0,
+      "aged60": false,
+      "edf": 0,
+      "internalNote": ""
+    }
+  }
+]
