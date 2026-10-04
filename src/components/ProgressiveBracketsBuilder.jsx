@@ -44,6 +44,7 @@ export default function ProgressiveBracketsBuilder({ availableColumns, baseKey, 
         <label className="label">Base value column</label>
         <select
           value={baseKey ?? ''}
+          aria-label="Base value column"
           onChange={(e) => setBaseKey(e.target.value || null)}
           className="field"
         >
@@ -70,6 +71,7 @@ export default function ProgressiveBracketsBuilder({ availableColumns, baseKey, 
                     type="number"
                     value={b.width}
                     onChange={(e) => updateBracket(i, { width: e.target.value === '' ? '' : Number(e.target.value) })}
+                    aria-label="width"
                     placeholder="width"
                     className="field num w-32 text-right"
                   />
@@ -79,6 +81,7 @@ export default function ProgressiveBracketsBuilder({ availableColumns, baseKey, 
                   type="number"
                   value={b.rate}
                   onChange={(e) => updateBracket(i, { rate: e.target.value === '' ? '' : Number(e.target.value) })}
+                  aria-label="rate"
                   placeholder="rate"
                   className="field num w-24 text-right"
                 />

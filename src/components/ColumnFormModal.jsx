@@ -289,6 +289,7 @@ export default function ColumnFormModal({
             className="field"
             value={name}
             onChange={(e) => handleNameChange(e.target.value)}
+            aria-label="Name"
             placeholder="e.g. Basic Salary"
             autoFocus
           />
@@ -298,6 +299,7 @@ export default function ColumnFormModal({
           <label className="label">Category</label>
           <select
             value={category}
+            aria-label="Category"
             onChange={(e) => handleCategoryChange(e.target.value)}
             className="field"
           >
@@ -357,6 +359,7 @@ export default function ColumnFormModal({
               setKeyTouched(true)
               setKey(e.target.value)
             }}
+            aria-label="Key"
             placeholder="basicSalary"
           />
           {autoAdjustedKey && (
@@ -458,6 +461,7 @@ export default function ColumnFormModal({
             <label className="label">Decimal places</label>
             <select
               value={decimals}
+              aria-label="Decimal places"
               onChange={(e) => setDecimals(Number(e.target.value))}
               className="field w-32"
             >
@@ -572,6 +576,7 @@ export default function ColumnFormModal({
                   rows={3}
                   value={formula}
                   onChange={(e) => setFormula(e.target.value)}
+                  aria-label="Formula expression"
                   placeholder="basicSalary * 0.03 + bonus - deductions"
                 />
                 <div className="mt-2">

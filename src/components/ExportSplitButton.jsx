@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
 import { ChevronDown, FileSpreadsheet } from 'lucide-react'
+import { useFocusScope } from '../hooks/useFocusScope'
 
 const MENU_ITEM = 'block w-full px-3 py-2 text-left text-sm text-fg transition-colors hover:bg-surface-hover'
 const MENU_HINT = 'mt-0.5 block text-xs font-normal text-muted'
@@ -11,6 +12,8 @@ const MENU_HINT = 'mt-0.5 block text-xs font-normal text-muted'
 export default function ExportSplitButton({ onExport, onExportPdfFill }) {
   const [open, setOpen] = useState(false)
   const containerRef = useRef(null)
+  // Keyboard: Escape closes the menu and focus returns to its button.
+  useFocusScope(containerRef, { active: open, trap: false, onEscape: () => setOpen(false) })
 
   useEffect(() => {
     function handleClickOutside(e) {

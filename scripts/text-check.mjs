@@ -90,6 +90,13 @@ try {
     console.log('')
   }
   console.log(unapproved === 0 ? 'Every difference is on the approved list.' : `${unapproved} difference(s) are NOT on the approved list.`)
+
+  // Form controls with no accessible name, in the working tree and (for comparison) the base.
+  const unlabelled = (label) => JSON.parse(fs.readFileSync(path.join(work, `${label}.unlabelled.json`), 'utf8'))
+  const now = unlabelled('current')
+  console.log(`\nForm controls with no accessible name: ${now.length} (base commit: ${unlabelled('base').length})`)
+  for (const u of now) console.log(`  ${u}`)
+  if (now.length) unapproved++
   fs.writeFileSync(path.join(work, 'differences.json'), JSON.stringify(perScreen, null, 2))
   process.exitCode = unapproved === 0 ? 0 : 1
 } finally {

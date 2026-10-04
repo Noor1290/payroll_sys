@@ -40,6 +40,7 @@ export default function IdentityFieldFormModal({ initial, existingKeys, onSave, 
             className="field"
             value={name}
             onChange={(e) => handleNameChange(e.target.value)}
+            aria-label="Name"
             placeholder="e.g. Employee Code"
             autoFocus
           />
@@ -54,6 +55,7 @@ export default function IdentityFieldFormModal({ initial, existingKeys, onSave, 
               setKeyTouched(true)
               setKey(e.target.value)
             }}
+            aria-label="Key"
             placeholder="employeeCode"
           />
         </div>

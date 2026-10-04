@@ -91,6 +91,7 @@ export default function CompanyDetailsModal({ company, otherCompanies, onSave, o
             <label className="label">Company Name</label>
             <input
               className="field"
+              aria-label="Company Name"
               value={name}
               onChange={(e) => {
                 setName(e.target.value)
@@ -105,6 +106,7 @@ export default function CompanyDetailsModal({ company, otherCompanies, onSave, o
             <textarea
               rows={3}
               className="field"
+              aria-label="Address"
               value={address}
               onChange={(e) => {
                 setAddress(e.target.value)
@@ -118,6 +120,7 @@ export default function CompanyDetailsModal({ company, otherCompanies, onSave, o
             <label className="label">BRN</label>
             <input
               className="field"
+              aria-label="BRN"
               value={brn}
               onChange={(e) => {
                 setBrn(e.target.value)
@@ -132,6 +135,7 @@ export default function CompanyDetailsModal({ company, otherCompanies, onSave, o
               {otherCompanies.length > 0 && (
                 <select
                   value={copyFromId}
+                  aria-label="Copy fields from…"
                   onChange={(e) => applyCopyFrom(e.target.value)}
                   className="field field-cell w-auto max-w-full"
                 >
@@ -172,12 +176,14 @@ export default function CompanyDetailsModal({ company, otherCompanies, onSave, o
                     <input
                       value={field.label}
                       onChange={(e) => updateCustomField(field.id, { label: e.target.value })}
+                      aria-label="Label, e.g. VAT No"
                       placeholder="Label, e.g. VAT No"
                       className="field font-medium"
                     />
                     <textarea
                       value={field.value}
                       onChange={(e) => updateCustomField(field.id, { value: e.target.value })}
+                      aria-label="Value"
                       placeholder="Value"
                       rows={1}
                       className="field"

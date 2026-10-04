@@ -60,9 +60,26 @@ function snapshot() {
   return out
 }
 
+// Form controls with no accessible name (aria-label, aria-labelledby, title,
+// a wrapping <label>, or a <label for>). Placeholders and option text don't count.
+const unlabelled = new Set()
+function sweepUnlabelled(step) {
+  for (const el of document.querySelectorAll('input, select, textarea')) {
+    if (el.type === 'file' || el.type === 'hidden') continue
+    const named =
+      el.getAttribute('aria-label') ||
+      el.getAttribute('aria-labelledby') ||
+      el.getAttribute('title') ||
+      el.closest('label') ||
+      (el.id && document.querySelector(`label[for="${el.id}"]`))
+    if (!named) unlabelled.add(`${el.tagName.toLowerCase()}${el.type ? `[${el.type}]` : ''} placeholder="${el.getAttribute('placeholder') ?? ''}" (first seen: ${step})`)
+  }
+}
+
 function snap(name) {
   expect(collected[name], `duplicate step name ${name}`).toBeUndefined()
   collected[name] = snapshot()
+  sweepUnlabelled(name)
 }
 
 // ---- driving the app ----
@@ -370,4 +387,5 @@ test('collect every visible string', async () => {
 
   expect(OUT, 'TEXT_CHECK_OUT').toBeTruthy()
   fs.writeFileSync(OUT, JSON.stringify(collected, null, 2))
+  fs.writeFileSync(OUT.replace(/\.json$/, '.unlabelled.json'), JSON.stringify([...unlabelled].sort(), null, 2))
 }, 120000)

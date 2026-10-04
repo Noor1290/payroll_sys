@@ -35,6 +35,7 @@ export default function CompareColumnsBuilder({ availableColumns, columnAKey, op
           <label className="label">Column A</label>
           <select
             value={columnAKey ?? ''}
+            aria-label="Column A"
             onChange={(e) => patch({ columnAKey: e.target.value || null })}
             className="field"
           >
@@ -51,6 +52,7 @@ export default function CompareColumnsBuilder({ availableColumns, columnAKey, op
           <label className="label">Comparison</label>
           <select
             value={operator}
+            aria-label="Comparison"
             onChange={(e) => patch({ operator: e.target.value })}
             className="field"
           >
@@ -66,6 +68,7 @@ export default function CompareColumnsBuilder({ availableColumns, columnAKey, op
           <label className="label">Column B</label>
           <select
             value={columnBKey ?? ''}
+            aria-label="Column B"
             onChange={(e) => patch({ columnBKey: e.target.value || null })}
             className="field"
           >
@@ -83,6 +86,7 @@ export default function CompareColumnsBuilder({ availableColumns, columnAKey, op
         <label className="label">Result if TRUE</label>
         <input
           value={trueExpr}
+          aria-label="Result if TRUE"
           onChange={(e) => patch({ trueExpr: e.target.value })}
           placeholder="e.g. 0, or Column B - Column A"
           className="field font-mono"
@@ -109,6 +113,7 @@ export default function CompareColumnsBuilder({ availableColumns, columnAKey, op
         <label className="label">Result if FALSE</label>
         <input
           value={falseExpr}
+          aria-label="Result if FALSE"
           onChange={(e) => patch({ falseExpr: e.target.value })}
           placeholder="e.g. 0, or Column B - Column A"
           className="field font-mono"

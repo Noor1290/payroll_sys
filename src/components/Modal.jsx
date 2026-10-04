@@ -1,11 +1,16 @@
-import { useId } from 'react'
+import { useId, useRef } from 'react'
 import { X } from 'lucide-react'
+import { useFocusScope } from '../hooks/useFocusScope'
 
 // Shared dialog shell: centred on a dimmed, blurred overlay, with a round
 // tinted icon, the title and an optional one-line description in the header.
 export default function Modal({ title, onClose, children, width = 'max-w-lg', icon, iconTone, description }) {
   // The dialog is named by its own visible title, not by a separate label.
   const titleId = useId()
+  // Keyboard: focus moves in, Tab stays inside, Escape uses the same close
+  // handler as the close button, focus returns to the opener.
+  const dialogRef = useRef(null)
+  useFocusScope(dialogRef, { onEscape: onClose })
 
   return (
     <div
@@ -15,10 +20,12 @@ export default function Modal({ title, onClose, children, width = 'max-w-lg', ic
       }}
     >
       <div
+        ref={dialogRef}
+        tabIndex={-1}
         role="dialog"
         aria-modal="true"
         aria-labelledby={titleId}
-        className={`rise-in w-full ${width} rounded-2xl border border-line-strong bg-elevated shadow-pop`}
+        className={`rise-in w-full outline-none ${width} rounded-2xl border border-line-strong bg-elevated shadow-pop`}
       >
         <div className="flex items-start gap-3 px-6 pt-5">
           {icon && (

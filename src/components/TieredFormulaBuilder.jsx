@@ -47,6 +47,7 @@ export default function TieredFormulaBuilder({ availableColumns, baseKey, tiers,
         <label className="label">Base value column</label>
         <select
           value={baseKey ?? ''}
+          aria-label="Base value column"
           onChange={(e) => setBaseKey(e.target.value || null)}
           className="field"
         >
@@ -66,6 +67,7 @@ export default function TieredFormulaBuilder({ availableColumns, baseKey, tiers,
             <div key={i} className="flex items-center gap-2">
               <select
                 value={tier.operator}
+                aria-label="Tiers"
                 onChange={(e) => updateTier(i, { operator: e.target.value })}
                 className="field w-auto max-w-full"
               >
@@ -78,6 +80,7 @@ export default function TieredFormulaBuilder({ availableColumns, baseKey, tiers,
                 type="number"
                 value={tier.threshold}
                 onChange={(e) => updateTier(i, { threshold: e.target.value === '' ? '' : Number(e.target.value) })}
+                aria-label="amount"
                 placeholder="amount"
                 className="field num w-32 text-right"
               />
@@ -86,6 +89,7 @@ export default function TieredFormulaBuilder({ availableColumns, baseKey, tiers,
                 type="number"
                 value={tier.rate}
                 onChange={(e) => updateTier(i, { rate: e.target.value === '' ? '' : Number(e.target.value) })}
+                aria-label="rate"
                 placeholder="rate"
                 className="field num w-24 text-right"
               />
@@ -120,6 +124,7 @@ export default function TieredFormulaBuilder({ availableColumns, baseKey, tiers,
             type="number"
             value={cap}
             onChange={(e) => setCapValue(e.target.value === '' ? '' : Number(e.target.value))}
+            aria-label="maximum amount"
             placeholder="maximum amount"
             className="field num mt-2 w-40 text-right"
           />

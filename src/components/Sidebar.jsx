@@ -1,7 +1,8 @@
-import { useState } from 'react'
+import { useRef, useState } from 'react'
 import { Info, Trash2, WalletCards, X } from 'lucide-react'
 import ConfirmDialog from './ConfirmDialog'
 import ThemeToggle from './ThemeToggle'
+import { useFocusScope } from '../hooks/useFocusScope'
 
 const ROW_ACTION =
   'ml-1 inline-flex h-6 w-6 shrink-0 items-center justify-center rounded-md text-muted transition-colors hover:bg-surface-hover hover:text-fg focus-visible:opacity-100 group-focus-within:opacity-100 group-hover:opacity-100'
@@ -23,6 +24,12 @@ export default function Sidebar({
   const [renameValue, setRenameValue] = useState('')
   const [deletingCompany, setDeletingCompany] = useState(null)
 
+  // Keyboard, only while it is open as a drawer at narrow widths: focus
+  // moves in, Tab stays inside, Escape closes it, focus returns to the menu button.
+  const asideRef = useRef(null)
+  const isDrawer = open && window.matchMedia?.('(max-width: 767.98px)').matches
+  useFocusScope(asideRef, { active: Boolean(isDrawer), onEscape: onClose })
+
   function startRename(company) {
     setRenamingId(company.id)
     setRenameValue(company.name)
@@ -38,7 +45,9 @@ export default function Sidebar({
       {open && <div className="fixed inset-0 z-30 bg-black/60 md:hidden" onClick={onClose} aria-hidden="true" />}
 
       <aside
-        className={`flex h-full w-64 shrink-0 flex-col border-r border-line bg-elevated transition-transform duration-150 max-md:fixed max-md:inset-y-0 max-md:left-0 max-md:z-40 max-md:shadow-pop md:relative md:z-10 md:bg-surface ${
+        ref={asideRef}
+        tabIndex={-1}
+        className={`outline-none flex h-full w-64 shrink-0 flex-col border-r border-line bg-elevated transition-transform duration-150 max-md:fixed max-md:inset-y-0 max-md:left-0 max-md:z-40 max-md:shadow-pop md:relative md:z-10 md:bg-surface ${
           open ? 'max-md:translate-x-0' : 'max-md:invisible max-md:-translate-x-full'
         }`}
       >
@@ -71,6 +80,7 @@ export default function Sidebar({
                 {renamingId === company.id ? (
                   <input
                     autoFocus
+                    data-own-escape
                     aria-label="Company name"
                     className="field field-cell"
                     value={renameValue}

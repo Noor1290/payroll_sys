@@ -90,6 +90,7 @@ export default function ExemptionConditionBuilder({ availableColumns, exemption,
                   <div className="flex flex-wrap items-center gap-2">
                     <select
                       value={cond.columnKey ?? ''}
+                      aria-label="Checkbox column"
                       onChange={(e) => updateCondition(i, { columnKey: e.target.value || null })}
                       className="field w-auto max-w-full"
                     >
@@ -102,6 +103,7 @@ export default function ExemptionConditionBuilder({ availableColumns, exemption,
                     </select>
                     <select
                       value={cond.checked ? 'ticked' : 'unticked'}
+                      aria-label="Checkbox state"
                       onChange={(e) => updateCondition(i, { checked: e.target.value === 'ticked' })}
                       className="field w-auto max-w-full"
                     >
@@ -116,6 +118,7 @@ export default function ExemptionConditionBuilder({ availableColumns, exemption,
                   <div className="flex flex-wrap items-center gap-2">
                     <select
                       value={cond.columnKey ?? ''}
+                      aria-label="Column"
                       onChange={(e) => updateCondition(i, { columnKey: e.target.value || null })}
                       className="field w-auto max-w-full"
                     >
@@ -128,6 +131,7 @@ export default function ExemptionConditionBuilder({ availableColumns, exemption,
                     </select>
                     <select
                       value={cond.operator}
+                      aria-label="Comparison"
                       onChange={(e) => updateCondition(i, { operator: e.target.value })}
                       className="field w-auto max-w-full"
                     >
@@ -139,6 +143,7 @@ export default function ExemptionConditionBuilder({ availableColumns, exemption,
                     </select>
                     <select
                       value={cond.compareToType}
+                      aria-label="Compare to"
                       onChange={(e) => updateCondition(i, { compareToType: e.target.value })}
                       className="field w-auto max-w-full"
                     >
@@ -149,12 +154,14 @@ export default function ExemptionConditionBuilder({ availableColumns, exemption,
                       <input
                         type="number"
                         value={cond.compareToValue}
+                        aria-label="a fixed value"
                         onChange={(e) => updateCondition(i, { compareToValue: e.target.value === '' ? '' : Number(e.target.value) })}
                         className="field num w-28 text-right"
                       />
                     ) : (
                       <select
                         value={cond.compareToColumnKey ?? ''}
+                        aria-label="another column"
                         onChange={(e) => updateCondition(i, { compareToColumnKey: e.target.value || null })}
                         className="field w-auto max-w-full"
                       >
@@ -185,6 +192,7 @@ export default function ExemptionConditionBuilder({ availableColumns, exemption,
                 Combine with
                 <select
                   value={exemption.combineWith}
+                  aria-label="Combine with"
                   onChange={(e) => patch({ combineWith: e.target.value })}
                   className="field field-cell w-auto"
                 >
@@ -200,6 +208,7 @@ export default function ExemptionConditionBuilder({ availableColumns, exemption,
             <div className="flex flex-wrap items-center gap-2">
               <select
                 value={exemption.resultType}
+                aria-label="Result when the condition is met"
                 onChange={(e) => patch({ resultType: e.target.value })}
                 className="field w-auto max-w-full"
               >
@@ -210,12 +219,14 @@ export default function ExemptionConditionBuilder({ availableColumns, exemption,
                 <input
                   type="number"
                   value={exemption.resultValue}
+                  aria-label="Fixed value"
                   onChange={(e) => patch({ resultValue: e.target.value === '' ? '' : Number(e.target.value) })}
                   className="field num w-28 text-right"
                 />
               ) : (
                 <select
                   value={exemption.resultColumnKey ?? ''}
+                  aria-label="Value of another column"
                   onChange={(e) => patch({ resultColumnKey: e.target.value || null })}
                   className="field w-auto max-w-full"
                 >

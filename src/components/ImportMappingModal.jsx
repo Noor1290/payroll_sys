@@ -58,6 +58,7 @@ export default function ImportMappingModal({ headers, rows, systemFields, initia
                   </span>
                   <select
                     value={mapping[field.key] ?? ''}
+                    aria-label={field.name}
                     onChange={(e) => setFieldMapping(field.key, e.target.value)}
                     className="field field-cell min-w-0 flex-1"
                   >
