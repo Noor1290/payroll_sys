@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
+import { Building2, CircleAlert, Copy, Menu, Trash2, Upload, X } from 'lucide-react'
 import Sidebar from './components/Sidebar'
 import ColumnManager from './components/ColumnManager'
 import IdentityFieldsManager from './components/IdentityFieldsManager'
@@ -62,6 +63,10 @@ export default function App() {
   const [detailsCompanyId, setDetailsCompanyId] = useState(null)
   const [copyPreviousMonthData, setCopyPreviousMonthData] = useState(null) // { employees, year, month } | null
   const [loaded, setLoaded] = useState(false)
+  // Display only: the message shown when an Excel file can't be read, and
+  // whether the company list is open as a drawer (narrow widths).
+  const [importError, setImportError] = useState(null)
+  const [sidebarOpen, setSidebarOpen] = useState(false)
   const fileInputRef = useRef(null)
 
   // The currently selected month's employees for the active company. Kept
@@ -286,6 +291,7 @@ export default function App() {
 
   // ---- Import from Excel ----
   function handleImportClick() {
+    setImportError(null)
     fileInputRef.current?.click()
   }
 
@@ -303,7 +309,7 @@ export default function App() {
       setImportData({ headers, rows, systemFields, initialMapping, recognized, autoNote, meta })
     } catch (err) {
       console.error('Failed to read Excel file:', err)
-      window.alert('Could not read that file. Please make sure it is a valid .xlsx file.')
+      setImportError('Could not read that file. Please make sure it is a valid .xlsx file.')
     }
   }
 
@@ -368,36 +374,61 @@ export default function App() {
   )
 
   return (
-    <div className="flex h-screen bg-slate-100 text-slate-900">
+    <div className="relative isolate flex h-dvh overflow-hidden bg-canvas text-fg">
+      {/* Decorative background. Kept faint and still on the table screens. */}
+      <div className="aurora" data-quiet={activeTab === 'employees' || activeTab === 'totals'} aria-hidden="true">
+        <span />
+        <span />
+        <span />
+      </div>
+
       <Sidebar
         companies={companies}
         activeCompanyId={activeCompanyId}
         onSelect={(id) => {
           setActiveCompanyId(id)
           setActiveTab('employees')
+          setSidebarOpen(false)
         }}
         onAddCompany={handleAddCompany}
         onRenameCompany={handleRenameCompany}
         onDeleteCompany={handleDeleteCompany}
         onOpenDetails={setDetailsCompanyId}
+        open={sidebarOpen}
+        onClose={() => setSidebarOpen(false)}
       />
 
-      <main className="flex-1 overflow-hidden p-6">
+      <main className="relative z-10 flex min-w-0 flex-1 flex-col overflow-hidden p-4 sm:p-6">
+        {/* Narrow widths only: the company list is a drawer, opened from here. */}
+        <button
+          onClick={() => setSidebarOpen(true)}
+          className="btn btn-secondary btn-icon mb-3 shrink-0 md:hidden"
+          aria-label="Open company list"
+        >
+          <Menu aria-hidden="true" />
+        </button>
+
         {!activeCompany ? (
-          <div className="flex h-full flex-col items-center justify-center text-slate-400">
-            <p className="text-lg font-medium">No company selected</p>
-            <p className="text-sm">Create or select a company from the sidebar to get started.</p>
+          <div className="flex min-h-0 flex-1 flex-col items-center justify-center gap-1 text-center">
+            <span className="icon-tile icon-tile-neutral mb-3" aria-hidden="true">
+              <Building2 />
+            </span>
+            <p className="text-base font-semibold text-fg">No company selected</p>
+            <p className="text-sm text-muted">Create or select a company from the sidebar to get started.</p>
           </div>
         ) : (
-          <div className="flex h-full flex-col">
-            <div className="mb-4 flex items-center justify-between">
-              <div className="flex gap-1 rounded-lg bg-slate-200/70 p-1">
+          <div className="flex min-h-0 flex-1 flex-col">
+            <div className="mb-4 flex flex-wrap items-center gap-x-3 gap-y-2">
+              <div className="flex max-w-full gap-1 overflow-x-auto rounded-[10px] border border-line bg-surface p-1 shadow-inner-glow">
                 {TABS.map((tab) => (
                   <button
                     key={tab.id}
                     onClick={() => setActiveTab(tab.id)}
-                    className={`rounded-md px-4 py-1.5 text-sm font-medium transition ${
-                      activeTab === tab.id ? 'bg-white text-indigo-700 shadow-sm' : 'text-slate-600 hover:text-slate-800'
+                    aria-current={activeTab === tab.id ? 'page' : undefined}
+                    className={`h-8 shrink-0 whitespace-nowrap rounded-md px-3 text-sm font-medium transition-colors ${
+                      activeTab === tab.id
+                        ? 'bg-accent/15 text-accent shadow-[inset_0_0_0_1px_color-mix(in_srgb,var(--accent)_35%,transparent)]'
+                        : 'text-muted hover:bg-surface-hover hover:text-fg'
                     }`}
                   >
                     {tab.label}
@@ -406,7 +437,7 @@ export default function App() {
               </div>
 
               {activeTab === 'employees' && (
-                <div className="flex gap-2">
+                <div className="ml-auto flex flex-wrap justify-end gap-2">
                   <input
                     ref={fileInputRef}
                     type="file"
@@ -414,10 +445,8 @@ export default function App() {
                     className="hidden"
                     onChange={handleFileSelected}
                   />
-                  <button
-                    onClick={handleImportClick}
-                    className="rounded-md border border-slate-300 bg-white px-3 py-1.5 text-sm font-medium text-slate-700 hover:bg-slate-50"
-                  >
+                  <button onClick={handleImportClick} className="btn btn-secondary">
+                    <Upload aria-hidden="true" />
                     Import from Excel
                   </button>
                   <ExportSplitButton onExport={handleOpenExportPreview} onExportPdfFill={setPdfFillFormat} />
@@ -439,20 +468,35 @@ export default function App() {
                     onClick={handleOpenCopyPreviousMonth}
                     disabled={!previousPeriodHasData}
                     title={previousPeriodHasData ? undefined : 'No data in the previous month for this company'}
-                    className="rounded-md border border-slate-300 bg-white px-3 py-1.5 text-sm font-medium text-slate-700 hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-40 disabled:hover:bg-white"
+                    className="btn btn-secondary"
                   >
+                    <Copy aria-hidden="true" />
                     Copy from Previous Month
                   </button>
                   <button
                     onClick={() => setConfirmingDeleteAll(true)}
                     disabled={periodEmployees.length === 0}
-                    className="rounded-md border border-red-300 bg-white px-3 py-1.5 text-sm font-medium text-red-600 hover:bg-red-50 disabled:cursor-not-allowed disabled:opacity-40 disabled:hover:bg-white"
+                    className="btn btn-danger"
                   >
+                    <Trash2 aria-hidden="true" />
                     Delete All Employees
                   </button>
                 </div>
               )}
             </div>
+
+            {activeTab === 'employees' && importError && (
+              <div role="alert" className="panel panel-danger rise-in mb-4 items-center text-sm">
+                <CircleAlert aria-hidden="true" />
+                <span className="min-w-0 flex-1">{importError}</span>
+                <button onClick={handleImportClick} className="btn btn-secondary btn-sm">
+                  Try again
+                </button>
+                <button onClick={() => setImportError(null)} className="btn btn-ghost btn-icon btn-sm" aria-label="Dismiss">
+                  <X aria-hidden="true" />
+                </button>
+              </div>
+            )}
 
             {activeTab === 'employees' && selectedYear && selectedMonth && (
               <div className="mb-4">
@@ -460,7 +504,14 @@ export default function App() {
               </div>
             )}
 
-            <div className="flex-1 overflow-auto">
+            {/* TEMPORARY: screens not restyled yet keep their old light look
+                inside a panel, so nothing is unreadable in the meantime. */}
+            <div
+              key={activeTab}
+              className={`rise-in min-h-0 flex-1 overflow-auto ${
+                activeTab === 'employees' ? '' : 'legacy-light rounded-2xl bg-slate-100 p-4'
+              }`}
+            >
               {activeTab === 'global' && (
                 <>
                   <IdentityFieldsManager

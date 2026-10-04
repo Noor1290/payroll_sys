@@ -1,4 +1,8 @@
 import { useEffect, useRef, useState } from 'react'
+import { ChevronDown, FileSpreadsheet } from 'lucide-react'
+
+const MENU_ITEM = 'block w-full px-3 py-2 text-left text-sm text-fg transition-colors hover:bg-surface-hover'
+const MENU_HINT = 'mt-0.5 block text-xs font-normal text-muted'
 
 // Main button click = "Export with Values" (the existing/default behavior,
 // unchanged). The chevron opens a small menu offering both xlsx options
@@ -28,50 +32,38 @@ export default function ExportSplitButton({ onExport, onExportPdfFill }) {
 
   return (
     <div className="relative inline-flex" ref={containerRef}>
-      <button
-        onClick={() => choose('values')}
-        className="rounded-l-md bg-emerald-600 px-3 py-1.5 text-sm font-medium text-white hover:bg-emerald-700"
-      >
+      <button onClick={() => choose('values')} className="btn btn-primary rounded-r-none">
+        <FileSpreadsheet aria-hidden="true" />
         Export to Excel
       </button>
       <button
         onClick={() => setOpen((o) => !o)}
-        className="rounded-r-md border-l border-emerald-700 bg-emerald-600 px-2 py-1.5 text-sm font-medium text-white hover:bg-emerald-700"
+        className="btn btn-primary btn-icon ml-px w-9 rounded-l-none"
         aria-label="More export options"
+        aria-haspopup="menu"
+        aria-expanded={open}
       >
-        ▾
+        <ChevronDown aria-hidden="true" />
       </button>
 
       {open && (
-        <div className="absolute right-0 top-full z-30 mt-1 w-56 rounded-md border border-slate-200 bg-white py-1 text-left shadow-lg">
-          <button
-            onClick={() => choose('values')}
-            className="block w-full px-3 py-2 text-left text-sm text-slate-700 hover:bg-slate-50"
-          >
+        <div className="rise-in absolute right-0 top-full z-30 mt-2 w-64 overflow-hidden rounded-xl border border-line-strong bg-elevated py-1 text-left shadow-pop">
+          <button onClick={() => choose('values')} className={MENU_ITEM}>
             Export with Values
-            <span className="block text-xs font-normal text-slate-400">Formula columns as computed numbers</span>
+            <span className={MENU_HINT}>Formula columns as computed numbers</span>
           </button>
-          <button
-            onClick={() => choose('formulas')}
-            className="block w-full px-3 py-2 text-left text-sm text-slate-700 hover:bg-slate-50"
-          >
+          <button onClick={() => choose('formulas')} className={MENU_ITEM}>
             Export with Live Formulas
-            <span className="block text-xs font-normal text-slate-400">Formula columns as working Excel formulas</span>
+            <span className={MENU_HINT}>Formula columns as working Excel formulas</span>
           </button>
-          <div className="my-1 border-t border-slate-100" />
-          <button
-            onClick={() => choosePdfFill('csv')}
-            className="block w-full px-3 py-2 text-left text-sm text-slate-700 hover:bg-slate-50"
-          >
+          <div className="my-1 border-t border-line" />
+          <button onClick={() => choosePdfFill('csv')} className={MENU_ITEM}>
             Export for PDF fill (CSV)
-            <span className="block text-xs font-normal text-slate-400">Pick columns, one row per employee, plain-name headers</span>
+            <span className={MENU_HINT}>Pick columns, one row per employee, plain-name headers</span>
           </button>
-          <button
-            onClick={() => choosePdfFill('json')}
-            className="block w-full px-3 py-2 text-left text-sm text-slate-700 hover:bg-slate-50"
-          >
+          <button onClick={() => choosePdfFill('json')} className={MENU_ITEM}>
             Export for PDF fill (JSON)
-            <span className="block text-xs font-normal text-slate-400">Pick columns, one object per employee, plain-name keys</span>
+            <span className={MENU_HINT}>Pick columns, one object per employee, plain-name keys</span>
           </button>
         </div>
       )}
