@@ -1,0 +1,822 @@
+[
+  {
+    "employee": "F001",
+    "cells": {
+      "Basic Salary": {
+        "value": 18115,
+        "shown": "18115.00"
+      },
+      "Govt Increment": {
+        "value": 0,
+        "shown": ""
+      },
+      "New Basic Salary": {
+        "value": 18115,
+        "shown": "18,115.00",
+        "breakdown": {
+          "substituted": "18115.00 + 0.00"
+        }
+      },
+      "Full time / Part time": {
+        "value": "Full time",
+        "shown": "Full time"
+      },
+      "Allowances": {
+        "value": 2000,
+        "shown": "2000.00"
+      },
+      "Emoluments": {
+        "value": 20115,
+        "shown": "20,115.00",
+        "breakdown": {
+          "substituted": "18115.00 + 2000.00"
+        }
+      },
+      "Travelling": {
+        "value": 1500,
+        "shown": "1500.00"
+      },
+      "Gross Pay": {
+        "value": 21615,
+        "shown": "21,615.00",
+        "breakdown": {
+          "substituted": "20115.00 + 1500.00"
+        }
+      },
+      "Age 60+": {
+        "value": 0,
+        "shown": false
+      },
+      "Net Pay": {
+        "value": 21112.125,
+        "shown": "21,112.13",
+        "breakdown": {
+          "substituted": "21615.00 - 502.88"
+        }
+      },
+      "Internal Note": {
+        "value": "",
+        "shown": ""
+      },
+      "CSG": {
+        "value": 301.72499999999997,
+        "shown": "301.72",
+        "breakdown": {
+          "substituted": "(20115.00) * (20115.00 < 50000 ? 0.015 : 20115.00 >= 50000 ? 0.03 : 0)",
+          "tiered": "Emoluments: 20,115.00. This is below 50,000.00 → rate: 1.5%. 20,115.00 × 1.5% = 301.72."
+        }
+      },
+      "NSF": {
+        "value": 201.15,
+        "shown": "201.15",
+        "breakdown": {
+          "substituted": "((0.00 === 1)) ? (0) : ((Math.min(20115.00, 29710)) * (0.01))",
+          "exemption": "'Age 60+' is not ticked, so the normal calculation applies:",
+          "exemptionMatched": false,
+          "tiered": "Emoluments: 20,115.00. 20,115.00 × 1% = 201.15."
+        }
+      },
+      "PAYE": {
+        "value": 0,
+        "shown": "0",
+        "breakdown": {
+          "substituted": "(Math.max(0, Math.min(20115.00, 30000) - 0)) * 0 + (Math.max(0, Math.min(20115.00, 50000) - 30000)) * 0.1 + (Math.max(0, 20115.00 - 50000)) * 0.2",
+          "progressive": "Emoluments: 20,115.00. First 30,000 @ 0% = 0. Next 20,000 (30,000–50,000) @ 10% = 0. Remainder (0.00 above 50,000.00) @ 20% = 0. Total: 0."
+        }
+      },
+      "Total deductions": {
+        "value": 502.875,
+        "shown": "502.88",
+        "breakdown": {
+          "substituted": "301.72 + 201.15 + 0"
+        }
+      },
+      "Levy": {
+        "value": 301.72499999999997,
+        "shown": "301.725",
+        "breakdown": {
+          "substituted": "(Math.min(20115.00, 100000)) * (20115.00 === 50000 ? 0.02 : 20115.00 < 20000 ? 0 : 20115.00 > 20000 ? 0.015 : 0)",
+          "tiered": "Emoluments: 20,115.00. This is above 20,000.00 → rate: 1.5%. 20,115.00 × 1.5% = 301.725."
+        }
+      },
+      "PRGF": {
+        "value": 905.175,
+        "shown": "905.18",
+        "breakdown": {
+          "substituted": "((20115.00 > 200000) || (18115.00 < 2000.00)) ? (1500.00) : (20115.00 * 0.045)",
+          "exemption": "'Emoluments' (20,115) is greater than 200,000 or 'Basic Salary' (18,115) is less than 2,000, so the normal calculation applies:",
+          "exemptionMatched": false
+        }
+      },
+      "Total MRA contributions": {
+        "value": 1709.7749999999999,
+        "shown": "1,709.77",
+        "breakdown": {
+          "substituted": "301.72 + 201.15 + 0 + 301.725 + 905.18"
+        }
+      },
+      "EDF": {
+        "value": 390000,
+        "shown": "390000"
+      },
+      "EDF (monthly)": {
+        "value": 30000,
+        "shown": "30,000.00",
+        "breakdown": {
+          "substituted": "390000 / 13"
+        }
+      },
+      "Total": {
+        "value": 0,
+        "shown": "0.00",
+        "breakdown": {
+          "substituted": "(30000.00 > 20115.00) ? (0) : (20115.00 - 30000.00)",
+          "compare": "EDF (monthly): 30,000.00. Emoluments: 20,115.00. 30,000.00 is greater than 20,115.00 → 0 = 0.00."
+        }
+      }
+    }
+  },
+  {
+    "employee": "F002",
+    "cells": {
+      "Basic Salary": {
+        "value": 48000,
+        "shown": "48000.00"
+      },
+      "Govt Increment": {
+        "value": 500,
+        "shown": "500.00"
+      },
+      "New Basic Salary": {
+        "value": 48500,
+        "shown": "48,500.00",
+        "breakdown": {
+          "substituted": "48000.00 + 500.00"
+        }
+      },
+      "Full time / Part time": {
+        "value": "Full time",
+        "shown": "Full time"
+      },
+      "Allowances": {
+        "value": 1500,
+        "shown": "1500.00"
+      },
+      "Emoluments": {
+        "value": 50000,
+        "shown": "50,000.00",
+        "breakdown": {
+          "substituted": "48500.00 + 1500.00"
+        }
+      },
+      "Travelling": {
+        "value": 0,
+        "shown": "0.00"
+      },
+      "Gross Pay": {
+        "value": 50000,
+        "shown": "50,000.00",
+        "breakdown": {
+          "substituted": "50000.00 + 0.00"
+        }
+      },
+      "Age 60+": {
+        "value": 0,
+        "shown": false
+      },
+      "Net Pay": {
+        "value": 46202.9,
+        "shown": "46,202.90",
+        "breakdown": {
+          "substituted": "50000.00 - 3797.10"
+        }
+      },
+      "Internal Note": {
+        "value": "check, \"quoted\"",
+        "shown": "check, \"quoted\""
+      },
+      "CSG": {
+        "value": 1500,
+        "shown": "1,500.00",
+        "breakdown": {
+          "substituted": "(50000.00) * (50000.00 < 50000 ? 0.015 : 50000.00 >= 50000 ? 0.03 : 0)",
+          "tiered": "Emoluments: 50,000.00. This is 50,000.00 or above → rate: 3%. 50,000.00 × 3% = 1,500.00."
+        }
+      },
+      "NSF": {
+        "value": 297.1,
+        "shown": "297.10",
+        "breakdown": {
+          "substituted": "((0.00 === 1)) ? (0) : ((Math.min(50000.00, 29710)) * (0.01))",
+          "exemption": "'Age 60+' is not ticked, so the normal calculation applies:",
+          "exemptionMatched": false,
+          "tiered": "Emoluments: 50,000.00. Capped at 29,710.00 → 29,710.00 × 1% = 297.10."
+        }
+      },
+      "PAYE": {
+        "value": 2000,
+        "shown": "2,000",
+        "breakdown": {
+          "substituted": "(Math.max(0, Math.min(50000.00, 30000) - 0)) * 0 + (Math.max(0, Math.min(50000.00, 50000) - 30000)) * 0.1 + (Math.max(0, 50000.00 - 50000)) * 0.2",
+          "progressive": "Emoluments: 50,000.00. First 30,000 @ 0% = 0. Next 20,000 (30,000–50,000) @ 10% = 2,000. Remainder (0.00 above 50,000.00) @ 20% = 0. Total: 2,000."
+        }
+      },
+      "Total deductions": {
+        "value": 3797.1,
+        "shown": "3,797.10",
+        "breakdown": {
+          "substituted": "1500.00 + 297.10 + 2000"
+        }
+      },
+      "Levy": {
+        "value": 1000,
+        "shown": "1,000.000",
+        "breakdown": {
+          "substituted": "(Math.min(50000.00, 100000)) * (50000.00 === 50000 ? 0.02 : 50000.00 < 20000 ? 0 : 50000.00 > 20000 ? 0.015 : 0)",
+          "tiered": "Emoluments: 50,000.00. This is equal to 50,000.00 → rate: 2%. 50,000.00 × 2% = 1,000.000."
+        }
+      },
+      "PRGF": {
+        "value": 2250,
+        "shown": "2,250.00",
+        "breakdown": {
+          "substituted": "((50000.00 > 200000) || (48000.00 < 1500.00)) ? (0.00) : (50000.00 * 0.045)",
+          "exemption": "'Emoluments' (50,000) is greater than 200,000 or 'Basic Salary' (48,000) is less than 1,500, so the normal calculation applies:",
+          "exemptionMatched": false
+        }
+      },
+      "Total MRA contributions": {
+        "value": 7047.1,
+        "shown": "7,047.10",
+        "breakdown": {
+          "substituted": "1500.00 + 297.10 + 2000 + 1000.000 + 2250.00"
+        }
+      },
+      "EDF": {
+        "value": 0,
+        "shown": "0"
+      },
+      "EDF (monthly)": {
+        "value": 0,
+        "shown": "0.00",
+        "breakdown": {
+          "substituted": "0 / 13"
+        }
+      },
+      "Total": {
+        "value": 50000,
+        "shown": "50,000.00",
+        "breakdown": {
+          "substituted": "(0.00 > 50000.00) ? (0) : (50000.00 - 0.00)",
+          "compare": "EDF (monthly): 0.00. Emoluments: 50,000.00. 0.00 is not greater than 50,000.00 → 50,000.00 − 0.00 = 50,000.00."
+        }
+      }
+    }
+  },
+  {
+    "employee": "F003",
+    "cells": {
+      "Basic Salary": {
+        "value": 250000,
+        "shown": "250000.00"
+      },
+      "Govt Increment": {
+        "value": 0,
+        "shown": "0.00"
+      },
+      "New Basic Salary": {
+        "value": 250000,
+        "shown": "250,000.00",
+        "breakdown": {
+          "substituted": "250000.00 + 0.00"
+        }
+      },
+      "Full time / Part time": {
+        "value": "Full time",
+        "shown": "Full time"
+      },
+      "Allowances": {
+        "value": 10000.555,
+        "shown": "10000.56"
+      },
+      "Emoluments": {
+        "value": 260000.555,
+        "shown": "260,000.56",
+        "breakdown": {
+          "substituted": "250000.00 + 10000.56"
+        }
+      },
+      "Travelling": {
+        "value": 0,
+        "shown": "0.00"
+      },
+      "Gross Pay": {
+        "value": 260000.555,
+        "shown": "260,000.56",
+        "breakdown": {
+          "substituted": "260000.56 + 0.00"
+        }
+      },
+      "Age 60+": {
+        "value": 0,
+        "shown": false
+      },
+      "Net Pay": {
+        "value": 207903.32734999998,
+        "shown": "207,903.33",
+        "breakdown": {
+          "substituted": "260000.56 - 52097.23"
+        }
+      },
+      "Internal Note": {
+        "value": "",
+        "shown": ""
+      },
+      "CSG": {
+        "value": 7800.01665,
+        "shown": "7,800.02",
+        "breakdown": {
+          "substituted": "(260000.56) * (260000.56 < 50000 ? 0.015 : 260000.56 >= 50000 ? 0.03 : 0)",
+          "tiered": "Emoluments: 260,000.56. This is 50,000.00 or above → rate: 3%. 260,000.56 × 3% = 7,800.02."
+        }
+      },
+      "NSF": {
+        "value": 297.1,
+        "shown": "297.10",
+        "breakdown": {
+          "substituted": "((0.00 === 1)) ? (0) : ((Math.min(260000.56, 29710)) * (0.01))",
+          "exemption": "'Age 60+' is not ticked, so the normal calculation applies:",
+          "exemptionMatched": false,
+          "tiered": "Emoluments: 260,000.56. Capped at 29,710.00 → 29,710.00 × 1% = 297.10."
+        }
+      },
+      "PAYE": {
+        "value": 44000.111000000004,
+        "shown": "44,000",
+        "breakdown": {
+          "substituted": "(Math.max(0, Math.min(260000.56, 30000) - 0)) * 0 + (Math.max(0, Math.min(260000.56, 50000) - 30000)) * 0.1 + (Math.max(0, 260000.56 - 50000)) * 0.2",
+          "progressive": "Emoluments: 260,000.56. First 30,000 @ 0% = 0. Next 20,000 (30,000–50,000) @ 10% = 2,000. Remainder (210,000.56 above 50,000.00) @ 20% = 42,000. Total: 44,000."
+        }
+      },
+      "Total deductions": {
+        "value": 52097.22765,
+        "shown": "52,097.23",
+        "breakdown": {
+          "substituted": "7800.02 + 297.10 + 44000"
+        }
+      },
+      "Levy": {
+        "value": 1500,
+        "shown": "1,500.000",
+        "breakdown": {
+          "substituted": "(Math.min(260000.56, 100000)) * (260000.56 === 50000 ? 0.02 : 260000.56 < 20000 ? 0 : 260000.56 > 20000 ? 0.015 : 0)",
+          "tiered": "Emoluments: 260,000.56. This is above 20,000.00 → rate: 1.5%. Capped at 100,000.00 → 100,000.00 × 1.5% = 1,500.000."
+        }
+      },
+      "PRGF": {
+        "value": 0,
+        "shown": "0.00",
+        "breakdown": {
+          "substituted": "((260000.56 > 200000) || (250000.00 < 10000.56)) ? (0.00) : (260000.56 * 0.045)",
+          "exemption": "'Emoluments' (260,000.56) is greater than 200,000 or 'Basic Salary' (250,000) is less than 10,000.56, so PRGF = 0.00.",
+          "exemptionMatched": true
+        }
+      },
+      "Total MRA contributions": {
+        "value": 53597.22765,
+        "shown": "53,597.23",
+        "breakdown": {
+          "substituted": "7800.02 + 297.10 + 44000 + 1500.000 + 0.00"
+        }
+      },
+      "EDF": {
+        "value": 500000,
+        "shown": "500000"
+      },
+      "EDF (monthly)": {
+        "value": 38461.53846153846,
+        "shown": "38,461.54",
+        "breakdown": {
+          "substituted": "500000 / 13"
+        }
+      },
+      "Total": {
+        "value": 221539.01653846152,
+        "shown": "221,539.02",
+        "breakdown": {
+          "substituted": "(38461.54 > 260000.56) ? (0) : (260000.56 - 38461.54)",
+          "compare": "EDF (monthly): 38,461.54. Emoluments: 260,000.56. 38,461.54 is not greater than 260,000.56 → 260,000.56 − 38,461.54 = 221,539.02."
+        }
+      }
+    }
+  },
+  {
+    "employee": "F004",
+    "cells": {
+      "Basic Salary": {
+        "value": 30000.005,
+        "shown": "30000.01"
+      },
+      "Govt Increment": {
+        "value": 635,
+        "shown": "635.00"
+      },
+      "New Basic Salary": {
+        "value": 30635.005,
+        "shown": "30,635.01",
+        "breakdown": {
+          "substituted": "30000.01 + 635.00"
+        }
+      },
+      "Full time / Part time": {
+        "value": "Part time",
+        "shown": "Part time"
+      },
+      "Allowances": {
+        "value": 0,
+        "shown": ""
+      },
+      "Emoluments": {
+        "value": 30635.005,
+        "shown": "30,635.01",
+        "breakdown": {
+          "substituted": "30635.01 + 0.00"
+        }
+      },
+      "Travelling": {
+        "value": 750.5,
+        "shown": "750.50"
+      },
+      "Gross Pay": {
+        "value": 31385.505,
+        "shown": "31,385.51",
+        "breakdown": {
+          "substituted": "30635.01 + 750.50"
+        }
+      },
+      "Age 60+": {
+        "value": 1,
+        "shown": true
+      },
+      "Net Pay": {
+        "value": 30862.479425,
+        "shown": "30,862.48",
+        "breakdown": {
+          "substituted": "31385.51 - 523.03"
+        }
+      },
+      "Internal Note": {
+        "value": "part time",
+        "shown": "part time"
+      },
+      "CSG": {
+        "value": 459.525075,
+        "shown": "459.53",
+        "breakdown": {
+          "substituted": "(30635.01) * (30635.01 < 50000 ? 0.015 : 30635.01 >= 50000 ? 0.03 : 0)",
+          "tiered": "Emoluments: 30,635.01. This is below 50,000.00 → rate: 1.5%. 30,635.01 × 1.5% = 459.53."
+        }
+      },
+      "NSF": {
+        "value": 0,
+        "shown": "0.00",
+        "breakdown": {
+          "substituted": "((1.00 === 1)) ? (0) : ((Math.min(30635.01, 29710)) * (0.01))",
+          "exemption": "'Age 60+' is ticked, so NSF = 0.00.",
+          "exemptionMatched": true
+        }
+      },
+      "PAYE": {
+        "value": 63.5005000000001,
+        "shown": "64",
+        "breakdown": {
+          "substituted": "(Math.max(0, Math.min(30635.01, 30000) - 0)) * 0 + (Math.max(0, Math.min(30635.01, 50000) - 30000)) * 0.1 + (Math.max(0, 30635.01 - 50000)) * 0.2",
+          "progressive": "Emoluments: 30,635.01. First 30,000 @ 0% = 0. Next 20,000 (30,000–50,000) @ 10% = 64. Remainder (0.00 above 50,000.00) @ 20% = 0. Total: 64."
+        }
+      },
+      "Total deductions": {
+        "value": 523.0255750000001,
+        "shown": "523.03",
+        "breakdown": {
+          "substituted": "459.53 + 0.00 + 64"
+        }
+      },
+      "Levy": {
+        "value": 459.525075,
+        "shown": "459.525",
+        "breakdown": {
+          "substituted": "(Math.min(30635.01, 100000)) * (30635.01 === 50000 ? 0.02 : 30635.01 < 20000 ? 0 : 30635.01 > 20000 ? 0.015 : 0)",
+          "tiered": "Emoluments: 30,635.01. This is above 20,000.00 → rate: 1.5%. 30,635.01 × 1.5% = 459.525."
+        }
+      },
+      "PRGF": {
+        "value": 1378.575225,
+        "shown": "1,378.58",
+        "breakdown": {
+          "substituted": "((30635.01 > 200000) || (30000.01 < 0.00)) ? (750.50) : (30635.01 * 0.045)",
+          "exemption": "'Emoluments' (30,635.01) is greater than 200,000 or 'Basic Salary' (30,000.01) is less than 0, so the normal calculation applies:",
+          "exemptionMatched": false
+        }
+      },
+      "Total MRA contributions": {
+        "value": 2361.125875,
+        "shown": "2,361.13",
+        "breakdown": {
+          "substituted": "459.53 + 0.00 + 64 + 459.525 + 1378.58"
+        }
+      },
+      "EDF": {
+        "value": 1000000,
+        "shown": "1000000"
+      },
+      "EDF (monthly)": {
+        "value": 76923.07692307692,
+        "shown": "76,923.08",
+        "breakdown": {
+          "substituted": "1000000 / 13"
+        }
+      },
+      "Total": {
+        "value": 0,
+        "shown": "0.00",
+        "breakdown": {
+          "substituted": "(76923.08 > 30635.01) ? (0) : (30635.01 - 76923.08)",
+          "compare": "EDF (monthly): 76,923.08. Emoluments: 30,635.01. 76,923.08 is greater than 30,635.01 → 0 = 0.00."
+        }
+      }
+    }
+  },
+  {
+    "employee": "F005",
+    "cells": {
+      "Basic Salary": {
+        "value": 0,
+        "shown": "abc"
+      },
+      "Govt Increment": {
+        "value": 0,
+        "shown": ""
+      },
+      "New Basic Salary": {
+        "value": 0,
+        "shown": "0.00",
+        "breakdown": {
+          "substituted": "0.00 + 0.00"
+        }
+      },
+      "Full time / Part time": {
+        "value": "",
+        "shown": ""
+      },
+      "Allowances": {
+        "value": 5000,
+        "shown": "5000.00"
+      },
+      "Emoluments": {
+        "value": 5000,
+        "shown": "5,000.00",
+        "breakdown": {
+          "substituted": "0.00 + 5000.00"
+        }
+      },
+      "Travelling": {
+        "value": 300,
+        "shown": "300.00"
+      },
+      "Gross Pay": {
+        "value": 5300,
+        "shown": "5,300.00",
+        "breakdown": {
+          "substituted": "5000.00 + 300.00"
+        }
+      },
+      "Age 60+": {
+        "value": 1,
+        "shown": true
+      },
+      "Net Pay": {
+        "value": 5225,
+        "shown": "5,225.00",
+        "breakdown": {
+          "substituted": "5300.00 - 75.00"
+        }
+      },
+      "Internal Note": {
+        "value": "",
+        "shown": ""
+      },
+      "CSG": {
+        "value": 75,
+        "shown": "75.00",
+        "breakdown": {
+          "substituted": "(5000.00) * (5000.00 < 50000 ? 0.015 : 5000.00 >= 50000 ? 0.03 : 0)",
+          "tiered": "Emoluments: 5,000.00. This is below 50,000.00 → rate: 1.5%. 5,000.00 × 1.5% = 75.00."
+        }
+      },
+      "NSF": {
+        "value": 0,
+        "shown": "0.00",
+        "breakdown": {
+          "substituted": "((1.00 === 1)) ? (0) : ((Math.min(5000.00, 29710)) * (0.01))",
+          "exemption": "'Age 60+' is ticked, so NSF = 0.00.",
+          "exemptionMatched": true
+        }
+      },
+      "PAYE": {
+        "value": 0,
+        "shown": "0",
+        "breakdown": {
+          "substituted": "(Math.max(0, Math.min(5000.00, 30000) - 0)) * 0 + (Math.max(0, Math.min(5000.00, 50000) - 30000)) * 0.1 + (Math.max(0, 5000.00 - 50000)) * 0.2",
+          "progressive": "Emoluments: 5,000.00. First 30,000 @ 0% = 0. Next 20,000 (30,000–50,000) @ 10% = 0. Remainder (0.00 above 50,000.00) @ 20% = 0. Total: 0."
+        }
+      },
+      "Total deductions": {
+        "value": 75,
+        "shown": "75.00",
+        "breakdown": {
+          "substituted": "75.00 + 0.00 + 0"
+        }
+      },
+      "Levy": {
+        "value": 0,
+        "shown": "0.000",
+        "breakdown": {
+          "substituted": "(Math.min(5000.00, 100000)) * (5000.00 === 50000 ? 0.02 : 5000.00 < 20000 ? 0 : 5000.00 > 20000 ? 0.015 : 0)",
+          "tiered": "Emoluments: 5,000.00. This is below 20,000.00 → rate: 0%. 5,000.00 × 0% = 0.000."
+        }
+      },
+      "PRGF": {
+        "value": 300,
+        "shown": "300.00",
+        "breakdown": {
+          "substituted": "((5000.00 > 200000) || (0.00 < 5000.00)) ? (300.00) : (5000.00 * 0.045)",
+          "exemption": "'Emoluments' (5,000) is greater than 200,000 or 'Basic Salary' (0) is less than 5,000, so PRGF = 300.00.",
+          "exemptionMatched": true
+        }
+      },
+      "Total MRA contributions": {
+        "value": 375,
+        "shown": "375.00",
+        "breakdown": {
+          "substituted": "75.00 + 0.00 + 0 + 0.000 + 300.00"
+        }
+      },
+      "EDF": {
+        "value": 0,
+        "shown": ""
+      },
+      "EDF (monthly)": {
+        "value": 0,
+        "shown": "0.00",
+        "breakdown": {
+          "substituted": "0 / 13"
+        }
+      },
+      "Total": {
+        "value": 5000,
+        "shown": "5,000.00",
+        "breakdown": {
+          "substituted": "(0.00 > 5000.00) ? (0) : (5000.00 - 0.00)",
+          "compare": "EDF (monthly): 0.00. Emoluments: 5,000.00. 0.00 is not greater than 5,000.00 → 5,000.00 − 0.00 = 5,000.00."
+        }
+      }
+    }
+  },
+  {
+    "employee": "F006",
+    "cells": {
+      "Basic Salary": {
+        "value": 0,
+        "shown": ""
+      },
+      "Govt Increment": {
+        "value": 0,
+        "shown": ""
+      },
+      "New Basic Salary": {
+        "value": 0,
+        "shown": "0.00",
+        "breakdown": {
+          "substituted": "0.00 + 0.00"
+        }
+      },
+      "Full time / Part time": {
+        "value": "",
+        "shown": ""
+      },
+      "Allowances": {
+        "value": 0,
+        "shown": ""
+      },
+      "Emoluments": {
+        "value": 0,
+        "shown": "0.00",
+        "breakdown": {
+          "substituted": "0.00 + 0.00"
+        }
+      },
+      "Travelling": {
+        "value": 0,
+        "shown": ""
+      },
+      "Gross Pay": {
+        "value": 0,
+        "shown": "0.00",
+        "breakdown": {
+          "substituted": "0.00 + 0.00"
+        }
+      },
+      "Age 60+": {
+        "value": 0,
+        "shown": false
+      },
+      "Net Pay": {
+        "value": 0,
+        "shown": "0.00",
+        "breakdown": {
+          "substituted": "0.00 - 0.00"
+        }
+      },
+      "Internal Note": {
+        "value": "",
+        "shown": ""
+      },
+      "CSG": {
+        "value": 0,
+        "shown": "0.00",
+        "breakdown": {
+          "substituted": "(0.00) * (0.00 < 50000 ? 0.015 : 0.00 >= 50000 ? 0.03 : 0)",
+          "tiered": "Emoluments: 0.00. This is below 50,000.00 → rate: 1.5%. 0.00 × 1.5% = 0.00."
+        }
+      },
+      "NSF": {
+        "value": 0,
+        "shown": "0.00",
+        "breakdown": {
+          "substituted": "((0.00 === 1)) ? (0) : ((Math.min(0.00, 29710)) * (0.01))",
+          "exemption": "'Age 60+' is not ticked, so the normal calculation applies:",
+          "exemptionMatched": false,
+          "tiered": "Emoluments: 0.00. 0.00 × 1% = 0.00."
+        }
+      },
+      "PAYE": {
+        "value": 0,
+        "shown": "0",
+        "breakdown": {
+          "substituted": "(Math.max(0, Math.min(0.00, 30000) - 0)) * 0 + (Math.max(0, Math.min(0.00, 50000) - 30000)) * 0.1 + (Math.max(0, 0.00 - 50000)) * 0.2",
+          "progressive": "Emoluments: 0.00. First 30,000 @ 0% = 0. Next 20,000 (30,000–50,000) @ 10% = 0. Remainder (0.00 above 50,000.00) @ 20% = 0. Total: 0."
+        }
+      },
+      "Total deductions": {
+        "value": 0,
+        "shown": "0.00",
+        "breakdown": {
+          "substituted": "0.00 + 0.00 + 0"
+        }
+      },
+      "Levy": {
+        "value": 0,
+        "shown": "0.000",
+        "breakdown": {
+          "substituted": "(Math.min(0.00, 100000)) * (0.00 === 50000 ? 0.02 : 0.00 < 20000 ? 0 : 0.00 > 20000 ? 0.015 : 0)",
+          "tiered": "Emoluments: 0.00. This is below 20,000.00 → rate: 0%. 0.00 × 0% = 0.000."
+        }
+      },
+      "PRGF": {
+        "value": 0,
+        "shown": "0.00",
+        "breakdown": {
+          "substituted": "((0.00 > 200000) || (0.00 < 0.00)) ? (0.00) : (0.00 * 0.045)",
+          "exemption": "'Emoluments' (0) is greater than 200,000 or 'Basic Salary' (0) is less than 0, so the normal calculation applies:",
+          "exemptionMatched": false
+        }
+      },
+      "Total MRA contributions": {
+        "value": 0,
+        "shown": "0.00",
+        "breakdown": {
+          "substituted": "0.00 + 0.00 + 0 + 0.000 + 0.00"
+        }
+      },
+      "EDF": {
+        "value": 0,
+        "shown": ""
+      },
+      "EDF (monthly)": {
+        "value": 0,
+        "shown": "0.00",
+        "breakdown": {
+          "substituted": "0 / 13"
+        }
+      },
+      "Total": {
+        "value": 0,
+        "shown": "0.00",
+        "breakdown": {
+          "substituted": "(0.00 > 0.00) ? (0) : (0.00 - 0.00)",
+          "compare": "EDF (monthly): 0.00. Emoluments: 0.00. 0.00 is not greater than 0.00 → 0.00 − 0.00 = 0.00."
+        }
+      }
+    }
+  }
+]

@@ -1,0 +1,658 @@
+[
+  {
+    "group": "id:F001",
+    "identity": [
+      "F001",
+      "Testeur",
+      "Alpha Fake"
+    ],
+    "sums": {
+      "Basic Salary": {
+        "value": 35615,
+        "shown": "35,615.00"
+      },
+      "Govt Increment": {
+        "value": 615,
+        "shown": "615.00"
+      },
+      "New Basic Salary": {
+        "value": 36230,
+        "shown": "36,230.00"
+      },
+      "Allowances": {
+        "value": 3000,
+        "shown": "3,000.00"
+      },
+      "Emoluments": {
+        "value": 39230,
+        "shown": "39,230.00"
+      },
+      "Travelling": {
+        "value": 3000,
+        "shown": "3,000.00"
+      },
+      "Gross Pay": {
+        "value": 42230,
+        "shown": "42,230.00"
+      },
+      "Net Pay": {
+        "value": 41249.25,
+        "shown": "41,249.25"
+      },
+      "CSG": {
+        "value": 588.4499999999999,
+        "shown": "588.45"
+      },
+      "NSF": {
+        "value": 392.3,
+        "shown": "392.30"
+      },
+      "PAYE": {
+        "value": 0,
+        "shown": "0"
+      },
+      "Total deductions": {
+        "value": 980.75,
+        "shown": "980.75"
+      },
+      "Levy": {
+        "value": 301.72499999999997,
+        "shown": "301.725"
+      },
+      "PRGF": {
+        "value": 1765.35,
+        "shown": "1,765.35"
+      },
+      "Total MRA contributions": {
+        "value": 3047.825,
+        "shown": "3,047.83"
+      },
+      "EDF": {
+        "value": 780000,
+        "shown": "780,000"
+      },
+      "EDF (monthly)": {
+        "value": 60000,
+        "shown": "60,000.00"
+      },
+      "Total": {
+        "value": 0,
+        "shown": "0.00"
+      }
+    }
+  },
+  {
+    "group": "id:F002",
+    "identity": [
+      "F002",
+      "Exemple, Jr",
+      "Beta \"B\" Fake"
+    ],
+    "sums": {
+      "Basic Salary": {
+        "value": 108000,
+        "shown": "108,000.00"
+      },
+      "Govt Increment": {
+        "value": 500,
+        "shown": "500.00"
+      },
+      "New Basic Salary": {
+        "value": 108500,
+        "shown": "108,500.00"
+      },
+      "Allowances": {
+        "value": 4000.25,
+        "shown": "4,000.25"
+      },
+      "Emoluments": {
+        "value": 112500.25,
+        "shown": "112,500.25"
+      },
+      "Travelling": {
+        "value": 0,
+        "shown": "0.00"
+      },
+      "Gross Pay": {
+        "value": 112500.25,
+        "shown": "112,500.25"
+      },
+      "Net Pay": {
+        "value": 102030.9925,
+        "shown": "102,030.99"
+      },
+      "CSG": {
+        "value": 3375.0074999999997,
+        "shown": "3,375.01"
+      },
+      "NSF": {
+        "value": 594.2,
+        "shown": "594.20"
+      },
+      "PAYE": {
+        "value": 6500.05,
+        "shown": "6,500"
+      },
+      "Total deductions": {
+        "value": 10469.2575,
+        "shown": "10,469.26"
+      },
+      "Levy": {
+        "value": 1937.5037499999999,
+        "shown": "1,937.504"
+      },
+      "PRGF": {
+        "value": 5062.51125,
+        "shown": "5,062.51"
+      },
+      "Total MRA contributions": {
+        "value": 17469.2725,
+        "shown": "17,469.27"
+      },
+      "EDF": {
+        "value": 0,
+        "shown": "0"
+      },
+      "EDF (monthly)": {
+        "value": 0,
+        "shown": "0.00"
+      },
+      "Total": {
+        "value": 112500.25,
+        "shown": "112,500.25"
+      }
+    }
+  },
+  {
+    "group": "id:F007",
+    "identity": [
+      "F007",
+      "Leaver",
+      "Eta Fake"
+    ],
+    "sums": {
+      "Basic Salary": {
+        "value": 22000,
+        "shown": "22,000.00"
+      },
+      "Govt Increment": {
+        "value": 0,
+        "shown": "0.00"
+      },
+      "New Basic Salary": {
+        "value": 22000,
+        "shown": "22,000.00"
+      },
+      "Allowances": {
+        "value": 0,
+        "shown": "0.00"
+      },
+      "Emoluments": {
+        "value": 22000,
+        "shown": "22,000.00"
+      },
+      "Travelling": {
+        "value": 400,
+        "shown": "400.00"
+      },
+      "Gross Pay": {
+        "value": 22400,
+        "shown": "22,400.00"
+      },
+      "Net Pay": {
+        "value": 22070,
+        "shown": "22,070.00"
+      },
+      "CSG": {
+        "value": 330,
+        "shown": "330.00"
+      },
+      "NSF": {
+        "value": 0,
+        "shown": "0.00"
+      },
+      "PAYE": {
+        "value": 0,
+        "shown": "0"
+      },
+      "Total deductions": {
+        "value": 330,
+        "shown": "330.00"
+      },
+      "Levy": {
+        "value": 330,
+        "shown": "330.000"
+      },
+      "PRGF": {
+        "value": 990,
+        "shown": "990.00"
+      },
+      "Total MRA contributions": {
+        "value": 1650,
+        "shown": "1,650.00"
+      },
+      "EDF": {
+        "value": 130000,
+        "shown": "130,000"
+      },
+      "EDF (monthly)": {
+        "value": 10000,
+        "shown": "10,000.00"
+      },
+      "Total": {
+        "value": 12000,
+        "shown": "12,000.00"
+      }
+    }
+  },
+  {
+    "group": "rec:emp-sep-noid",
+    "identity": [
+      "",
+      "Unnumbered",
+      "Theta Fake"
+    ],
+    "sums": {
+      "Basic Salary": {
+        "value": 15000,
+        "shown": "15,000.00"
+      },
+      "Govt Increment": {
+        "value": 0,
+        "shown": "0.00"
+      },
+      "New Basic Salary": {
+        "value": 15000,
+        "shown": "15,000.00"
+      },
+      "Allowances": {
+        "value": 0,
+        "shown": "0.00"
+      },
+      "Emoluments": {
+        "value": 15000,
+        "shown": "15,000.00"
+      },
+      "Travelling": {
+        "value": 0,
+        "shown": "0.00"
+      },
+      "Gross Pay": {
+        "value": 15000,
+        "shown": "15,000.00"
+      },
+      "Net Pay": {
+        "value": 14625,
+        "shown": "14,625.00"
+      },
+      "CSG": {
+        "value": 225,
+        "shown": "225.00"
+      },
+      "NSF": {
+        "value": 150,
+        "shown": "150.00"
+      },
+      "PAYE": {
+        "value": 0,
+        "shown": "0"
+      },
+      "Total deductions": {
+        "value": 375,
+        "shown": "375.00"
+      },
+      "Levy": {
+        "value": 0,
+        "shown": "0.000"
+      },
+      "PRGF": {
+        "value": 675,
+        "shown": "675.00"
+      },
+      "Total MRA contributions": {
+        "value": 1050,
+        "shown": "1,050.00"
+      },
+      "EDF": {
+        "value": 0,
+        "shown": "0"
+      },
+      "EDF (monthly)": {
+        "value": 0,
+        "shown": "0.00"
+      },
+      "Total": {
+        "value": 15000,
+        "shown": "15,000.00"
+      }
+    }
+  },
+  {
+    "group": "id:F003",
+    "identity": [
+      "F003",
+      "Specimen",
+      "Gamma Fake"
+    ],
+    "sums": {
+      "Basic Salary": {
+        "value": 250000,
+        "shown": "250,000.00"
+      },
+      "Govt Increment": {
+        "value": 0,
+        "shown": "0.00"
+      },
+      "New Basic Salary": {
+        "value": 250000,
+        "shown": "250,000.00"
+      },
+      "Allowances": {
+        "value": 10000.555,
+        "shown": "10,000.56"
+      },
+      "Emoluments": {
+        "value": 260000.555,
+        "shown": "260,000.56"
+      },
+      "Travelling": {
+        "value": 0,
+        "shown": "0.00"
+      },
+      "Gross Pay": {
+        "value": 260000.555,
+        "shown": "260,000.56"
+      },
+      "Net Pay": {
+        "value": 207903.32734999998,
+        "shown": "207,903.33"
+      },
+      "CSG": {
+        "value": 7800.01665,
+        "shown": "7,800.02"
+      },
+      "NSF": {
+        "value": 297.1,
+        "shown": "297.10"
+      },
+      "PAYE": {
+        "value": 44000.111000000004,
+        "shown": "44,000"
+      },
+      "Total deductions": {
+        "value": 52097.22765,
+        "shown": "52,097.23"
+      },
+      "Levy": {
+        "value": 1500,
+        "shown": "1,500.000"
+      },
+      "PRGF": {
+        "value": 0,
+        "shown": "0.00"
+      },
+      "Total MRA contributions": {
+        "value": 53597.22765,
+        "shown": "53,597.23"
+      },
+      "EDF": {
+        "value": 500000,
+        "shown": "500,000"
+      },
+      "EDF (monthly)": {
+        "value": 38461.53846153846,
+        "shown": "38,461.54"
+      },
+      "Total": {
+        "value": 221539.01653846152,
+        "shown": "221,539.02"
+      }
+    }
+  },
+  {
+    "group": "id:F004",
+    "identity": [
+      "F004",
+      "Dummy",
+      "Delta Fake"
+    ],
+    "sums": {
+      "Basic Salary": {
+        "value": 30000.005,
+        "shown": "30,000.01"
+      },
+      "Govt Increment": {
+        "value": 635,
+        "shown": "635.00"
+      },
+      "New Basic Salary": {
+        "value": 30635.005,
+        "shown": "30,635.01"
+      },
+      "Allowances": {
+        "value": 0,
+        "shown": "0.00"
+      },
+      "Emoluments": {
+        "value": 30635.005,
+        "shown": "30,635.01"
+      },
+      "Travelling": {
+        "value": 750.5,
+        "shown": "750.50"
+      },
+      "Gross Pay": {
+        "value": 31385.505,
+        "shown": "31,385.51"
+      },
+      "Net Pay": {
+        "value": 30862.479425,
+        "shown": "30,862.48"
+      },
+      "CSG": {
+        "value": 459.525075,
+        "shown": "459.53"
+      },
+      "NSF": {
+        "value": 0,
+        "shown": "0.00"
+      },
+      "PAYE": {
+        "value": 63.5005000000001,
+        "shown": "64"
+      },
+      "Total deductions": {
+        "value": 523.0255750000001,
+        "shown": "523.03"
+      },
+      "Levy": {
+        "value": 459.525075,
+        "shown": "459.525"
+      },
+      "PRGF": {
+        "value": 1378.575225,
+        "shown": "1,378.58"
+      },
+      "Total MRA contributions": {
+        "value": 2361.125875,
+        "shown": "2,361.13"
+      },
+      "EDF": {
+        "value": 1000000,
+        "shown": "1,000,000"
+      },
+      "EDF (monthly)": {
+        "value": 76923.07692307692,
+        "shown": "76,923.08"
+      },
+      "Total": {
+        "value": 0,
+        "shown": "0.00"
+      }
+    }
+  },
+  {
+    "group": "id:F005",
+    "identity": [
+      "F005",
+      "Placeholder",
+      "Epsilon Fake"
+    ],
+    "sums": {
+      "Basic Salary": {
+        "value": 0,
+        "shown": "0.00"
+      },
+      "Govt Increment": {
+        "value": 0,
+        "shown": "0.00"
+      },
+      "New Basic Salary": {
+        "value": 0,
+        "shown": "0.00"
+      },
+      "Allowances": {
+        "value": 5000,
+        "shown": "5,000.00"
+      },
+      "Emoluments": {
+        "value": 5000,
+        "shown": "5,000.00"
+      },
+      "Travelling": {
+        "value": 300,
+        "shown": "300.00"
+      },
+      "Gross Pay": {
+        "value": 5300,
+        "shown": "5,300.00"
+      },
+      "Net Pay": {
+        "value": 5225,
+        "shown": "5,225.00"
+      },
+      "CSG": {
+        "value": 75,
+        "shown": "75.00"
+      },
+      "NSF": {
+        "value": 0,
+        "shown": "0.00"
+      },
+      "PAYE": {
+        "value": 0,
+        "shown": "0"
+      },
+      "Total deductions": {
+        "value": 75,
+        "shown": "75.00"
+      },
+      "Levy": {
+        "value": 0,
+        "shown": "0.000"
+      },
+      "PRGF": {
+        "value": 300,
+        "shown": "300.00"
+      },
+      "Total MRA contributions": {
+        "value": 375,
+        "shown": "375.00"
+      },
+      "EDF": {
+        "value": 0,
+        "shown": "0"
+      },
+      "EDF (monthly)": {
+        "value": 0,
+        "shown": "0.00"
+      },
+      "Total": {
+        "value": 5000,
+        "shown": "5,000.00"
+      }
+    }
+  },
+  {
+    "group": "id:F006",
+    "identity": [
+      "F006",
+      "Blank",
+      "Zeta Fake"
+    ],
+    "sums": {
+      "Basic Salary": {
+        "value": 0,
+        "shown": "0.00"
+      },
+      "Govt Increment": {
+        "value": 0,
+        "shown": "0.00"
+      },
+      "New Basic Salary": {
+        "value": 0,
+        "shown": "0.00"
+      },
+      "Allowances": {
+        "value": 0,
+        "shown": "0.00"
+      },
+      "Emoluments": {
+        "value": 0,
+        "shown": "0.00"
+      },
+      "Travelling": {
+        "value": 0,
+        "shown": "0.00"
+      },
+      "Gross Pay": {
+        "value": 0,
+        "shown": "0.00"
+      },
+      "Net Pay": {
+        "value": 0,
+        "shown": "0.00"
+      },
+      "CSG": {
+        "value": 0,
+        "shown": "0.00"
+      },
+      "NSF": {
+        "value": 0,
+        "shown": "0.00"
+      },
+      "PAYE": {
+        "value": 0,
+        "shown": "0"
+      },
+      "Total deductions": {
+        "value": 0,
+        "shown": "0.00"
+      },
+      "Levy": {
+        "value": 0,
+        "shown": "0.000"
+      },
+      "PRGF": {
+        "value": 0,
+        "shown": "0.00"
+      },
+      "Total MRA contributions": {
+        "value": 0,
+        "shown": "0.00"
+      },
+      "EDF": {
+        "value": 0,
+        "shown": "0"
+      },
+      "EDF (monthly)": {
+        "value": 0,
+        "shown": "0.00"
+      },
+      "Total": {
+        "value": 0,
+        "shown": "0.00"
+      }
+    }
+  }
+]

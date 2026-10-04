@@ -1,0 +1,444 @@
+{
+  "companyName": "Fake Co Ltd",
+  "exportDateLabel": "<date>",
+  "companyDetails": {
+    "address": "1 Test Street\nPort Louis",
+    "brn": "C00000001",
+    "customFields": [
+      {
+        "id": "cf-vat",
+        "label": "VAT",
+        "value": "VAT-FAKE-1"
+      },
+      {
+        "id": "cf-levy",
+        "label": "Levy",
+        "value": "Levy ref 42"
+      }
+    ]
+  },
+  "showCompanyDetails": false,
+  "columns": [
+    {
+      "key": "id",
+      "name": "ID",
+      "kind": "identity"
+    },
+    {
+      "key": "surname",
+      "name": "Surname",
+      "kind": "identity"
+    },
+    {
+      "key": "otherNames",
+      "name": "Other names",
+      "kind": "identity"
+    },
+    {
+      "key": "basicSalary",
+      "name": "Basic Salary",
+      "kind": "input",
+      "valueType": "number",
+      "decimals": 2
+    },
+    {
+      "key": "govtIncrement",
+      "name": "Govt Increment",
+      "kind": "input",
+      "valueType": "number",
+      "decimals": 2
+    },
+    {
+      "key": "newBasicSalary",
+      "name": "New Basic Salary",
+      "kind": "formula",
+      "decimals": 2,
+      "formula": "basicSalary + govtIncrement"
+    },
+    {
+      "key": "fullTimePartTime",
+      "name": "Full time / Part time",
+      "kind": "input",
+      "valueType": "text",
+      "decimals": 2
+    },
+    {
+      "key": "allowances",
+      "name": "Allowances",
+      "kind": "input",
+      "valueType": "number",
+      "decimals": 2
+    },
+    {
+      "key": "emoluments",
+      "name": "Emoluments",
+      "kind": "formula",
+      "decimals": 2,
+      "formula": "newBasicSalary + allowances"
+    },
+    {
+      "key": "travelling",
+      "name": "Travelling",
+      "kind": "input",
+      "valueType": "number",
+      "decimals": 2
+    },
+    {
+      "key": "grossPay",
+      "name": "Gross Pay",
+      "kind": "formula",
+      "decimals": 2,
+      "formula": "emoluments + travelling"
+    },
+    {
+      "key": "aged60",
+      "name": "Age 60+",
+      "kind": "input",
+      "valueType": "checkbox",
+      "decimals": 2
+    },
+    {
+      "key": "netPay",
+      "name": "Net Pay",
+      "kind": "formula",
+      "decimals": 2,
+      "formula": "grossPay - totalDeductions"
+    },
+    {
+      "key": "csg",
+      "name": "CSG",
+      "kind": "formula",
+      "decimals": 2,
+      "formula": "(emoluments) * (emoluments < 50000 ? 0.015 : emoluments >= 50000 ? 0.03 : 0)"
+    },
+    {
+      "key": "nsf",
+      "name": "NSF",
+      "kind": "formula",
+      "decimals": 2,
+      "formula": "((aged60 === 1)) ? (0) : ((Math.min(emoluments, 29710)) * (0.01))"
+    },
+    {
+      "key": "paye",
+      "name": "PAYE",
+      "kind": "formula",
+      "decimals": 0,
+      "formula": "(Math.max(0, Math.min(emoluments, 30000) - 0)) * 0 + (Math.max(0, Math.min(emoluments, 50000) - 30000)) * 0.1 + (Math.max(0, emoluments - 50000)) * 0.2"
+    },
+    {
+      "key": "totalDeductions",
+      "name": "Total deductions",
+      "kind": "formula",
+      "decimals": 2,
+      "formula": "csg + nsf + paye"
+    },
+    {
+      "key": "levy",
+      "name": "Levy",
+      "kind": "formula",
+      "decimals": 3,
+      "formula": "(Math.min(emoluments, 100000)) * (emoluments === 50000 ? 0.02 : emoluments < 20000 ? 0 : emoluments > 20000 ? 0.015 : 0)"
+    },
+    {
+      "key": "prgf",
+      "name": "PRGF",
+      "kind": "formula",
+      "decimals": 2,
+      "formula": "((emoluments > 200000) || (basicSalary < allowances)) ? (travelling) : (emoluments * 0.045)"
+    },
+    {
+      "key": "totalMra",
+      "name": "Total MRA contributions",
+      "kind": "formula",
+      "decimals": 2,
+      "formula": "csg + nsf + paye + levy + prgf"
+    },
+    {
+      "key": "edf",
+      "name": "EDF",
+      "kind": "input",
+      "valueType": "number",
+      "decimals": 0
+    },
+    {
+      "key": "edfMonthly",
+      "name": "EDF (monthly)",
+      "kind": "formula",
+      "decimals": 2,
+      "formula": "edf / 13"
+    },
+    {
+      "key": "total",
+      "name": "Total",
+      "kind": "formula",
+      "decimals": 2,
+      "formula": "(edfMonthly > emoluments) ? (0) : (emoluments - edfMonthly)"
+    }
+  ],
+  "groups": [
+    {
+      "label": "Identifiers",
+      "count": 3
+    },
+    {
+      "label": "General",
+      "count": 10
+    },
+    {
+      "label": "Employee Contribution",
+      "count": 4
+    },
+    {
+      "label": "Employer Contribution",
+      "count": 3
+    },
+    {
+      "label": "Other Deductions",
+      "count": 3
+    }
+  ],
+  "rows": [
+    [
+      "F001",
+      "Testeur",
+      "Alpha Fake",
+      18115,
+      0,
+      18115,
+      "Full time",
+      2000,
+      20115,
+      1500,
+      21615,
+      "No",
+      21112.125,
+      301.72499999999997,
+      201.15,
+      0,
+      502.875,
+      301.72499999999997,
+      905.175,
+      1709.7749999999999,
+      390000,
+      30000,
+      0
+    ],
+    [
+      "F002",
+      "Exemple, Jr",
+      "Beta \"B\" Fake",
+      48000,
+      500,
+      48500,
+      "Full time",
+      1500,
+      50000,
+      0,
+      50000,
+      "No",
+      46202.9,
+      1500,
+      297.1,
+      2000,
+      3797.1,
+      1000,
+      2250,
+      7047.1,
+      0,
+      0,
+      50000
+    ],
+    [
+      "F003",
+      "Specimen",
+      "Gamma Fake",
+      250000,
+      0,
+      250000,
+      "Full time",
+      10000.555,
+      260000.555,
+      0,
+      260000.555,
+      "No",
+      207903.32734999998,
+      7800.01665,
+      297.1,
+      44000.111000000004,
+      52097.22765,
+      1500,
+      0,
+      53597.22765,
+      500000,
+      38461.53846153846,
+      221539.01653846152
+    ],
+    [
+      "F004",
+      "Dummy",
+      "Delta Fake",
+      30000.005,
+      635,
+      30635.005,
+      "Part time",
+      0,
+      30635.005,
+      750.5,
+      31385.505,
+      "Yes",
+      30862.479425,
+      459.525075,
+      0,
+      63.5005000000001,
+      523.0255750000001,
+      459.525075,
+      1378.575225,
+      2361.125875,
+      1000000,
+      76923.07692307692,
+      0
+    ],
+    [
+      "F005",
+      "Placeholder",
+      "Epsilon Fake",
+      0,
+      0,
+      0,
+      "",
+      5000,
+      5000,
+      300,
+      5300,
+      "Yes",
+      5225,
+      75,
+      0,
+      0,
+      75,
+      0,
+      300,
+      375,
+      0,
+      0,
+      5000
+    ],
+    [
+      "F006",
+      "Blank",
+      "Zeta Fake",
+      0,
+      0,
+      0,
+      "",
+      0,
+      0,
+      0,
+      0,
+      "No",
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0
+    ]
+  ],
+  "totalsRow": [
+    "TOTAL",
+    "",
+    "",
+    346115.005,
+    1135,
+    347250.005,
+    "",
+    18500.555,
+    365750.56,
+    2550.5,
+    368301.06,
+    "2 ticked",
+    311305.83177499997,
+    10136.266725,
+    795.35,
+    46063.611500000006,
+    56995.228225,
+    3261.250075,
+    4833.750225,
+    65090.228525,
+    1890000,
+    145384.61538461538,
+    276539.01653846155
+  ],
+  "hiddenColumns": [],
+  "hiddenRows": [
+    [],
+    [],
+    [],
+    [],
+    [],
+    []
+  ],
+  "meta": {
+    "generator": "payroll-sys",
+    "version": 2,
+    "kind": "period",
+    "companyId": "company-fake",
+    "columnKeys": [
+      "id",
+      "surname",
+      "otherNames",
+      "basicSalary",
+      "govtIncrement",
+      "newBasicSalary",
+      "fullTimePartTime",
+      "allowances",
+      "emoluments",
+      "travelling",
+      "grossPay",
+      "aged60",
+      "netPay",
+      "csg",
+      "nsf",
+      "paye",
+      "totalDeductions",
+      "levy",
+      "prgf",
+      "totalMra",
+      "edf",
+      "edfMonthly",
+      "total"
+    ],
+    "excludedValues": {
+      "internalNote": [
+        "",
+        "check, \"quoted\"",
+        "",
+        "part time",
+        "",
+        ""
+      ]
+    },
+    "companyDetails": {
+      "address": "1 Test Street\nPort Louis",
+      "brn": "C00000001",
+      "customFields": [
+        {
+          "id": "cf-vat",
+          "label": "VAT",
+          "value": "VAT-FAKE-1"
+        },
+        {
+          "id": "cf-levy",
+          "label": "Levy",
+          "value": "Levy ref 42"
+        }
+      ]
+    }
+  },
+  "exportMode": "formulas"
+}

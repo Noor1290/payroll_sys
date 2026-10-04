@@ -1,0 +1,184 @@
+[
+  {
+    "key": "basicSalary",
+    "name": "Basic Salary",
+    "category": "general",
+    "type": "input",
+    "valueType": "number",
+    "decimals": 2
+  },
+  {
+    "key": "govtIncrement",
+    "name": "Govt Increment",
+    "category": "general",
+    "type": "input",
+    "valueType": "number",
+    "decimals": 2
+  },
+  {
+    "key": "newBasicSalary",
+    "name": "New Basic Salary",
+    "category": "general",
+    "type": "formula",
+    "decimals": 2,
+    "builderMode": "simple",
+    "formula": "basicSalary + govtIncrement"
+  },
+  {
+    "key": "fullTimePartTime",
+    "name": "Full time / Part time",
+    "category": "general",
+    "type": "input",
+    "valueType": "text"
+  },
+  {
+    "key": "allowances",
+    "name": "Allowances",
+    "category": "general",
+    "type": "input",
+    "valueType": "number",
+    "decimals": 2
+  },
+  {
+    "key": "emoluments",
+    "name": "Emoluments",
+    "category": "general",
+    "type": "formula",
+    "decimals": 2,
+    "builderMode": "simple",
+    "formula": "newBasicSalary + allowances"
+  },
+  {
+    "key": "travelling",
+    "name": "Travelling",
+    "category": "general",
+    "type": "input",
+    "valueType": "number",
+    "decimals": 2
+  },
+  {
+    "key": "grossPay",
+    "name": "Gross Pay",
+    "category": "general",
+    "type": "formula",
+    "decimals": 2,
+    "builderMode": "simple",
+    "formula": "emoluments + travelling"
+  },
+  {
+    "key": "aged60",
+    "name": "Age 60+",
+    "category": "general",
+    "type": "input",
+    "valueType": "checkbox"
+  },
+  {
+    "key": "netPay",
+    "name": "Net Pay",
+    "category": "general",
+    "type": "formula",
+    "decimals": 2,
+    "builderMode": "simple",
+    "formula": "grossPay - totalDeductions"
+  },
+  {
+    "key": "internalNote",
+    "name": "Internal Note",
+    "category": "general",
+    "type": "input",
+    "valueType": "text"
+  },
+  {
+    "key": "csg",
+    "name": "CSG",
+    "category": "employeeContribution",
+    "type": "formula",
+    "decimals": 2,
+    "builderMode": "tiered",
+    "tieredKind": "threshold",
+    "formula": "(emoluments) * (emoluments < 50000 ? 0.015 : emoluments >= 50000 ? 0.03 : 0)"
+  },
+  {
+    "key": "nsf",
+    "name": "NSF",
+    "category": "employeeContribution",
+    "type": "formula",
+    "decimals": 2,
+    "builderMode": "tiered",
+    "tieredKind": "threshold",
+    "formula": "((aged60 === 1)) ? (0) : ((Math.min(emoluments, 29710)) * (0.01))"
+  },
+  {
+    "key": "paye",
+    "name": "PAYE",
+    "category": "employeeContribution",
+    "type": "formula",
+    "decimals": 0,
+    "builderMode": "progressive",
+    "formula": "(Math.max(0, Math.min(emoluments, 30000) - 0)) * 0 + (Math.max(0, Math.min(emoluments, 50000) - 30000)) * 0.1 + (Math.max(0, emoluments - 50000)) * 0.2"
+  },
+  {
+    "key": "totalDeductions",
+    "name": "Total deductions",
+    "category": "employeeContribution",
+    "type": "formula",
+    "decimals": 2,
+    "builderMode": "simple",
+    "formula": "csg + nsf + paye"
+  },
+  {
+    "key": "levy",
+    "name": "Levy",
+    "category": "employerContribution",
+    "type": "formula",
+    "decimals": 3,
+    "builderMode": "tiered",
+    "tieredKind": "threshold",
+    "formula": "(Math.min(emoluments, 100000)) * (emoluments === 50000 ? 0.02 : emoluments < 20000 ? 0 : emoluments > 20000 ? 0.015 : 0)"
+  },
+  {
+    "key": "prgf",
+    "name": "PRGF",
+    "category": "employerContribution",
+    "type": "formula",
+    "decimals": 2,
+    "builderMode": "simple",
+    "formula": "((emoluments > 200000) || (basicSalary < allowances)) ? (travelling) : (emoluments * 0.045)"
+  },
+  {
+    "key": "totalMra",
+    "name": "Total MRA contributions",
+    "category": "employerContribution",
+    "type": "formula",
+    "decimals": 2,
+    "builderMode": "simple",
+    "formula": "csg + nsf + paye + levy + prgf"
+  },
+  {
+    "key": "edf",
+    "name": "EDF",
+    "category": "otherDeductions",
+    "type": "input",
+    "valueType": "number",
+    "decimals": 0
+  },
+  {
+    "key": "edfMonthly",
+    "name": "EDF (monthly)",
+    "category": "otherDeductions",
+    "type": "formula",
+    "decimals": 2,
+    "builderMode": "simple",
+    "formula": "edf / 13"
+  },
+  {
+    "key": "total",
+    "name": "Total",
+    "category": "otherDeductions",
+    "type": "formula",
+    "decimals": 2,
+    "builderMode": "tiered",
+    "tieredKind": "compare",
+    "formula": "(edfMonthly > emoluments) ? (0) : (emoluments - edfMonthly)"
+  }
+]
