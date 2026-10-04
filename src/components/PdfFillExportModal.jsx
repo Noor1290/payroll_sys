@@ -4,10 +4,8 @@ import {
   buildPdfFillColumnGroups,
   buildCompanyDetailFields,
   resolveCompanyFieldHeaders,
-  buildPdfFillRows,
   downloadPdfFillExport,
 } from '../lib/pdfFillExport'
-import { periodKey } from '../lib/periods'
 
 const FORMAT_LABEL = { csv: 'CSV', json: 'JSON' }
 
@@ -65,41 +63,15 @@ export default function PdfFillExportModal({
 
   const selectedCount = selected.size
 
-  // Only inside the Payroll Hub dashboard's iframe - opened on its own, the
-  // app shows no dashboard controls at all.
-  const canSendToDashboard = format === 'json' && window.PayrollHubBridge.isEmbedded()
-  const [sending, setSending] = useState(false)
-  const [dashboardReply, setDashboardReply] = useState(null) // { ok, text } | null
-
-  function getSelection() {
+  function handleExport() {
     const chosenColumns = groups.flatMap((g) => g.columns).filter((c) => selected.has(c.key))
     const chosenCompanyFields = companyFields.filter((f) => selectedCompanyFields.has(f.key))
     const resolvedCompanyFields = resolveCompanyFieldHeaders(
       chosenCompanyFields,
       chosenColumns.map((c) => c.name)
     )
-    return { chosenColumns, resolvedCompanyFields }
-  }
-
-  function handleExport() {
-    const { chosenColumns, resolvedCompanyFields } = getSelection()
     downloadPdfFillExport(format, chosenColumns, employees, computedGrid, resolvedCompanyFields, { companyName, year, month })
     onClose()
-  }
-
-  // Sends exactly the array the JSON download writes (same builder, same
-  // selection). sendToDashboard never throws - it resolves with ok/error.
-  async function handleSendToDashboard() {
-    const { chosenColumns, resolvedCompanyFields } = getSelection()
-    setSending(true)
-    setDashboardReply(null)
-    const reply = await window.PayrollHubBridge.sendToDashboard('send-data', {
-      dataType: 'payroll-result',
-      rows: buildPdfFillRows(chosenColumns, employees, computedGrid, resolvedCompanyFields),
-      meta: { period: periodKey(year, month) },
-    })
-    setSending(false)
-    setDashboardReply(reply.ok ? { ok: true, text: 'Sent to the dashboard.' } : { ok: false, text: `Not sent: ${reply.error}` })
   }
 
   return (
@@ -161,30 +133,10 @@ export default function PdfFillExportModal({
           · {employees.length} employee{employees.length === 1 ? '' : 's'} will be exported.
         </p>
 
-        {dashboardReply && (
-          <div
-            role="status"
-            className={`rounded-md border px-3 py-2 text-sm ${
-              dashboardReply.ok ? 'border-emerald-200 bg-emerald-50 text-emerald-700' : 'border-red-200 bg-red-50 text-red-700'
-            }`}
-          >
-            {dashboardReply.text}
-          </div>
-        )}
-
         <div className="flex justify-end gap-2 border-t border-slate-100 pt-3">
           <button onClick={onClose} className="rounded-md border border-slate-300 px-3 py-1.5 text-sm text-slate-700 hover:bg-slate-50">
             Cancel
           </button>
-          {canSendToDashboard && (
-            <button
-              onClick={handleSendToDashboard}
-              disabled={selectedCount === 0 || employees.length === 0 || sending}
-              className="rounded-md border border-indigo-600 px-3 py-1.5 text-sm font-medium text-indigo-700 hover:bg-indigo-50 disabled:cursor-not-allowed disabled:opacity-50"
-            >
-              {sending ? 'Sending…' : 'Send to dashboard'}
-            </button>
-          )}
           <button
             onClick={handleExport}
             disabled={selectedCount === 0}

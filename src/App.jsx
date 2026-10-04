@@ -10,6 +10,7 @@ import ImportMappingModal from './components/ImportMappingModal'
 import ExportPreviewModal from './components/ExportPreviewModal'
 import ExportSplitButton from './components/ExportSplitButton'
 import PdfFillExportModal from './components/PdfFillExportModal'
+import SendToDashboardButton from './components/SendToDashboardButton'
 import ConfirmDialog from './components/ConfirmDialog'
 import CompanyDetailsModal from './components/CompanyDetailsModal'
 import CopyPreviousMonthModal from './components/CopyPreviousMonthModal'
@@ -420,6 +421,20 @@ export default function App() {
                     Import from Excel
                   </button>
                   <ExportSplitButton onExport={handleOpenExportPreview} onExportPdfFill={setPdfFillFormat} />
+                  {selectedYear && selectedMonth && (
+                    <SendToDashboardButton
+                      // Remounts per company + month, so a "Sent" message never lingers over different data.
+                      key={`${activeCompany.id}:${selectedYear}-${selectedMonth}`}
+                      identityFields={identityFields}
+                      effectiveColumns={effectiveColumns}
+                      employees={periodEmployees}
+                      computedGrid={computedGrid}
+                      companyName={activeCompany.name}
+                      companyDetails={activeCompany.details}
+                      year={selectedYear}
+                      month={selectedMonth}
+                    />
+                  )}
                   <button
                     onClick={handleOpenCopyPreviousMonth}
                     disabled={!previousPeriodHasData}
