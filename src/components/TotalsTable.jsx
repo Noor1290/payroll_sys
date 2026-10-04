@@ -1,6 +1,16 @@
 import { useMemo } from 'react'
+import { CalendarSearch } from 'lucide-react'
 import { getOrderedEffectiveColumns, getCategoryGroups, labelColumnsForHelper } from '../lib/categories'
 import { formatDecimal } from '../lib/format'
+
+// Sticky header cells: a solid background (rows scroll underneath) and the
+// bottom rule drawn as an inset shadow, since a collapsed border doesn't
+// travel with a sticky cell.
+const HEADER_CELL = 'bg-elevated shadow-[inset_0_-1px_0_var(--line)]'
+
+function isFigureColumn(col) {
+  return col.valueType !== 'text' && col.valueType !== 'checkbox'
+}
 
 // Read-only aggregated view: same category-grouped header as the Employee
 // Table, but cells are plain summed values - no editing, no per-cell
@@ -11,100 +21,95 @@ export default function TotalsTable({ identityFields, idFieldKey, effectiveColum
   const labeledColumns = useMemo(() => labelColumnsForHelper(orderedColumns), [orderedColumns])
 
   return (
-    <div className="max-h-[calc(100vh-16rem)] overflow-auto rounded-lg border border-slate-200">
-      <table className="w-full border-collapse text-sm">
-        <thead>
-          <tr className="sticky top-0 z-20 bg-slate-200 text-left text-[11px] font-semibold uppercase tracking-wide text-slate-600 shadow-sm">
-            {identityFields.length > 0 && (
-              <th colSpan={identityFields.length} className="border-b border-slate-300 px-3 py-1.5">
-                Identifiers
-              </th>
-            )}
-            {categoryGroups.map((group) => (
-              <th key={group.category} colSpan={group.columns.length} className="border-b border-slate-300 px-3 py-1.5">
-                {group.label}
-              </th>
-            ))}
-          </tr>
-          <tr className="sticky top-[28px] z-10 bg-slate-100 text-left text-xs font-medium uppercase tracking-wide text-slate-500 shadow-sm">
-            {identityFields.map((field) => (
-              <th key={field.key} className="border-b border-slate-200 px-3 py-2">
-                <span className="flex items-center gap-1">
-                  {field.name}
-                  {idFieldKey === field.key && (
-                    <span className="rounded bg-amber-100 px-1 py-0.5 text-[10px] font-semibold text-amber-700">ID</span>
-                  )}
-                </span>
-              </th>
-            ))}
-            {labeledColumns.map((col) => (
-              <th
-                key={col.key}
-                className="border-b border-slate-200 px-3 py-2"
-                title={col.helperLabel !== col.name ? col.helperLabel : undefined}
-              >
-                <span className="flex items-center gap-1">
-                  {col.name}
-                  {col.type === 'formula' && (
-                    <span className="rounded bg-violet-100 px-1 py-0.5 text-[10px] font-semibold text-violet-700">fx</span>
-                  )}
-                  {col.excludeFromExport && (
-                    <span
-                      title="Not included in Excel exports or payslips"
-                      className="rounded bg-slate-200 px-1 py-0.5 text-[10px] font-semibold text-slate-500"
-                    >
-                      not exported
-                    </span>
-                  )}
-                </span>
-              </th>
-            ))}
-          </tr>
-        </thead>
-        <tbody className="divide-y divide-slate-100 bg-white">
-          {employees.map((emp) => (
-            <tr key={emp.id} className="hover:bg-slate-50">
-              {identityFields.map((field) => (
-                <td key={field.key} className="px-3 py-1.5 text-slate-700">
-                  {emp.values?.[field.key] ?? ''}
-                </td>
+    // The table scrolls inside its card; no backdrop blur on a large scrolling area.
+    <div className="card flex min-h-0 flex-col overflow-hidden">
+      <div className="min-h-0 overflow-auto">
+        <table className="w-full border-collapse whitespace-nowrap text-sm">
+          <thead>
+            <tr className="sticky top-0 z-20 h-7 text-left text-[11px] font-medium uppercase tracking-wider text-subtle">
+              {identityFields.length > 0 && (
+                <th colSpan={identityFields.length} className={`${HEADER_CELL} px-3`}>
+                  Identifiers
+                </th>
+              )}
+              {categoryGroups.map((group) => (
+                <th key={group.category} colSpan={group.columns.length} className={`${HEADER_CELL} border-l border-line px-3`}>
+                  {group.label}
+                </th>
               ))}
-              {orderedColumns.map((col) => {
-                if (col.valueType === 'text') {
-                  return (
-                    <td key={col.key} className="px-3 py-1.5 text-slate-700">
-                      {emp.values?.[col.key] ?? ''}
-                    </td>
-                  )
-                }
-                if (col.valueType === 'checkbox') {
-                  return (
-                    <td key={col.key} className="px-3 py-1.5 text-slate-700">
-                      {emp.values?.[col.key] ? 'Yes' : 'No'}
-                    </td>
-                  )
-                }
-                const value = computedGrid[emp.id]?.[col.key]?.value ?? 0
-                return (
-                  <td key={col.key} className={`px-3 py-1.5 font-mono ${col.type === 'formula' ? 'bg-violet-50' : ''}`}>
-                    {formatDecimal(value, col.decimals ?? 2)}
+            </tr>
+            <tr className="sticky top-7 z-10 text-left text-xs font-medium text-muted">
+              {identityFields.map((field) => (
+                <th key={field.key} className={`${HEADER_CELL} px-3 py-2.5`}>
+                  <span className="flex items-center gap-1.5">
+                    {field.name}
+                    {idFieldKey === field.key && <span className="badge badge-warn">ID</span>}
+                  </span>
+                </th>
+              ))}
+              {labeledColumns.map((col) => (
+                <th
+                  key={col.key}
+                  className={`${HEADER_CELL} px-3 py-2.5`}
+                  title={col.helperLabel !== col.name ? col.helperLabel : undefined}
+                >
+                  <span className={`flex items-center gap-1.5 ${isFigureColumn(col) ? 'justify-end' : ''}`}>
+                    {col.name}
+                    {col.type === 'formula' && <span className="badge badge-glow">fx</span>}
+                    {col.excludeFromExport && (
+                      <span title="Not included in Excel exports or payslips" className="badge">
+                        not exported
+                      </span>
+                    )}
+                  </span>
+                </th>
+              ))}
+            </tr>
+          </thead>
+          <tbody className="divide-y divide-line">
+            {employees.map((emp) => (
+              <tr key={emp.id} className="transition-colors hover:bg-surface-hover">
+                {identityFields.map((field) => (
+                  <td key={field.key} className={`px-3 py-2 text-fg ${idFieldKey === field.key ? 'num' : ''}`}>
+                    {emp.values?.[field.key] ?? ''}
                   </td>
-                )
-              })}
-            </tr>
-          ))}
-          {employees.length === 0 && (
-            <tr>
-              <td
-                colSpan={identityFields.length + orderedColumns.length}
-                className="px-3 py-6 text-center text-slate-400"
-              >
-                No employees found in the selected month range.
-              </td>
-            </tr>
-          )}
-        </tbody>
-      </table>
+                ))}
+                {orderedColumns.map((col) => {
+                  if (col.valueType === 'text') {
+                    return (
+                      <td key={col.key} className="px-3 py-2 text-fg">
+                        {emp.values?.[col.key] ?? ''}
+                      </td>
+                    )
+                  }
+                  if (col.valueType === 'checkbox') {
+                    return (
+                      <td key={col.key} className="px-3 py-2 text-fg">
+                        {emp.values?.[col.key] ? 'Yes' : 'No'}
+                      </td>
+                    )
+                  }
+                  const value = computedGrid[emp.id]?.[col.key]?.value ?? 0
+                  return (
+                    <td key={col.key} className={`num px-3 py-2 text-right text-fg ${col.type === 'formula' ? 'bg-glow/10' : ''}`}>
+                      {formatDecimal(value, col.decimals ?? 2)}
+                    </td>
+                  )
+                })}
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+
+      {employees.length === 0 && (
+        <div className="flex flex-col items-center gap-3 border-t border-line px-4 py-10 text-center">
+          <span className="icon-tile icon-tile-neutral" aria-hidden="true">
+            <CalendarSearch />
+          </span>
+          <p className="text-sm text-muted">No employees found in the selected month range.</p>
+        </div>
+      )}
     </div>
   )
 }

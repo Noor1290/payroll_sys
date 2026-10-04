@@ -5,20 +5,14 @@ export default function MonthSwitcher({ year, month, onChange }) {
   const next = shiftPeriod(year, month, 1)
 
   return (
-    <div className="flex items-center justify-center gap-4 rounded-lg border border-slate-200 bg-white py-2">
-      <button
-        onClick={() => onChange(prev.year, prev.month)}
-        className="rounded-md px-3 py-1 text-sm text-slate-500 hover:bg-slate-100 hover:text-slate-700"
-      >
+    <div className="card flex items-center justify-center gap-2 px-2 py-1.5 sm:gap-4">
+      <button onClick={() => onChange(prev.year, prev.month)} className="btn btn-ghost btn-sm">
         ← {monthName(prev.month)}
       </button>
-      <span className="min-w-[10rem] text-center text-sm font-semibold text-slate-800">
+      <span className="num min-w-36 text-center text-sm font-semibold text-fg sm:min-w-40">
         {formatPeriodLabel(year, month)}
       </span>
-      <button
-        onClick={() => onChange(next.year, next.month)}
-        className="rounded-md px-3 py-1 text-sm text-slate-500 hover:bg-slate-100 hover:text-slate-700"
-      >
+      <button onClick={() => onChange(next.year, next.month)} className="btn btn-ghost btn-sm">
         {monthName(next.month)} →
       </button>
     </div>

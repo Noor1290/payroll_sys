@@ -6,11 +6,11 @@ import {
   newCompareCondition,
 } from '../lib/exemptionCondition'
 
-const TOGGLE_ACTIVE = 'border-indigo-600 bg-indigo-50 text-indigo-700'
-const TOGGLE_INACTIVE = 'border-slate-300 text-slate-600 hover:bg-slate-50'
+const TOGGLE_ACTIVE = 'choice-active'
+const TOGGLE_INACTIVE = ''
 
 function toggleClass(active) {
-  return `rounded-md border px-3 py-1.5 text-sm ${active ? TOGGLE_ACTIVE : TOGGLE_INACTIVE}`
+  return `choice ${active ? TOGGLE_ACTIVE : TOGGLE_INACTIVE}`
 }
 
 // Optional guard shown alongside any formula builder mode: "if [condition],
@@ -47,8 +47,8 @@ export default function ExemptionConditionBuilder({ availableColumns, exemption,
   const summary = exemption.enabled ? describeExemptionRule(exemption, columnsByKey, baseSummary) : null
 
   return (
-    <div className="space-y-3 rounded-md border border-slate-200 p-3">
-      <label className="flex items-center gap-2 text-sm font-medium text-slate-700">
+    <div className="space-y-3 rounded-xl border border-line bg-surface p-3">
+      <label className="flex items-center gap-2 text-sm font-medium text-fg">
         <input type="checkbox" checked={exemption.enabled} onChange={(e) => patch({ enabled: e.target.checked })} />
         Add an exemption / override condition
       </label>
@@ -56,12 +56,12 @@ export default function ExemptionConditionBuilder({ availableColumns, exemption,
       {exemption.enabled && (
         <div className="space-y-3">
           {summary && (
-            <div className="rounded-md border border-amber-200 bg-amber-50 px-3 py-2 text-sm text-amber-800">{summary}</div>
+            <div className="note note-warn">{summary}</div>
           )}
 
           <div className="space-y-2">
             {exemption.conditions.map((cond, i) => (
-              <div key={i} className="rounded-md border border-slate-200 bg-slate-50 p-2">
+              <div key={i} className="rounded-lg border border-line bg-surface p-3">
                 <div className="mb-2 flex items-center justify-between">
                   <div className="flex gap-1.5">
                     <button
@@ -80,7 +80,7 @@ export default function ExemptionConditionBuilder({ availableColumns, exemption,
                     </button>
                   </div>
                   {exemption.conditions.length > 1 && (
-                    <button type="button" onClick={() => removeCondition(i)} className="rounded px-2 py-1 text-xs text-red-600 hover:bg-red-50">
+                    <button type="button" onClick={() => removeCondition(i)} className="btn btn-ghost btn-sm text-xs text-danger">
                       Remove
                     </button>
                   )}
@@ -90,8 +90,9 @@ export default function ExemptionConditionBuilder({ availableColumns, exemption,
                   <div className="flex flex-wrap items-center gap-2">
                     <select
                       value={cond.columnKey ?? ''}
+                      aria-label="Checkbox column"
                       onChange={(e) => updateCondition(i, { columnKey: e.target.value || null })}
-                      className="rounded-md border border-slate-300 px-2 py-1.5 text-sm focus:border-indigo-500 focus:outline-none"
+                      className="field w-auto max-w-full"
                     >
                       <option value="">— Select a checkbox column —</option>
                       {checkboxColumns.map((c) => (
@@ -102,22 +103,24 @@ export default function ExemptionConditionBuilder({ availableColumns, exemption,
                     </select>
                     <select
                       value={cond.checked ? 'ticked' : 'unticked'}
+                      aria-label="Checkbox state"
                       onChange={(e) => updateCondition(i, { checked: e.target.value === 'ticked' })}
-                      className="rounded-md border border-slate-300 px-2 py-1.5 text-sm focus:border-indigo-500 focus:outline-none"
+                      className="field w-auto max-w-full"
                     >
                       <option value="ticked">is ticked</option>
                       <option value="unticked">is not ticked</option>
                     </select>
                     {checkboxColumns.length === 0 && (
-                      <span className="text-xs text-slate-400">No checkbox columns available yet.</span>
+                      <span className="text-xs text-subtle">No checkbox columns available yet.</span>
                     )}
                   </div>
                 ) : (
                   <div className="flex flex-wrap items-center gap-2">
                     <select
                       value={cond.columnKey ?? ''}
+                      aria-label="Column"
                       onChange={(e) => updateCondition(i, { columnKey: e.target.value || null })}
-                      className="rounded-md border border-slate-300 px-2 py-1.5 text-sm focus:border-indigo-500 focus:outline-none"
+                      className="field w-auto max-w-full"
                     >
                       <option value="">— Select a column —</option>
                       {availableColumns.map((c) => (
@@ -128,8 +131,9 @@ export default function ExemptionConditionBuilder({ availableColumns, exemption,
                     </select>
                     <select
                       value={cond.operator}
+                      aria-label="Comparison"
                       onChange={(e) => updateCondition(i, { operator: e.target.value })}
-                      className="rounded-md border border-slate-300 px-2 py-1.5 text-sm focus:border-indigo-500 focus:outline-none"
+                      className="field w-auto max-w-full"
                     >
                       {COMPARE_OPERATORS.map((op) => (
                         <option key={op} value={op}>
@@ -139,8 +143,9 @@ export default function ExemptionConditionBuilder({ availableColumns, exemption,
                     </select>
                     <select
                       value={cond.compareToType}
+                      aria-label="Compare to"
                       onChange={(e) => updateCondition(i, { compareToType: e.target.value })}
-                      className="rounded-md border border-slate-300 px-2 py-1.5 text-sm focus:border-indigo-500 focus:outline-none"
+                      className="field w-auto max-w-full"
                     >
                       <option value="value">a fixed value</option>
                       <option value="column">another column</option>
@@ -149,14 +154,16 @@ export default function ExemptionConditionBuilder({ availableColumns, exemption,
                       <input
                         type="number"
                         value={cond.compareToValue}
+                        aria-label="a fixed value"
                         onChange={(e) => updateCondition(i, { compareToValue: e.target.value === '' ? '' : Number(e.target.value) })}
-                        className="w-28 rounded-md border border-slate-300 px-2 py-1.5 text-sm focus:border-indigo-500 focus:outline-none"
+                        className="field num w-28 text-right"
                       />
                     ) : (
                       <select
                         value={cond.compareToColumnKey ?? ''}
+                        aria-label="another column"
                         onChange={(e) => updateCondition(i, { compareToColumnKey: e.target.value || null })}
-                        className="rounded-md border border-slate-300 px-2 py-1.5 text-sm focus:border-indigo-500 focus:outline-none"
+                        className="field w-auto max-w-full"
                       >
                         <option value="">— Select a column —</option>
                         {availableColumns.map((c) => (
@@ -176,17 +183,18 @@ export default function ExemptionConditionBuilder({ availableColumns, exemption,
             <button
               type="button"
               onClick={addCondition}
-              className="rounded-md border border-dashed border-slate-300 px-3 py-1 text-xs text-slate-500 hover:border-indigo-400 hover:text-indigo-600"
+              className="btn btn-ghost btn-sm border-dashed border-line-strong text-xs hover:border-accent hover:text-accent"
             >
               + Add Condition
             </button>
             {exemption.conditions.length > 1 && (
-              <div className="flex items-center gap-1.5 text-xs text-slate-500">
+              <div className="flex items-center gap-1.5 text-xs text-muted">
                 Combine with
                 <select
                   value={exemption.combineWith}
+                  aria-label="Combine with"
                   onChange={(e) => patch({ combineWith: e.target.value })}
-                  className="rounded-md border border-slate-300 px-2 py-1 text-xs focus:border-indigo-500 focus:outline-none"
+                  className="field field-cell w-auto"
                 >
                   <option value="AND">AND (all must match)</option>
                   <option value="OR">OR (any can match)</option>
@@ -196,12 +204,13 @@ export default function ExemptionConditionBuilder({ availableColumns, exemption,
           </div>
 
           <div>
-            <label className="mb-1 block text-xs font-medium text-slate-600">Result when the condition is met</label>
+            <label className="label">Result when the condition is met</label>
             <div className="flex flex-wrap items-center gap-2">
               <select
                 value={exemption.resultType}
+                aria-label="Result when the condition is met"
                 onChange={(e) => patch({ resultType: e.target.value })}
-                className="rounded-md border border-slate-300 px-2 py-1.5 text-sm focus:border-indigo-500 focus:outline-none"
+                className="field w-auto max-w-full"
               >
                 <option value="fixed">Fixed value</option>
                 <option value="column">Value of another column</option>
@@ -210,14 +219,16 @@ export default function ExemptionConditionBuilder({ availableColumns, exemption,
                 <input
                   type="number"
                   value={exemption.resultValue}
+                  aria-label="Fixed value"
                   onChange={(e) => patch({ resultValue: e.target.value === '' ? '' : Number(e.target.value) })}
-                  className="w-28 rounded-md border border-slate-300 px-2 py-1.5 text-sm focus:border-indigo-500 focus:outline-none"
+                  className="field num w-28 text-right"
                 />
               ) : (
                 <select
                   value={exemption.resultColumnKey ?? ''}
+                  aria-label="Value of another column"
                   onChange={(e) => patch({ resultColumnKey: e.target.value || null })}
-                  className="rounded-md border border-slate-300 px-2 py-1.5 text-sm focus:border-indigo-500 focus:outline-none"
+                  className="field w-auto max-w-full"
                 >
                   <option value="">— Select a column —</option>
                   {availableColumns.map((c) => (

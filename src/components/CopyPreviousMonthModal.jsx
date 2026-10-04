@@ -1,4 +1,5 @@
 import { useMemo, useState } from 'react'
+import { Copy } from 'lucide-react'
 import Modal from './Modal'
 import ConfirmDialog from './ConfirmDialog'
 import { formatDecimal } from '../lib/format'
@@ -95,62 +96,61 @@ export default function CopyPreviousMonthModal({
 
   return (
     <>
-      <Modal title="Copy from Previous Month" onClose={onCancel} width="max-w-4xl">
+      <Modal title="Copy from Previous Month" onClose={onCancel} width="max-w-4xl" icon={<Copy />}>
         <div className="space-y-4">
-          <p className="text-sm text-slate-600">
+          <p className="text-sm leading-relaxed text-muted [&_strong]:font-semibold [&_strong]:text-fg">
             Copy selected employees' values for selected columns from <strong>{previousPeriodLabel}</strong> into{' '}
             <strong>{currentPeriodLabel}</strong>. Only what you check below is touched - everything else in{' '}
             {currentPeriodLabel} stays exactly as it is.
           </p>
 
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid gap-4 sm:grid-cols-2">
             <div>
-              <div className="mb-1 flex items-center justify-between">
-                <h3 className="text-xs font-semibold uppercase tracking-wide text-slate-500">
+              <div className="mb-1.5 flex min-h-8 items-center justify-between gap-2">
+                <h3 className="text-[11px] font-medium uppercase tracking-wider text-subtle">
                   Employees in {previousPeriodLabel}
                 </h3>
-                <div className="flex gap-2">
-                  <button onClick={selectAllEmployees} className="text-xs text-indigo-600 hover:underline">
+                <div className="flex gap-1">
+                  <button onClick={selectAllEmployees} className="btn btn-ghost btn-sm text-xs text-accent">
                     Select All
                   </button>
-                  <button onClick={clearAllEmployees} className="text-xs text-indigo-600 hover:underline">
+                  <button onClick={clearAllEmployees} className="btn btn-ghost btn-sm text-xs text-accent">
                     Clear All
                   </button>
                 </div>
               </div>
-              <div className="max-h-72 space-y-1 overflow-y-auto rounded-md border border-slate-200 p-2">
+              <div className="max-h-64 space-y-0.5 overflow-y-auto rounded-xl border border-line bg-surface p-2">
                 {matched.map(({ prevEmp, existing }) => (
-                  <label key={prevEmp.id} className="flex items-center justify-between gap-2 rounded px-1 py-1 text-sm hover:bg-slate-50">
-                    <span className="flex items-center gap-2 truncate">
+                  <label
+                    key={prevEmp.id}
+                    className="flex items-center justify-between gap-2 rounded-md px-2 py-1.5 text-sm transition-colors hover:bg-surface-hover"
+                  >
+                    <span className="flex min-w-0 items-center gap-2">
                       <input
                         type="checkbox"
                         checked={selectedEmployeeIds.has(prevEmp.id)}
                         onChange={() => toggleEmployee(prevEmp.id)}
                       />
-                      <span className="truncate text-slate-700">{employeeLabel(prevEmp, identityFields)}</span>
+                      <span className="truncate text-fg">{employeeLabel(prevEmp, identityFields)}</span>
                     </span>
-                    <span
-                      className={`shrink-0 rounded px-1.5 py-0.5 text-[10px] font-semibold ${
-                        existing ? 'bg-amber-100 text-amber-700' : 'bg-emerald-100 text-emerald-700'
-                      }`}
-                    >
-                      {existing ? 'Exists' : 'New'}
-                    </span>
+                    <span className={`badge ${existing ? 'badge-warn' : 'badge-accent'}`}>{existing ? 'Exists' : 'New'}</span>
                   </label>
                 ))}
-                {matched.length === 0 && <p className="px-1 py-2 text-sm text-slate-400">No employees found.</p>}
+                {matched.length === 0 && <p className="px-2 py-2 text-sm text-muted">No employees found.</p>}
               </div>
             </div>
 
             <div>
-              <h3 className="mb-1 text-xs font-semibold uppercase tracking-wide text-slate-500">Columns to copy</h3>
-              <div className="max-h-72 space-y-3 overflow-y-auto rounded-md border border-slate-200 p-2">
+              <h3 className="mb-1.5 flex min-h-8 items-center text-[11px] font-medium uppercase tracking-wider text-subtle">
+                Columns to copy
+              </h3>
+              <div className="max-h-64 space-y-3 overflow-y-auto rounded-xl border border-line bg-surface p-3">
                 {columnGroups.map((group) => (
                   <div key={group.label}>
-                    <p className="mb-1 text-[11px] font-semibold uppercase tracking-wide text-slate-400">{group.label}</p>
-                    <div className="space-y-1">
+                    <p className="mb-1.5 text-[11px] font-medium uppercase tracking-wider text-subtle">{group.label}</p>
+                    <div className="space-y-1.5">
                       {group.columns.map((col) => (
-                        <label key={col.key} className="flex items-center gap-2 text-sm text-slate-700">
+                        <label key={col.key} className="flex items-center gap-2 text-sm text-fg">
                           <input type="checkbox" checked={selectedColumnKeys.has(col.key)} onChange={() => toggleColumn(col.key)} />
                           {col.name}
                         </label>
@@ -158,37 +158,47 @@ export default function CopyPreviousMonthModal({
                     </div>
                   </div>
                 ))}
-                {columnGroups.length === 0 && <p className="text-sm text-slate-400">No columns defined yet.</p>}
+                {columnGroups.length === 0 && <p className="text-sm text-muted">No columns defined yet.</p>}
               </div>
             </div>
           </div>
 
           <div>
-            <h3 className="mb-1 text-xs font-semibold uppercase tracking-wide text-slate-500">Preview</h3>
-            <div className="max-h-64 overflow-auto rounded-md border border-slate-200">
-              <table className="w-full text-xs">
-                <thead className="sticky top-0 bg-slate-50 text-left uppercase tracking-wide text-slate-500">
+            <h3 className="mb-1.5 text-[11px] font-medium uppercase tracking-wider text-subtle">Preview</h3>
+            <div className="max-h-56 overflow-auto rounded-xl border border-line">
+              <table className="w-full whitespace-nowrap text-xs">
+                <thead className="sticky top-0 text-left font-medium text-muted">
                   <tr>
-                    <th className="px-2 py-1.5">Employee</th>
-                    <th className="px-2 py-1.5">Status</th>
+                    <th className="bg-elevated px-3 py-2 shadow-[inset_0_-1px_0_var(--line)]">Employee</th>
+                    <th className="bg-elevated px-3 py-2 shadow-[inset_0_-1px_0_var(--line)]">Status</th>
                     {selectedColumns.map((col) => (
-                      <th key={col.key} className="px-2 py-1.5">
+                      <th
+                        key={col.key}
+                        className={`bg-elevated px-3 py-2 shadow-[inset_0_-1px_0_var(--line)] ${
+                          col.valueType === 'text' || col.valueType === 'checkbox' || !col.valueType ? '' : 'text-right'
+                        }`}
+                      >
                         {col.name}
                       </th>
                     ))}
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-slate-100">
+                <tbody className="divide-y divide-line">
                   {selectedRows.map(({ prevEmp, existing }) => (
                     <tr key={prevEmp.id}>
-                      <td className="px-2 py-1.5 text-slate-700">{employeeLabel(prevEmp, identityFields)}</td>
-                      <td className="px-2 py-1.5">
-                        <span className={existing ? 'text-amber-700' : 'text-emerald-700'}>
+                      <td className="px-3 py-2 text-fg">{employeeLabel(prevEmp, identityFields)}</td>
+                      <td className="px-3 py-2">
+                        <span className={`badge normal-case ${existing ? 'badge-warn' : 'badge-accent'}`}>
                           {existing ? 'Update existing' : 'Create new'}
                         </span>
                       </td>
                       {selectedColumns.map((col) => (
-                        <td key={col.key} className="px-2 py-1.5 font-mono text-slate-600">
+                        <td
+                          key={col.key}
+                          className={`num px-3 py-2 text-fg ${
+                            col.valueType === 'text' || col.valueType === 'checkbox' || !col.valueType ? '' : 'text-right'
+                          }`}
+                        >
                           {displayValue(prevEmp.values?.[col.key], columnsByKey[col.key])}
                         </td>
                       ))}
@@ -196,7 +206,7 @@ export default function CopyPreviousMonthModal({
                   ))}
                   {selectedRows.length === 0 && (
                     <tr>
-                      <td colSpan={2 + selectedColumns.length} className="px-2 py-4 text-center text-slate-400">
+                      <td colSpan={2 + selectedColumns.length} className="whitespace-normal px-3 py-5 text-center text-muted">
                         Select employees and columns above to see a preview.
                       </td>
                     </tr>
@@ -206,15 +216,11 @@ export default function CopyPreviousMonthModal({
             </div>
           </div>
 
-          <div className="flex justify-end gap-2 border-t border-slate-100 pt-3">
-            <button onClick={onCancel} className="rounded-md border border-slate-300 px-3 py-1.5 text-sm text-slate-700 hover:bg-slate-50">
+          <div className="flex justify-end gap-2 border-t border-line pt-4">
+            <button onClick={onCancel} className="btn btn-secondary">
               Cancel
             </button>
-            <button
-              onClick={handleConfirmClick}
-              disabled={!canConfirm}
-              className="rounded-md bg-indigo-600 px-3 py-1.5 text-sm font-medium text-white hover:bg-indigo-700 disabled:cursor-not-allowed disabled:opacity-50"
-            >
+            <button onClick={handleConfirmClick} disabled={!canConfirm} className="btn btn-primary">
               Copy {selectedEmployeeIds.size} Employee{selectedEmployeeIds.size === 1 ? '' : 's'}
             </button>
           </div>

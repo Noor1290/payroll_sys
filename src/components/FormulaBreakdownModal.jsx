@@ -1,7 +1,11 @@
 import { useState } from 'react'
+import { ChevronDown, ChevronRight, Sigma } from 'lucide-react'
 import Modal from './Modal'
 import { formatDecimal } from '../lib/format'
 import { formatFormulaForDisplay } from '../lib/formulaEngine'
+
+const SECTION_LABEL = 'text-xs font-medium uppercase tracking-wide text-subtle'
+const CODE_LINE = 'num mt-1 rounded-md border border-line bg-surface px-2.5 py-1.5 text-sm text-fg'
 
 function formatValue(v, decimals, valueType) {
   if (valueType === 'checkbox') return v === 1 || v === true ? 'Yes' : 'No'
@@ -15,32 +19,31 @@ function DependencyRow({ trace, labelByKey }) {
   const isFormula = trace.type === 'formula'
 
   return (
-    <div className="rounded-md border border-slate-200">
+    <div className="rounded-lg border border-line">
       <button
         type="button"
         onClick={() => isFormula && setOpen((o) => !o)}
-        className={`flex w-full items-center justify-between px-3 py-2 text-left text-sm ${
-          isFormula ? 'cursor-pointer hover:bg-slate-50' : 'cursor-default'
+        aria-expanded={isFormula ? open : undefined}
+        className={`flex w-full items-center justify-between gap-3 rounded-lg px-3 py-2 text-left text-sm transition-colors ${
+          isFormula ? 'cursor-pointer hover:bg-surface-hover' : 'cursor-default'
         }`}
       >
-        <span className="flex items-center gap-2">
+        <span className="flex min-w-0 items-center gap-2">
           {isFormula && (
-            <span className="text-xs text-slate-400">{open ? '▾' : '▸'}</span>
+            <span className="text-subtle" aria-hidden="true">
+              {open ? <ChevronDown className="h-4 w-4" /> : <ChevronRight className="h-4 w-4" />}
+            </span>
           )}
-          <span className="font-medium text-slate-700">{trace.name}</span>
-          {isFormula ? (
-            <span className="rounded bg-violet-100 px-1.5 py-0.5 text-[10px] font-semibold text-violet-700">fx</span>
-          ) : (
-            <span className="rounded bg-slate-100 px-1.5 py-0.5 text-[10px] font-semibold text-slate-500">input</span>
-          )}
+          <span className="font-medium text-fg">{trace.name}</span>
+          {isFormula ? <span className="badge badge-glow normal-case">fx</span> : <span className="badge normal-case">input</span>}
         </span>
-        <span className={`font-mono text-sm ${trace.error ? 'text-red-600' : 'text-slate-800'}`}>
+        <span className={`num shrink-0 text-sm ${trace.error ? 'text-danger' : 'text-fg'}`}>
           {trace.error ? 'Error' : formatValue(trace.value, trace.decimals, trace.valueType)}
         </span>
       </button>
 
       {isFormula && open && (
-        <div className="border-t border-slate-100 px-3 py-2">
+        <div className="border-t border-line px-3 py-3">
           <FormulaBody trace={trace} labelByKey={labelByKey} />
         </div>
       )}
@@ -50,47 +53,43 @@ function DependencyRow({ trace, labelByKey }) {
 
 function FormulaBody({ trace, labelByKey }) {
   if (trace.error) {
-    return <p className="text-sm text-red-600">Error: {trace.error}</p>
+    return <p className="text-sm text-danger">Error: {trace.error}</p>
   }
 
   return (
-    <div className="space-y-3">
+    <div className="space-y-4">
       {trace.exemption && (
         <div>
-          <p className="text-xs font-medium uppercase tracking-wide text-slate-400">Exemption / condition</p>
-          <p className="mt-0.5 rounded bg-amber-50 px-2 py-1.5 text-sm text-amber-900">{trace.exemption.sentence}</p>
+          <p className={SECTION_LABEL}>Exemption / condition</p>
+          <p className="note note-warn mt-1">{trace.exemption.sentence}</p>
         </div>
       )}
       {(!trace.exemption || !trace.exemption.matched) &&
         (trace.tiered || trace.compare || trace.progressive ? (
           <div>
-            <p className="text-xs font-medium uppercase tracking-wide text-slate-400">How this was calculated</p>
-            <p className="mt-0.5 rounded bg-indigo-50 px-2 py-1.5 text-sm text-indigo-900">
-              {(trace.tiered ?? trace.compare ?? trace.progressive).sentence}
-            </p>
+            <p className={SECTION_LABEL}>How this was calculated</p>
+            <p className="note note-accent mt-1">{(trace.tiered ?? trace.compare ?? trace.progressive).sentence}</p>
           </div>
         ) : (
           <>
             <div>
-              <p className="text-xs font-medium uppercase tracking-wide text-slate-400">Formula</p>
-              <p className="mt-0.5 rounded bg-slate-50 px-2 py-1 font-mono text-sm text-slate-700">
-                {formatFormulaForDisplay(trace.formula, labelByKey)}
-              </p>
+              <p className={SECTION_LABEL}>Formula</p>
+              <p className={CODE_LINE}>{formatFormulaForDisplay(trace.formula, labelByKey)}</p>
             </div>
             <div>
-              <p className="text-xs font-medium uppercase tracking-wide text-slate-400">Substituted</p>
-              <p className="mt-0.5 rounded bg-slate-50 px-2 py-1 font-mono text-sm text-slate-700">{trace.substituted}</p>
+              <p className={SECTION_LABEL}>Substituted</p>
+              <p className={CODE_LINE}>{trace.substituted}</p>
             </div>
           </>
         ))}
       <div>
-        <p className="text-xs font-medium uppercase tracking-wide text-slate-400">Result</p>
-        <p className="mt-0.5 font-mono text-base font-semibold text-indigo-700">{formatValue(trace.value, trace.decimals)}</p>
+        <p className={SECTION_LABEL}>Result</p>
+        <p className="num mt-1 text-xl font-semibold text-accent">{formatValue(trace.value, trace.decimals)}</p>
       </div>
 
       {trace.dependencies && trace.dependencies.length > 0 && (
         <div>
-          <p className="mb-1 text-xs font-medium uppercase tracking-wide text-slate-400">Depends on</p>
+          <p className={`${SECTION_LABEL} mb-1.5`}>Depends on</p>
           <div className="space-y-1.5">
             {trace.dependencies.map((dep) => (
               <DependencyRow key={dep.key} trace={dep} labelByKey={labelByKey} />
@@ -104,7 +103,7 @@ function FormulaBody({ trace, labelByKey }) {
 
 export default function FormulaBreakdownModal({ trace, labelByKey = {}, onClose }) {
   return (
-    <Modal title={`Breakdown: ${trace.name}`} onClose={onClose} width="max-w-xl">
+    <Modal title={`Breakdown: ${trace.name}`} onClose={onClose} width="max-w-xl" icon={<Sigma />}>
       <FormulaBody trace={trace} labelByKey={labelByKey} />
     </Modal>
   )

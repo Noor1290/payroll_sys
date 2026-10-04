@@ -1,0 +1,59 @@
+[
+  {
+    "id": "oct-1",
+    "values": {
+      "id": "F001",
+      "surname": "Testeur",
+      "otherNames": "Alpha Fake",
+      "basicSalary": "17500",
+      "allowances": "1000",
+      "travelling": "77",
+      "aged60": false,
+      "fullTimePartTime": "Full time",
+      "edf": "5",
+      "govtIncrement": "615"
+    }
+  },
+  {
+    "id": "oct-2",
+    "values": {
+      "id": "F002",
+      "surname": "Exemple, Jr",
+      "otherNames": "Beta \"B\" Fake",
+      "basicSalary": "60000",
+      "allowances": "2500.25",
+      "travelling": "",
+      "aged60": false,
+      "fullTimePartTime": "Full time",
+      "edf": "",
+      "govtIncrement": "0"
+    }
+  },
+  {
+    "id": "oct-9",
+    "values": {
+      "id": "F009",
+      "surname": "Stayer",
+      "otherNames": "Iota Fake",
+      "basicSalary": "12345.67",
+      "allowances": "10",
+      "travelling": "20",
+      "aged60": false,
+      "fullTimePartTime": "Full time",
+      "edf": "30"
+    }
+  },
+  {
+    "id": "<new>",
+    "values": {
+      "id": "F007",
+      "surname": "Leaver",
+      "otherNames": "Eta Fake",
+      "basicSalary": "22000",
+      "govtIncrement": "",
+      "fullTimePartTime": "Part time",
+      "allowances": "0",
+      "aged60": true
+    }
+  }
+]

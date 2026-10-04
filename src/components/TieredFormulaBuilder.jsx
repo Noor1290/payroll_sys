@@ -39,16 +39,17 @@ export default function TieredFormulaBuilder({ availableColumns, baseKey, tiers,
 
   return (
     <div className="space-y-4">
-      <div className="rounded-md border border-indigo-200 bg-indigo-50 px-3 py-2 text-sm text-indigo-800">
+      <div className="note note-accent">
         {summary}
       </div>
 
       <div>
-        <label className="mb-1 block text-xs font-medium text-slate-600">Base value column</label>
+        <label className="label">Base value column</label>
         <select
           value={baseKey ?? ''}
+          aria-label="Base value column"
           onChange={(e) => setBaseKey(e.target.value || null)}
-          className="w-full rounded-md border border-slate-300 px-3 py-1.5 text-sm focus:border-indigo-500 focus:outline-none"
+          className="field"
         >
           <option value="">— Select a column —</option>
           {availableColumns.map((c) => (
@@ -60,14 +61,15 @@ export default function TieredFormulaBuilder({ availableColumns, baseKey, tiers,
       </div>
 
       <div>
-        <label className="mb-1 block text-xs font-medium text-slate-600">Tiers</label>
+        <label className="label">Tiers</label>
         <div className="space-y-2">
           {tiers.map((tier, i) => (
             <div key={i} className="flex items-center gap-2">
               <select
                 value={tier.operator}
+                aria-label="Tiers"
                 onChange={(e) => updateTier(i, { operator: e.target.value })}
-                className="rounded-md border border-slate-300 px-2 py-1.5 text-sm focus:border-indigo-500 focus:outline-none"
+                className="field w-auto max-w-full"
               >
                 <option value="below">Below</option>
                 <option value="equal">Equal to</option>
@@ -78,23 +80,25 @@ export default function TieredFormulaBuilder({ availableColumns, baseKey, tiers,
                 type="number"
                 value={tier.threshold}
                 onChange={(e) => updateTier(i, { threshold: e.target.value === '' ? '' : Number(e.target.value) })}
+                aria-label="amount"
                 placeholder="amount"
-                className="w-32 rounded-md border border-slate-300 px-2 py-1.5 text-sm focus:border-indigo-500 focus:outline-none"
+                className="field num w-32 text-right"
               />
-              <span className="text-sm text-slate-400">→ rate</span>
+              <span className="text-sm text-subtle">→ rate</span>
               <input
                 type="number"
                 value={tier.rate}
                 onChange={(e) => updateTier(i, { rate: e.target.value === '' ? '' : Number(e.target.value) })}
+                aria-label="rate"
                 placeholder="rate"
-                className="w-24 rounded-md border border-slate-300 px-2 py-1.5 text-sm focus:border-indigo-500 focus:outline-none"
+                className="field num w-24 text-right"
               />
-              <span className="text-sm text-slate-400">%</span>
+              <span className="text-sm text-subtle">%</span>
               <button
                 type="button"
                 onClick={() => removeTier(i)}
                 disabled={tiers.length <= 1}
-                className="ml-1 rounded px-2 py-1 text-xs text-red-600 hover:bg-red-50 disabled:cursor-not-allowed disabled:opacity-30"
+                className="btn btn-ghost btn-sm text-xs text-danger"
               >
                 Remove
               </button>
@@ -104,14 +108,14 @@ export default function TieredFormulaBuilder({ availableColumns, baseKey, tiers,
         <button
           type="button"
           onClick={addTier}
-          className="mt-2 rounded-md border border-dashed border-slate-300 px-3 py-1 text-xs text-slate-500 hover:border-indigo-400 hover:text-indigo-600"
+          className="btn btn-ghost btn-sm mt-2 border-dashed border-line-strong text-xs hover:border-accent hover:text-accent"
         >
           + Add Tier
         </button>
       </div>
 
       <div>
-        <label className="flex items-center gap-2 text-xs font-medium text-slate-600">
+        <label className="flex items-center gap-2 text-sm text-fg">
           <input type="checkbox" checked={cap !== null && cap !== undefined} onChange={(e) => setCapEnabled(e.target.checked)} />
           Cap / Ceiling — apply the rate to a maximum of
         </label>
@@ -120,8 +124,9 @@ export default function TieredFormulaBuilder({ availableColumns, baseKey, tiers,
             type="number"
             value={cap}
             onChange={(e) => setCapValue(e.target.value === '' ? '' : Number(e.target.value))}
+            aria-label="maximum amount"
             placeholder="maximum amount"
-            className="mt-1 w-40 rounded-md border border-slate-300 px-2 py-1.5 text-sm focus:border-indigo-500 focus:outline-none"
+            className="field num mt-2 w-40 text-right"
           />
         )}
       </div>

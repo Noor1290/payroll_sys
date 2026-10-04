@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { CircleAlert, IdCard } from 'lucide-react'
 import Modal from './Modal'
 import { slugify, isValidKey } from '../lib/slugify'
 
@@ -31,45 +32,48 @@ export default function IdentityFieldFormModal({ initial, existingKeys, onSave, 
   }
 
   return (
-    <Modal title={isEdit ? 'Edit identity field' : 'Add identity field'} onClose={onClose} width="max-w-md">
+    <Modal title={isEdit ? 'Edit identity field' : 'Add identity field'} onClose={onClose} width="max-w-md" icon={<IdCard />}>
       <div className="space-y-4">
         <div>
-          <label className="mb-1 block text-xs font-medium text-slate-600">Name</label>
+          <label className="label">Name</label>
           <input
-            className="w-full rounded-md border border-slate-300 px-3 py-1.5 text-sm focus:border-indigo-500 focus:outline-none"
+            className="field"
             value={name}
             onChange={(e) => handleNameChange(e.target.value)}
+            aria-label="Name"
             placeholder="e.g. Employee Code"
             autoFocus
           />
         </div>
 
         <div>
-          <label className="mb-1 block text-xs font-medium text-slate-600">Key</label>
+          <label className="label">Key</label>
           <input
-            className="w-full rounded-md border border-slate-300 px-3 py-1.5 font-mono text-sm focus:border-indigo-500 focus:outline-none"
+            className="field font-mono"
             value={key}
             onChange={(e) => {
               setKeyTouched(true)
               setKey(e.target.value)
             }}
+            aria-label="Key"
             placeholder="employeeCode"
           />
         </div>
 
         {error && (
-          <div className="rounded-md border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700">
-            {error}
+          <div role="alert" className="panel panel-danger text-sm">
+            <CircleAlert aria-hidden="true" />
+            <span>{error}</span>
           </div>
         )}
 
-        <div className="flex justify-end gap-2 border-t border-slate-100 pt-3">
-          <button onClick={onClose} className="rounded-md border border-slate-300 px-3 py-1.5 text-sm text-slate-700 hover:bg-slate-50">
+        <div className="flex justify-end gap-2 border-t border-line pt-4">
+          <button onClick={onClose} className="btn btn-secondary">
             Cancel
           </button>
           <button
             onClick={handleSave}
-            className="rounded-md bg-indigo-600 px-3 py-1.5 text-sm font-medium text-white hover:bg-indigo-700"
+            className="btn btn-primary"
           >
             Save
           </button>

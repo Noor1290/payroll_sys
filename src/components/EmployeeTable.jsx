@@ -1,4 +1,5 @@
 import { useMemo, useState } from 'react'
+import { TriangleAlert, Users } from 'lucide-react'
 import ConfirmDialog from './ConfirmDialog'
 import { getOrderedEffectiveColumns, getCategoryGroups, labelColumnsForHelper } from '../lib/categories'
 import { formatDecimal } from '../lib/format'
@@ -15,12 +16,22 @@ const DEFAULT_COLUMN_WIDTH = 120
 const DEFAULT_ACTIONS_WIDTH = 88
 const GROUP_HEADER_HEIGHT = 28
 
+// Sticky header cells: a solid background (rows scroll underneath) and the
+// bottom rule drawn as an inset shadow, since a collapsed border doesn't
+// travel with a sticky cell.
+const HEADER_CELL = 'bg-elevated shadow-[inset_0_-1px_0_var(--line)]'
+
+// Figures (number inputs and formula results) are right-aligned; so are their headers.
+function isFigureColumn(col) {
+  return col.type === 'formula' || (col.valueType !== 'text' && col.valueType !== 'checkbox')
+}
+
 function ResizeHandle({ onResizeStart }) {
   return (
     <div
       onMouseDown={onResizeStart}
       title="Drag to resize"
-      className="absolute right-0 top-0 z-20 h-full w-2 translate-x-1/2 cursor-col-resize select-none hover:bg-indigo-400/60"
+      className="absolute right-0 top-0 z-20 h-full w-2 translate-x-1/2 cursor-col-resize select-none hover:bg-accent/60"
     />
   )
 }
@@ -121,9 +132,14 @@ export default function EmployeeTable({
   }
 
   return (
-    <div className="flex h-full flex-col">
-      <div className="max-h-[calc(100vh-11rem)] overflow-auto rounded-lg border border-slate-200">
-        <table className="border-collapse text-sm" style={{ tableLayout: 'fixed', minWidth: totalWidth }}>
+    <div className="flex h-full min-h-0 flex-col">
+      {/* The table scrolls inside its card. No backdrop blur here: a large
+          scrolling area has to stay cheap to paint. */}
+      <div className="card flex max-h-full flex-col overflow-hidden">
+        <div className="min-h-0 overflow-auto">
+        {/* An explicit width (not just min-width) is what makes the browser
+            honour table-layout: fixed, and so each column's declared width. */}
+        <table className="border-collapse text-sm" style={{ tableLayout: 'fixed', width: totalWidth, minWidth: totalWidth }}>
           <colgroup>
             {columnDefs.map((cd) => (
               <col key={cd.key} style={{ width: getWidth(cd.key, cd.defaultWidth) }} />
@@ -131,36 +147,29 @@ export default function EmployeeTable({
           </colgroup>
           <thead>
             <tr
-              className="sticky z-20 bg-slate-200 text-left text-[11px] font-semibold uppercase tracking-wide text-slate-600 shadow-sm"
+              className="sticky z-20 text-left text-[11px] font-medium uppercase tracking-wider text-subtle"
               style={{ top: 0, height: GROUP_HEADER_HEIGHT }}
             >
               {identityFields.length > 0 && (
-                <th colSpan={identityFields.length} className="border-b border-slate-300 px-3">
+                <th colSpan={identityFields.length} className={`${HEADER_CELL} px-3`}>
                   Identifiers
                 </th>
               )}
               {categoryGroups.map((group) => (
-                <th key={group.category} colSpan={group.columns.length} className="border-b border-slate-300 px-3">
+                <th key={group.category} colSpan={group.columns.length} className={`${HEADER_CELL} border-l border-line px-3`}>
                   {group.label}
                 </th>
               ))}
-              <th className="border-b border-slate-300 px-3"></th>
+              <th className={`${HEADER_CELL} px-3`}></th>
             </tr>
-            <tr
-              className="sticky z-10 bg-slate-100 text-left text-xs font-medium uppercase tracking-wide text-slate-500 shadow-sm"
-              style={{ top: GROUP_HEADER_HEIGHT }}
-            >
+            <tr className="sticky z-10 text-left text-xs font-medium text-muted" style={{ top: GROUP_HEADER_HEIGHT }}>
               {identityFields.map((field, idx) => {
                 const defaultWidth = idx === 0 ? DEFAULT_ID_WIDTH : DEFAULT_IDENTITY_WIDTH
                 return (
-                  <th key={field.key} className="relative border-b border-slate-200 px-3 py-2">
-                    <div className="flex items-center gap-1 overflow-hidden">
-                      <span className="truncate">{field.name}</span>
-                      {idFieldKey === field.key && (
-                        <span className="shrink-0 rounded bg-amber-100 px-1 py-0.5 text-[10px] font-semibold text-amber-700">
-                          ID
-                        </span>
-                      )}
+                  <th key={field.key} className={`${HEADER_CELL} relative px-3 py-2.5`}>
+                    <div className="flex flex-wrap items-center gap-x-1.5 gap-y-1 overflow-hidden">
+                      <span className="max-w-full overflow-hidden text-ellipsis leading-tight">{field.name}</span>
+                      {idFieldKey === field.key && <span className="badge badge-warn">ID</span>}
                     </div>
                     <ResizeHandle
                       onResizeStart={(e) => handleResizeStart(e, field.key, getWidth(field.key, defaultWidth))}
@@ -171,21 +180,15 @@ export default function EmployeeTable({
               {labeledColumns.map((col) => (
                 <th
                   key={col.key}
-                  className="relative border-b border-slate-200 px-3 py-2"
+                  className={`${HEADER_CELL} relative px-3 py-2.5`}
                   title={col.helperLabel !== col.name ? col.helperLabel : undefined}
                 >
-                  <div className="flex items-center gap-1 overflow-hidden">
-                    <span className="truncate">{col.name}</span>
-                    {col.type === 'formula' && (
-                      <span className="shrink-0 rounded bg-violet-100 px-1 py-0.5 text-[10px] font-semibold text-violet-700">
-                        fx
-                      </span>
-                    )}
+                  {/* Long names wrap onto a second line instead of being cut off. */}
+                  <div className={`flex flex-wrap items-center gap-x-1.5 gap-y-1 overflow-hidden ${isFigureColumn(col) ? 'justify-end text-right' : ''}`}>
+                    <span className="max-w-full overflow-hidden text-ellipsis leading-tight">{col.name}</span>
+                    {col.type === 'formula' && <span className="badge badge-glow">fx</span>}
                     {col.excludeFromExport && (
-                      <span
-                        title="Not included in Excel exports or payslips"
-                        className="shrink-0 rounded bg-slate-200 px-1 py-0.5 text-[10px] font-semibold text-slate-500"
-                      >
+                      <span title="Not included in Excel exports or payslips" className="badge">
                         not exported
                       </span>
                     )}
@@ -195,27 +198,28 @@ export default function EmployeeTable({
                   />
                 </th>
               ))}
-              <th className="border-b border-slate-200 px-3 py-2 text-right">Actions</th>
+              <th className={`${HEADER_CELL} px-3 py-2.5 text-right`}>Actions</th>
             </tr>
           </thead>
-          <tbody className="divide-y divide-slate-100 bg-white">
+          <tbody className="divide-y divide-line">
             {employees.map((emp) => {
               const rawIdValue = idFieldKey ? String(emp.values?.[idFieldKey] ?? '').trim() : ''
               const isDuplicate = rawIdValue !== '' && duplicateIdValues.has(rawIdValue)
 
               return (
-                <tr key={emp.id} className="hover:bg-slate-50">
+                <tr key={emp.id} className="transition-colors hover:bg-surface-hover">
                   {identityFields.map((field) => (
-                    <td key={field.key} className="overflow-hidden px-2 py-1">
+                    <td key={field.key} className="overflow-hidden px-1.5 py-1">
                       <div className="flex items-center gap-1">
                         <input
-                          className="w-full min-w-0 rounded border border-slate-300 px-2 py-1 text-sm focus:border-indigo-500 focus:outline-none"
+                          aria-label={field.name}
+                          className={`field field-cell ${idFieldKey === field.key ? 'num' : ''}`}
                           value={emp.values?.[field.key] ?? ''}
                           onChange={(e) => onUpdateValue(emp.id, field.key, e.target.value)}
                         />
                         {idFieldKey === field.key && isDuplicate && (
-                          <span title="Duplicate ID" className="shrink-0 cursor-help text-amber-500">
-                            ⚠
+                          <span title="Duplicate ID" role="img" aria-label="Duplicate ID" className="shrink-0 cursor-help text-warn">
+                            <TriangleAlert className="h-4 w-4" aria-hidden="true" />
                           </span>
                         )}
                       </div>
@@ -227,10 +231,11 @@ export default function EmployeeTable({
                       const raw = emp.values?.[col.key] ?? ''
                       if (col.valueType === 'checkbox') {
                         return (
-                          <td key={col.key} className="overflow-hidden px-2 py-1 text-center">
+                          <td key={col.key} className="overflow-hidden px-1.5 py-1 text-center">
                             <input
                               type="checkbox"
-                              className="h-4 w-4 accent-indigo-600"
+                              aria-label={col.name}
+                              className="h-4 w-4 align-middle accent-accent"
                               checked={Boolean(raw)}
                               onChange={(e) => onUpdateValue(emp.id, col.key, e.target.checked)}
                             />
@@ -239,10 +244,11 @@ export default function EmployeeTable({
                       }
                       if (col.valueType === 'text') {
                         return (
-                          <td key={col.key} className="overflow-hidden px-2 py-1">
+                          <td key={col.key} className="overflow-hidden px-1.5 py-1">
                             <input
                               type="text"
-                              className="w-full min-w-0 rounded border border-slate-300 bg-white px-2 py-1 text-sm focus:border-indigo-500 focus:outline-none"
+                              aria-label={col.name}
+                              className="field field-cell"
                               value={raw}
                               onChange={(e) => onUpdateValue(emp.id, col.key, e.target.value)}
                             />
@@ -256,10 +262,11 @@ export default function EmployeeTable({
                           ? raw
                           : formatDecimal(Number(raw), col.decimals ?? 2, { grouping: false })
                       return (
-                        <td key={col.key} className="overflow-hidden px-2 py-1">
+                        <td key={col.key} className="overflow-hidden px-1.5 py-1">
                           <input
                             type="number"
-                            className="w-full min-w-0 rounded border border-slate-300 bg-white px-2 py-1 text-sm focus:border-indigo-500 focus:outline-none"
+                            aria-label={col.name}
+                            className="field field-cell num text-right text-[13px]"
                             value={displayValue}
                             onFocus={() => setFocusedCellKey(cellKey)}
                             onBlur={() => setFocusedCellKey((k) => (k === cellKey ? null : k))}
@@ -270,31 +277,32 @@ export default function EmployeeTable({
                     }
                     const hasError = cell?.trace?.error
                     return (
-                      <td key={col.key} className="overflow-hidden px-2 py-1">
+                      <td key={col.key} className="overflow-hidden px-1.5 py-1">
                         <button
                           onClick={() => onOpenBreakdown(cell.trace)}
-                          className={`flex w-full min-w-0 items-center justify-between rounded border px-2 py-1 text-sm ${
+                          className={`flex h-8 w-full min-w-0 cursor-pointer items-center justify-between gap-1 rounded-md border px-1.5 text-[13px] transition-colors ${
                             hasError
-                              ? 'border-red-200 bg-red-50 text-red-600'
-                              : 'border-violet-100 bg-violet-50 text-slate-700'
-                          } cursor-pointer hover:brightness-95`}
+                              ? 'border-danger/40 bg-danger/10 text-danger hover:border-danger/70'
+                              : 'border-glow/25 bg-glow/10 text-fg hover:border-glow/60'
+                          }`}
                           title="Click to see calculation breakdown"
                         >
-                          <span className="truncate font-mono">
+                          {hasError ? (
+                            <TriangleAlert className="h-3.5 w-3.5 shrink-0" aria-hidden="true" />
+                          ) : (
+                            <span className="shrink-0 text-[10px] font-semibold text-glow" aria-hidden="true">
+                              fx
+                            </span>
+                          )}
+                          <span className="num min-w-0 flex-1 truncate text-right">
                             {hasError ? 'Error' : formatDecimal(cell?.value ?? 0, col.decimals ?? 2)}
-                          </span>
-                          <span className="ml-1 shrink-0 rounded bg-violet-200 px-1 text-[10px] font-semibold text-violet-700">
-                            fx
                           </span>
                         </button>
                       </td>
                     )
                   })}
-                  <td className="overflow-hidden px-2 py-1 text-right">
-                    <button
-                      onClick={() => setDeleting(emp)}
-                      className="rounded px-2 py-1 text-xs text-red-600 hover:bg-red-50"
-                    >
+                  <td className="overflow-hidden px-1.5 py-1 text-right">
+                    <button onClick={() => setDeleting(emp)} className="btn btn-ghost btn-sm text-xs hover:text-danger">
                       Delete
                     </button>
                   </td>
@@ -302,18 +310,36 @@ export default function EmployeeTable({
               )
             })}
 
-            <tr>
-              <td colSpan={columnDefs.length} className="px-2 py-2">
-                <button
-                  onClick={onAddEmployee}
-                  className="rounded-md border border-dashed border-slate-300 px-3 py-1.5 text-sm text-slate-500 hover:border-indigo-400 hover:text-indigo-600"
-                >
-                  + Add Employee
-                </button>
-              </td>
-            </tr>
+            {employees.length > 0 && (
+              <tr>
+                <td colSpan={columnDefs.length} className="px-2 py-2">
+                  <button
+                    onClick={onAddEmployee}
+                    className="btn btn-ghost btn-sm border-dashed border-line-strong hover:border-accent hover:text-accent"
+                  >
+                    + Add Employee
+                  </button>
+                </td>
+              </tr>
+            )}
           </tbody>
         </table>
+        </div>
+
+        {/* Empty month: sits under the column headers, centred in the card
+            (not in the table, which can be far wider than the screen). */}
+        {employees.length === 0 && (
+          <div data-empty-state className="flex flex-col items-center gap-1 border-t border-line px-4 py-10 text-center">
+            <span className="icon-tile icon-tile-neutral mb-3" aria-hidden="true">
+              <Users />
+            </span>
+            <p className="text-base font-semibold text-fg">No employees this month</p>
+            <p className="max-w-sm text-sm text-muted">Add an employee, import from Excel, or copy from the previous month.</p>
+            <button onClick={onAddEmployee} className="btn btn-primary mt-4">
+              + Add Employee
+            </button>
+          </div>
+        )}
       </div>
 
       {deleting && (

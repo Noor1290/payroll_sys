@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { CircleAlert, CircleCheck, Send, X } from 'lucide-react'
 import { buildPdfFillColumns, buildCompanyDetailFields, resolveCompanyFieldHeaders, buildPdfFillRows } from '../lib/pdfFillExport'
 import { periodKey } from '../lib/periods'
 
@@ -54,8 +55,9 @@ export default function SendToDashboardButton({
         onClick={handleSend}
         disabled={Boolean(blockedReason) || sending}
         aria-describedby={blockedReason ? 'send-to-dashboard-reason' : undefined}
-        className="rounded-md bg-indigo-600 px-3 py-1.5 text-sm font-medium text-white hover:bg-indigo-700 disabled:cursor-not-allowed disabled:opacity-40 disabled:hover:bg-indigo-600"
+        className="btn btn-secondary"
       >
+        <Send aria-hidden="true" className="text-accent" />
         {sending ? 'Sending…' : 'Send to dashboard'}
       </button>
       {blockedReason && (
@@ -65,15 +67,17 @@ export default function SendToDashboardButton({
       )}
 
       {reply && (
+        // Narrow screens: pinned to the bottom edge, so it can't run off the side.
         <div
           role="status"
-          className={`absolute right-0 top-full z-30 mt-1 flex w-72 items-start justify-between gap-2 rounded-md border px-3 py-2 text-sm shadow-lg ${
-            reply.ok ? 'border-emerald-200 bg-emerald-50 text-emerald-700' : 'border-red-200 bg-red-50 text-red-700'
+          className={`panel rise-in z-30 text-sm shadow-pop max-sm:fixed max-sm:inset-x-4 max-sm:bottom-4 sm:absolute sm:right-0 sm:top-full sm:mt-2 sm:w-72 ${
+            reply.ok ? 'panel-accent' : 'panel-danger'
           }`}
         >
-          <span>{reply.text}</span>
-          <button onClick={() => setReply(null)} aria-label="Dismiss" className="opacity-60 hover:opacity-100">
-            ✕
+          {reply.ok ? <CircleCheck aria-hidden="true" /> : <CircleAlert aria-hidden="true" />}
+          <span className="min-w-0 flex-1">{reply.text}</span>
+          <button onClick={() => setReply(null)} aria-label="Dismiss" className="btn btn-ghost btn-icon btn-sm -my-1 -mr-1.5">
+            <X aria-hidden="true" />
           </button>
         </div>
       )}

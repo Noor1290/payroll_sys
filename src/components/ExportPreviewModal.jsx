@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { CircleAlert, Download, FileSpreadsheet } from 'lucide-react'
 import Modal from './Modal'
 import { downloadExportPlan, formatCompanyDetailsLine } from '../lib/excelExport'
 import { formatDecimal } from '../lib/format'
@@ -34,15 +35,15 @@ export default function ExportPreviewModal({ plan, onClose }) {
   }
 
   return (
-    <Modal title="Export Preview" onClose={onClose} width="max-w-6xl">
-      <div className="space-y-3">
-        <p className="text-xs text-slate-500">
+    <Modal title="Export Preview" onClose={onClose} width="max-w-6xl" icon={<FileSpreadsheet />}>
+      <div className="space-y-4">
+        <p className="text-xs leading-relaxed text-muted">
           This is how the exported spreadsheet will look, including header styling, column widths, number
           formatting, row banding, and the frozen header row. Only columns currently defined for this company are
           included. Columns shaded violet are calculated (formula) columns.
         </p>
 
-        <label className={`flex items-center gap-2 text-sm ${detailsLine ? 'text-slate-700' : 'text-slate-400'}`}>
+        <label className={`flex flex-wrap items-center gap-2 text-sm ${detailsLine ? 'text-fg' : 'text-subtle'}`}>
           <input
             type="checkbox"
             checked={includeDetails}
@@ -53,8 +54,10 @@ export default function ExportPreviewModal({ plan, onClose }) {
           {!detailsLine && <span className="text-xs">(add an address or BRN in Company Details first)</span>}
         </label>
 
-        <div className="overflow-auto rounded-lg border border-slate-200" style={{ maxHeight: '60vh' }}>
-          <div className="min-w-max bg-white p-2 font-serif">
+        {/* The sheet itself is a picture of the Excel file, so it keeps the
+            file's own white paper, serif font and header colours in both themes. */}
+        <div className="overflow-auto rounded-xl border border-line" style={{ maxHeight: '55vh' }}>
+          <div className="min-w-max bg-white p-2 font-serif text-slate-900 scheme-light">
             <div className="text-center text-base font-bold text-slate-800">{plan.companyName}</div>
             <div className="text-center text-sm italic text-slate-500">{plan.exportDateLabel}</div>
             {includeDetails && detailsLine && (
@@ -137,21 +140,18 @@ export default function ExportPreviewModal({ plan, onClose }) {
         </div>
 
         {error && (
-          <div className="rounded-md border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700">{error}</div>
+          <div role="alert" className="panel panel-danger text-sm">
+            <CircleAlert aria-hidden="true" />
+            <span>{error}</span>
+          </div>
         )}
 
-        <div className="flex justify-end gap-2 border-t border-slate-100 pt-3">
-          <button
-            onClick={onClose}
-            className="rounded-md border border-slate-300 px-3 py-1.5 text-sm text-slate-700 hover:bg-slate-50"
-          >
+        <div className="flex justify-end gap-2 border-t border-line pt-4">
+          <button onClick={onClose} className="btn btn-secondary">
             Cancel
           </button>
-          <button
-            onClick={handleDownload}
-            disabled={downloading}
-            className="rounded-md bg-emerald-600 px-3 py-1.5 text-sm font-medium text-white hover:bg-emerald-700 disabled:cursor-not-allowed disabled:opacity-50"
-          >
+          <button onClick={handleDownload} disabled={downloading} className="btn btn-primary">
+            <Download aria-hidden="true" />
             {downloading ? 'Preparing file…' : 'Download .xlsx'}
           </button>
         </div>

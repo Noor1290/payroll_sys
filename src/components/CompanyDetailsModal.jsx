@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { Building2, ChevronDown, ChevronUp, CircleAlert } from 'lucide-react'
 import Modal from './Modal'
 import ConfirmDialog from './ConfirmDialog'
 import { newCustomField } from '../lib/model'
@@ -84,12 +85,13 @@ export default function CompanyDetailsModal({ company, otherCompanies, onSave, o
 
   return (
     <>
-      <Modal title={`${company.name} — Details`} onClose={requestClose} width="max-w-2xl">
+      <Modal title={`${company.name} — Details`} onClose={requestClose} width="max-w-2xl" icon={<Building2 />}>
         <div className="space-y-4">
           <div>
-            <label className="mb-1 block text-xs font-medium text-slate-600">Company Name</label>
+            <label className="label">Company Name</label>
             <input
-              className="w-full rounded-md border border-slate-300 px-3 py-1.5 text-sm focus:border-indigo-500 focus:outline-none"
+              className="field"
+              aria-label="Company Name"
               value={name}
               onChange={(e) => {
                 setName(e.target.value)
@@ -100,10 +102,11 @@ export default function CompanyDetailsModal({ company, otherCompanies, onSave, o
           </div>
 
           <div>
-            <label className="mb-1 block text-xs font-medium text-slate-600">Address</label>
+            <label className="label">Address</label>
             <textarea
               rows={3}
-              className="w-full rounded-md border border-slate-300 px-3 py-1.5 text-sm focus:border-indigo-500 focus:outline-none"
+              className="field"
+              aria-label="Address"
               value={address}
               onChange={(e) => {
                 setAddress(e.target.value)
@@ -114,9 +117,10 @@ export default function CompanyDetailsModal({ company, otherCompanies, onSave, o
           </div>
 
           <div>
-            <label className="mb-1 block text-xs font-medium text-slate-600">BRN</label>
+            <label className="label">BRN</label>
             <input
-              className="w-full rounded-md border border-slate-300 px-3 py-1.5 text-sm focus:border-indigo-500 focus:outline-none"
+              className="field"
+              aria-label="BRN"
               value={brn}
               onChange={(e) => {
                 setBrn(e.target.value)
@@ -125,14 +129,15 @@ export default function CompanyDetailsModal({ company, otherCompanies, onSave, o
             />
           </div>
 
-          <div className="border-t border-slate-100 pt-4">
-            <div className="mb-2 flex items-center justify-between">
-              <label className="block text-xs font-medium text-slate-600">Custom fields</label>
+          <div className="border-t border-line pt-4">
+            <div className="mb-2 flex flex-wrap items-center justify-between gap-2">
+              <label className="label mb-0">Custom fields</label>
               {otherCompanies.length > 0 && (
                 <select
                   value={copyFromId}
+                  aria-label="Copy fields from…"
                   onChange={(e) => applyCopyFrom(e.target.value)}
-                  className="rounded-md border border-slate-300 px-2 py-1 text-xs focus:border-indigo-500 focus:outline-none"
+                  className="field field-cell w-auto max-w-full"
                 >
                   <option value="">Copy fields from…</option>
                   {otherCompanies.map((c) => (
@@ -146,75 +151,73 @@ export default function CompanyDetailsModal({ company, otherCompanies, onSave, o
 
             <div className="space-y-2">
               {customFields.map((field, i) => (
-                <div key={field.id} className="flex items-start gap-2 rounded-md border border-slate-200 bg-slate-50 p-2">
-                  <div className="flex shrink-0 flex-col">
+                <div key={field.id} className="flex items-start gap-2 rounded-lg border border-line bg-surface p-3">
+                  <div className="flex shrink-0 flex-col gap-1">
                     <button
                       type="button"
                       onClick={() => moveCustomField(i, -1)}
                       disabled={i === 0}
-                      className="rounded px-1 text-xs text-slate-400 hover:bg-slate-200 disabled:cursor-not-allowed disabled:opacity-30"
+                      className="btn btn-ghost btn-icon btn-sm h-6 w-6"
                       aria-label="Move up"
                     >
-                      ▲
+                      <ChevronUp aria-hidden="true" />
                     </button>
                     <button
                       type="button"
                       onClick={() => moveCustomField(i, 1)}
                       disabled={i === customFields.length - 1}
-                      className="rounded px-1 text-xs text-slate-400 hover:bg-slate-200 disabled:cursor-not-allowed disabled:opacity-30"
+                      className="btn btn-ghost btn-icon btn-sm h-6 w-6"
                       aria-label="Move down"
                     >
-                      ▼
+                      <ChevronDown aria-hidden="true" />
                     </button>
                   </div>
-                  <div className="flex-1 space-y-1.5">
+                  <div className="min-w-0 flex-1 space-y-2">
                     <input
                       value={field.label}
                       onChange={(e) => updateCustomField(field.id, { label: e.target.value })}
+                      aria-label="Label, e.g. VAT No"
                       placeholder="Label, e.g. VAT No"
-                      className="w-full rounded-md border border-slate-300 px-2 py-1 text-sm font-medium focus:border-indigo-500 focus:outline-none"
+                      className="field font-medium"
                     />
                     <textarea
                       value={field.value}
                       onChange={(e) => updateCustomField(field.id, { value: e.target.value })}
+                      aria-label="Value"
                       placeholder="Value"
                       rows={1}
-                      className="w-full rounded-md border border-slate-300 px-2 py-1 text-sm focus:border-indigo-500 focus:outline-none"
+                      className="field"
                     />
                   </div>
-                  <button
-                    type="button"
-                    onClick={() => removeCustomField(field.id)}
-                    className="shrink-0 rounded px-2 py-1 text-xs text-red-600 hover:bg-red-50"
-                  >
+                  <button type="button" onClick={() => removeCustomField(field.id)} className="btn btn-ghost btn-sm shrink-0 text-xs text-danger">
                     Remove
                   </button>
                 </div>
               ))}
-              {customFields.length === 0 && <p className="text-xs text-slate-400">No custom fields yet.</p>}
+              {customFields.length === 0 && <p className="text-xs text-muted">No custom fields yet.</p>}
             </div>
 
             <button
               type="button"
               onClick={addCustomField}
-              className="mt-2 rounded-md border border-dashed border-slate-300 px-3 py-1 text-xs text-slate-500 hover:border-indigo-400 hover:text-indigo-600"
+              className="btn btn-ghost btn-sm mt-2 border-dashed border-line-strong text-xs hover:border-accent hover:text-accent"
             >
               + Add Field
             </button>
           </div>
 
           {error && (
-            <div className="rounded-md border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700">{error}</div>
+            <div role="alert" className="panel panel-danger text-sm">
+              <CircleAlert aria-hidden="true" />
+              <span>{error}</span>
+            </div>
           )}
 
-          <div className="flex justify-end gap-2 border-t border-slate-100 pt-3">
-            <button onClick={requestClose} className="rounded-md border border-slate-300 px-3 py-1.5 text-sm text-slate-700 hover:bg-slate-50">
+          <div className="flex justify-end gap-2 border-t border-line pt-4">
+            <button onClick={requestClose} className="btn btn-secondary">
               Cancel
             </button>
-            <button
-              onClick={handleSave}
-              className="rounded-md bg-indigo-600 px-3 py-1.5 text-sm font-medium text-white hover:bg-indigo-700"
-            >
+            <button onClick={handleSave} className="btn btn-primary">
               Save
             </button>
           </div>

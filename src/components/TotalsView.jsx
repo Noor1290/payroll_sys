@@ -1,4 +1,5 @@
 import { useMemo, useState } from 'react'
+import { FileSpreadsheet, TriangleAlert } from 'lucide-react'
 import TotalsTable from './TotalsTable'
 import { loadPeriod } from '../lib/storage'
 import { enumeratePeriods, periodKey, parsePeriodKey, formatPeriodLabel } from '../lib/periods'
@@ -37,40 +38,31 @@ export default function TotalsView({ company, identityFields, idFieldKey, effect
   }, [company.id, fromYear, fromMonth, toYear, toMonth, effectiveColumns, columnsByKey, idFieldKey])
 
   return (
-    <div className="flex h-full flex-col gap-3">
-      <div className="flex flex-wrap items-center gap-3 rounded-lg border border-slate-200 bg-white px-4 py-3">
-        <label className="flex items-center gap-2 text-sm text-slate-600">
+    <div className="flex h-full min-h-0 flex-col gap-4">
+      <div className="card flex flex-wrap items-end gap-x-4 gap-y-3 px-4 py-3">
+        <label className="flex flex-col gap-1 text-xs font-medium text-muted">
           From
-          <input
-            type="month"
-            value={fromKey}
-            onChange={(e) => setFromKey(e.target.value)}
-            className="rounded-md border border-slate-300 px-2 py-1 text-sm focus:border-indigo-500 focus:outline-none"
-          />
+          <input type="month" value={fromKey} onChange={(e) => setFromKey(e.target.value)} className="field num w-44" />
         </label>
-        <label className="flex items-center gap-2 text-sm text-slate-600">
+        <label className="flex flex-col gap-1 text-xs font-medium text-muted">
           To
-          <input
-            type="month"
-            value={toKey}
-            onChange={(e) => setToKey(e.target.value)}
-            className="rounded-md border border-slate-300 px-2 py-1 text-sm focus:border-indigo-500 focus:outline-none"
-          />
+          <input type="month" value={toKey} onChange={(e) => setToKey(e.target.value)} className="field num w-44" />
         </label>
-        <span className="text-xs text-slate-400">Summing {rangeLabel}</span>
+        <span className="pb-3 text-xs text-muted">Summing {rangeLabel}</span>
         <div className="flex-1" />
-        <button
-          onClick={() => onExport(employees, computedGrid, rangeLabel)}
-          className="rounded-md bg-emerald-600 px-3 py-1.5 text-sm font-medium text-white hover:bg-emerald-700"
-        >
+        <button onClick={() => onExport(employees, computedGrid, rangeLabel)} className="btn btn-primary mb-0.5">
+          <FileSpreadsheet aria-hidden="true" />
           Export to Excel
         </button>
       </div>
 
       {!idFieldKey ? (
-        <div className="rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-800">
-          No ID field is designated, so employees can't be matched across months. Set one as the "ID field" in Global
-          Columns → Identity Fields to use Totals.
+        <div className="panel text-sm [--panel:var(--warn)]">
+          <TriangleAlert aria-hidden="true" />
+          <span>
+            No ID field is designated, so employees can't be matched across months. Set one as the "ID field" in Global
+            Columns → Identity Fields to use Totals.
+          </span>
         </div>
       ) : (
         <TotalsTable

@@ -1,0 +1,18 @@
+{
+  "ready": {
+    "disabled": false,
+    "tooltip": null
+  },
+  "no employees": {
+    "disabled": true,
+    "tooltip": "Nothing to send: there are no employees for this month."
+  },
+  "no BRN": {
+    "disabled": true,
+    "tooltip": "Can't send yet: this company has no BRN. Add it in Company Details (the ⓘ next to the company name)."
+  },
+  "no company details at all": {
+    "disabled": true,
+    "tooltip": "Can't send yet: this company has no BRN. Add it in Company Details (the ⓘ next to the company name)."
+  }
+}
