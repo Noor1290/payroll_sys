@@ -107,6 +107,20 @@ white band above the column headers. Same before and after the redesign.
 
 **To decide.** Whether the preview should keep the title lines in view.
 
+## 6. Narrow width: double-click rename is hard to use
+
+**What happens.** At narrow widths the company list is a drawer that closes when a
+company is selected. Double-clicking a company name to rename it selects the company
+on the first click, so the drawer closes and the rename box ends up inside the closed
+drawer. Renaming works from Company Details and at wide widths.
+
+**Evidence.** At 640px wide: open the drawer and double-click a company name. The
+drawer closes; reopening it shows the rename box.
+
+**To decide.** Whether the drawer should stay open when the selected company is
+clicked again, or whether renaming at narrow widths should only be offered from
+Company Details.
+
 ## Possible later feature: on-screen grand total
 
 The Totals screen shows one row per employee and no grand-total row; only the Excel
