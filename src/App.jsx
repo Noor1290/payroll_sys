@@ -509,7 +509,7 @@ export default function App() {
             <div
               key={activeTab}
               className={`rise-in min-h-0 flex-1 overflow-auto ${
-                activeTab === 'employees' ? '' : 'legacy-light rounded-2xl bg-slate-100 p-4'
+                activeTab === 'employees' || activeTab === 'totals' ? '' : 'legacy-light rounded-2xl bg-slate-100 p-4'
               }`}
             >
               {activeTab === 'global' && (

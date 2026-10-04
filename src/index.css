@@ -314,7 +314,7 @@ input[type='number'] {
   /* Compact version for table cells: the column header is the label. */
   .field-cell {
     height: 32px;
-    padding: 0 8px;
+    padding: 0 6px;
     border-radius: 6px;
     box-shadow: none;
   }
