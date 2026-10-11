@@ -105,11 +105,9 @@ describe('months', () => {
     await context.close()
   })
 
-  // While the month changes, the app saves the month it is leaving under the
-  // key of the month it is entering, and corrects it a moment later. If that
-  // second save does not happen (tab closed, storage full), the new month is
-  // left holding a copy of the old one.
-  test('evidence (BUG): changing month first writes the month being left under the new month\'s key', async () => {
+  // The month being left must never be written under the key of the month
+  // being entered, not even for a moment.
+  test('changing month writes only the new month\'s own data under its key', async () => {
     const { context, page } = await openSeeded(app, seededState(), {
       initScript: () => {
         window.__writes = []
@@ -124,11 +122,16 @@ describe('months', () => {
     await goToMonth(page, /October →/)
     await page.waitForTimeout(300)
     const octoberWrites = await page.evaluate((key) => window.__writes.filter(([k]) => k === key).map(([, v]) => v), periodStorageKey(A, '2026-10'))
-    // First September's three employees, then the correction.
-    expect(octoberWrites).toHaveLength(2)
-    expect(JSON.parse(octoberWrites[0]).employees.map((e) => e.values.id)).toEqual(['TST001', 'TST002', 'TST003'])
-    expect(octoberWrites[1]).toBe('{"employees":[]}')
+    expect(octoberWrites).toEqual(['{"employees":[]}'])
     expect(await storedPeriod(page, A, '2026-10')).toEqual([])
+    // And back again: September is written only as September.
+    await page.evaluate(() => (window.__writes.length = 0))
+    await goToMonth(page, /← September/)
+    const allWrites = await page.evaluate(() => window.__writes)
+    for (const [key, value] of allWrites) {
+      if (key.endsWith('2026-10')) expect(value).toBe('{"employees":[]}')
+      if (key.endsWith('2026-09')) expect(JSON.parse(value).employees.map((e) => e.values.id)).toEqual(['TST001', 'TST002', 'TST003'])
+    }
     await context.close()
   })
 })
@@ -203,17 +206,39 @@ describe('employees', () => {
     await context.close()
   })
 
-  // Moving into a cell with Tab selects its content, so typing should replace
-  // it. Here the app swaps "18115.00" for "18115" as the cell takes focus,
-  // which drops the selection, and the typed digits are added on the end.
-  test('evidence (BUG): tabbing into a figure and typing adds to it instead of replacing it (18115 becomes 1811520000)', async () => {
+  // Moving into a cell with Tab selects its content, so typing replaces it.
+  // (The app swaps "18115.00" for "18115" as the cell takes focus; it now
+  // selects the whole figure again once that swap is done.)
+  test('tabbing into a figure and typing replaces it', async () => {
     const { context, page } = await openSeeded(app)
     await employeeRow(page, 0).getByLabel('Surname', { exact: true }).click()
     await page.keyboard.press('Tab')
     await page.keyboard.type('20000')
     await page.locator('body').click({ position: { x: 5, y: 5 } })
-    expect((await storedPeriod(page, A, '2026-09'))[0].values.basicSalary).toBe('1811520000')
-    expect((await readEmployeeTable(page))[0]['New Basic']).toBe('1,811,520,635.00')
+    expect((await storedPeriod(page, A, '2026-09'))[0].values.basicSalary).toBe('20000')
+    expect((await readEmployeeTable(page))[0]['New Basic']).toBe('20,635.00')
+
+    // Tabbing on through several cells and typing in each one.
+    await employeeRow(page, 1).getByLabel('Surname', { exact: true }).click()
+    await page.keyboard.press('Tab')
+    await page.keyboard.type('50000')
+    await page.keyboard.press('Tab')
+    await page.keyboard.type('250')
+    await page.locator('body').click({ position: { x: 5, y: 5 } })
+    const second = (await storedPeriod(page, A, '2026-09'))[1].values
+    expect([second.basicSalary, second.govtIncrement]).toEqual(['50000', '250'])
+    await context.close()
+  })
+
+  test('clicking into a figure, then moving the caret, still lets one digit be changed', async () => {
+    const { context, page } = await openSeeded(app)
+    const cell = employeeRow(page, 0).getByLabel('Basic Salary', { exact: true })
+    await cell.click()
+    await page.keyboard.press('End')
+    await page.keyboard.press('Backspace')
+    await page.keyboard.type('9')
+    await page.locator('body').click({ position: { x: 5, y: 5 } })
+    expect((await storedPeriod(page, A, '2026-09'))[0].values.basicSalary).toBe('18119')
     await context.close()
   })
 
@@ -352,19 +377,26 @@ describe('Totals', () => {
     await context.close()
   })
 
-  // On screen Totals shows "Full Time" and "Yes"; the export of the same
-  // table shows a blank and "No".
-  test('evidence (BUG): the Totals export preview loses the text column and shows every checkbox as "No"', async () => {
+  // The Totals export shows the text and checkbox columns exactly as the
+  // Totals screen does.
+  test('the Totals export matches the Totals screen, text and checkbox columns included', async () => {
     const { context, page } = await openSeeded(app, seed())
     await tab(page, 'Totals').click()
+    await page.getByLabel('To', { exact: true }).fill('2026-10')
+    await page.getByText('Summing September 2026 to October 2026').waitFor()
+    const screen = await readPlainTable(page)
     await page.getByRole('button', { name: 'Export to Excel' }).click()
     const preview = dialog(page, 'Export Preview')
     await preview.waitFor()
     const cells = await preview.evaluate((el) => {
       const headers = [...el.querySelectorAll('thead tr:nth-child(2) th')].map((th) => th.textContent.trim())
-      return [...el.querySelectorAll('tbody tr')].slice(0, 2).map((tr) => Object.fromEntries([...tr.children].map((td, i) => [headers[i], td.textContent.trim()])))
+      return [...el.querySelectorAll('tbody tr')].slice(0, 3).map((tr) => Object.fromEntries([...tr.children].map((td, i) => [headers[i], td.textContent.trim()])))
     })
-    expect(cells.map((r) => [r.ID, r.Status, r['Age 60+']])).toEqual([['TST001', '', 'No'], ['TST002', '', 'No']])
+    expect(cells.map((r) => [r.ID, r.Status, r['Age 60+']])).toEqual([['TST001', 'Full Time', 'No'], ['TST002', 'Part Time', 'Yes'], ['TST003', '', 'No']])
+    expect(cells.map((r) => [r.ID, r.Status, r['Age 60+']])).toEqual(screen.map((r) => [r.ID, r.Status, r['Age 60+']]))
+    // The figures match the screen too.
+    expect(cells.map((r) => r['New Basic (calc)'])).toEqual(screen.map((r) => r['New Basic']))
+    expect(cells.map((r) => r['NSF (calc)'])).toEqual(screen.map((r) => r.NSF))
     await context.close()
   })
 })
@@ -420,7 +452,7 @@ describe('what is kept in the browser', () => {
     }
   })
 
-  test('evidence (BUG): when browser storage is full, the screen and what is kept part ways, and nothing warns', async () => {
+  test('when browser storage is full, a blocking warning says the change was NOT saved, and the screen shows only what is saved', async () => {
     const { context, page } = await openSeeded(app)
     const errors = []
     page.on('console', (message) => message.type() === 'error' && errors.push(message.text()))
@@ -445,31 +477,103 @@ describe('what is kept in the browser', () => {
       }
     })
 
-    await setCell(page, 0, 'Basic Salary', '99999123')
-    await page.waitForTimeout(300)
-    // The screen carries on as if it were saved...
-    expect((await readEmployeeTable(page))[0]['New Basic']).toBe('99,999,758.00')
-    expect(await page.getByRole('alert').count()).toBe(0)
+    // Type a longer figure over 18115. The first five digits fit in the
+    // space the old figure used; the sixth does not.
+    const cell = employeeRow(page, 0).getByLabel('Basic Salary', { exact: true })
+    await cell.click()
+    await cell.press('Control+A')
+    await page.keyboard.type('99999123')
+
+    const warning = dialog(page, 'This change was NOT saved')
+    await warning.waitFor()
+    expect(await warning.textContent()).toContain("The browser's storage for this site is full, so your last change could not be kept.")
+    expect(await warning.textContent()).toContain('export a backup first')
     expect(errors.some((e) => e.includes('Failed to save payroll period to localStorage'))).toBe(true)
-    // ...but only the first five digits fitted, so 99,999 is what was kept.
-    expect((await storedPeriod(page, A, '2026-09'))[0].values.basicSalary).toBe('99999')
+    // It blocks: the table behind it cannot be reached until it is acknowledged.
+    expect(await warning.getAttribute('aria-modal')).toBe('true')
+
+    // What is on screen is exactly what is saved - the refused change is gone.
+    const stored = (await storedPeriod(page, A, '2026-09'))[0].values.basicSalary
+    expect(stored).toBe('99999')
+    await warning.getByRole('button', { name: 'OK', exact: true }).click()
+    await warning.waitFor({ state: 'hidden' })
+    await page.locator('body').click({ position: { x: 5, y: 5 } })
+    const row = (await readEmployeeTable(page))[0]
+    expect(row['Basic Salary']).toBe('99999.00')
+    expect(row['New Basic']).toBe('100,634.00')
+
     await page.reload()
     await page.getByRole('button', { name: 'TEST Co A', exact: true }).waitFor()
     expect((await readEmployeeTable(page))[0]['Basic Salary']).toBe('99999.00')
     await context.close()
   })
 
-  test('evidence (BUG): deleting a company leaves its employees\' data in the browser', async () => {
+  test('when browser storage is full, a new column is not shown as added, and the warning appears', async () => {
+    const { context, page } = await openSeeded(app)
+    await page.evaluate(() => {
+      let size = 1024 * 1024
+      let i = 0
+      while (size >= 1) {
+        try {
+          localStorage.setItem(`zz_test_fill_${i}`, 'x'.repeat(size))
+          i++
+        } catch {
+          size = Math.floor(size / 2)
+        }
+      }
+      for (;;) {
+        try {
+          localStorage.setItem('zz_test_fill_0', `${localStorage.getItem('zz_test_fill_0')}x`)
+        } catch {
+          break
+        }
+      }
+    })
+    await tab(page, 'Global Columns').click()
+    await page.getByRole('button', { name: '+ Add Column' }).click()
+    const form = dialog(page, 'Add column')
+    await form.getByLabel('Name', { exact: true }).fill('Overflow Column')
+    await form.getByRole('button', { name: 'Save', exact: true }).click()
+
+    const warning = dialog(page, 'This change was NOT saved')
+    await warning.waitFor()
+    await warning.getByRole('button', { name: 'OK', exact: true }).click()
+    expect((await readColumnList(page)).some((c) => c.name === 'Overflow Column')).toBe(false)
+    expect((await storedState(page)).globalColumns.some((c) => c.name === 'Overflow Column')).toBe(false)
+    await context.close()
+  })
+
+  test('deleting a company removes every month of its employees\' data from the browser, and only that company\'s', async () => {
     const seed = seedWith((s) => {
       s.periods[periodStorageKey(B, '2026-09')] = { employees: [{ id: 'b-1', values: { id: 'TST001', name: 'Other', basicSalary: '77000' } }] }
+      s.periods[periodStorageKey(B, '2026-10')] = { employees: [{ id: 'b-2', values: { id: 'TST001', name: 'Other', basicSalary: '78000' } }] }
+      s.periods[periodStorageKey(B, '2025-12')] = { employees: [] }
     })
     const { context, page } = await openSeeded(app, seed)
     await page.getByRole('button', { name: 'Delete TEST Co B' }).click()
     expect(await dialog(page, 'Delete company').textContent()).toContain('Delete "TEST Co B" and all of its employees and columns? This cannot be undone.')
     await confirm(page, 'Delete company', 'Delete')
     expect((await storedState(page)).companies.map((c) => c.name)).toEqual(['TEST Co A'])
-    expect(await storageKeys(page)).toContain(periodStorageKey(B, '2026-09'))
-    expect(await storedPeriod(page, B, '2026-09')).toHaveLength(1)
+    expect((await storageKeys(page)).filter((k) => k.includes(B))).toEqual([])
+    expect(await storedPeriod(page, B, '2026-09')).toBeNull()
+    // The other company is untouched.
+    expect(await storedPeriod(page, A, '2026-09')).toEqual(seed.periods[periodStorageKey(A, '2026-09')].employees)
+    expect(await ids(page)).toEqual(['TST001', 'TST002', 'TST003'])
+    // Still gone after a reload.
+    await page.reload()
+    await page.getByRole('button', { name: 'TEST Co A', exact: true }).waitFor()
+    expect((await storageKeys(page)).filter((k) => k.includes(B))).toEqual([])
+    await context.close()
+  })
+
+  test('deleting the company that is on screen removes its data too', async () => {
+    const { context, page } = await openSeeded(app)
+    await page.getByRole('button', { name: 'Delete TEST Co A' }).click()
+    await confirm(page, 'Delete company', 'Delete')
+    await page.getByText('No company selected').waitFor()
+    await page.waitForTimeout(300)
+    expect((await storageKeys(page)).filter((k) => k.startsWith('payroll_period_'))).toEqual([])
+    expect((await storedState(page)).companies.map((c) => c.name)).toEqual(['TEST Co B'])
     await context.close()
   })
 })
@@ -697,54 +801,175 @@ describe('Global and Company columns', () => {
     await context.close()
   })
 
-  // The reverse check is missing: a Global column that Global formulas use
-  // can be made company-only, and the other companies' figures turn to Error.
-  test('evidence (BUG): making "Basic Salary" company-only breaks New Basic for the other company, with no specific warning', async () => {
+  // A Global column that formulas use cannot be made company-only: the form
+  // lists those formulas and refuses until they are changed.
+  test('making "Basic Salary" company-only is refused while formulas use it, and the formulas are listed', async () => {
     const seed = seedWith((s) => {
       s.periods[periodStorageKey(B, '2026-09')] = { employees: [{ id: 'b-1', values: { id: 'TST001', name: 'Other', basicSalary: '77000', govtIncrement: '0' } }] }
+      // TEST Co B also has a formula of its own that uses Basic Salary.
+      s.state.companies[1].columns = [{ id: 'b-shift', name: 'Shift Pay', key: 'shiftPay', type: 'formula', category: 'general', decimals: 2, builderMode: 'simple', formula: 'basicSalary * 0.1' }]
     })
     const { context, page } = await openSeeded(app, seed)
-    await switchCompany(page, 'TEST Co B')
-    expect((await readEmployeeTable(page))[0]['New Basic']).toBe('77,000.00')
-
-    await switchCompany(page, 'TEST Co A')
+    const before = await storedState(page)
     await tab(page, 'Global Columns').click()
     const form = await openEditColumn(page, 'Basic Salary')
     await form.getByRole('button', { name: 'This company only' }).click()
     await form.getByRole('button', { name: 'Save', exact: true }).click()
-    const question = await dialog(page, 'Convert to Company-specific?').textContent()
-    expect(question).not.toMatch(/formula|New Basic/i)
-    await dialog(page, 'Convert to Company-specific?').getByRole('button', { name: 'Convert', exact: true }).click()
+    expect((await form.getByRole('alert').textContent()).trim()).toBe(
+      "Can't make this column Company-specific yet. These formulas use it and would stop working: New Basic (Global), Shift Pay (TEST Co B). Change those formulas first, or keep this column Global."
+    )
+    // It did not get as far as the "Convert" question, and nothing changed.
+    expect(await dialog(page, 'Convert to Company-specific?').count()).toBe(0)
+    await form.getByRole('button', { name: 'Cancel', exact: true }).click()
     await form.waitFor({ state: 'hidden' })
+    expect(await storedState(page)).toEqual(before)
 
     await switchCompany(page, 'TEST Co B')
     const rowB = (await readEmployeeTable(page))[0]
-    expect(rowB['New Basic']).toBe('Error')
-    // Columns that depend on the broken one show "NaN" as if it were a figure.
-    expect(rowB['Net Pay']).toBe('NaN')
-    expect(rowB.NSF).toBe('NaN')
+    expect(rowB['New Basic']).toBe('77,000.00')
+    expect(rowB['Shift Pay']).toBe('7,700.00')
     await context.close()
   })
 
-  // The Edit form lets the key be changed. The figures typed under the old
-  // key disappear from the table and every formula using it shows Error.
-  test('evidence (BUG): changing a column\'s key hides its figures and breaks the formulas that use it', async () => {
+  test('once no formula uses the column any more, it can be made company-only', async () => {
     const { context, page } = await openSeeded(app)
     await tab(page, 'Global Columns').click()
-    const form = await openEditColumn(page, 'Basic Salary')
-    await form.getByLabel('Key', { exact: true }).fill('basePay')
+    // "Bonus Base" is used by "Bonus": refused.
+    let form = await openEditColumn(page, 'Bonus Base')
+    await form.getByRole('button', { name: 'This company only' }).click()
+    await form.getByRole('button', { name: 'Save', exact: true }).click()
+    expect((await form.getByRole('alert').textContent()).trim()).toContain('These formulas use it and would stop working: Bonus (Global).')
+    await form.getByRole('button', { name: 'Cancel', exact: true }).click()
+    await form.waitFor({ state: 'hidden' })
+
+    // Change the formula that used it, then try again.
+    form = await openEditColumn(page, 'Bonus')
+    await form.getByLabel('Formula expression').fill('allowances * 0.1')
     await form.getByRole('button', { name: 'Save', exact: true }).click()
     await form.waitFor({ state: 'hidden' })
 
-    await tab(page, 'Employee Table').click()
-    const row = (await readEmployeeTable(page))[0]
-    expect(row['Basic Salary']).toBe('')
-    expect(row['New Basic']).toBe('Error')
-    // The figure is still in storage under the old key, just no longer shown.
-    expect((await storedPeriod(page, A, '2026-09'))[0].values.basicSalary).toBe('18115')
+    form = await openEditColumn(page, 'Bonus Base')
+    await form.getByRole('button', { name: 'This company only' }).click()
+    await form.getByRole('button', { name: 'Save', exact: true }).click()
+    await dialog(page, 'Convert to Company-specific?').getByRole('button', { name: 'Convert', exact: true }).click()
+    await form.waitFor({ state: 'hidden' })
+    const state = await storedState(page)
+    expect(state.globalColumns.some((c) => c.key === 'bonusBase')).toBe(false)
+    expect(state.companies[0].columns.map((c) => c.key)).toEqual(['bonusBase'])
     await context.close()
   })
 
+  // The Edit form lets the key be changed. The change is confirmed first,
+  // then carried through every formula and every saved month.
+  test('changing a column\'s key asks first, then moves its figures and updates the formulas that use it', async () => {
+    const seed = seedWith((s) => {
+      s.periods[periodStorageKey(A, '2026-10')] = { employees: [{ id: 'oct-1', values: { id: 'TST001', name: 'Alpha', basicSalary: '19000', govtIncrement: '100' } }] }
+      s.periods[periodStorageKey(B, '2026-09')] = { employees: [{ id: 'b-1', values: { id: 'TST001', name: 'Other', basicSalary: '77000', govtIncrement: '0' } }] }
+      s.state.companies[0].columnWidths = { basicSalary: 180 }
+    })
+    const { context, page } = await openSeeded(app, seed)
+    const figuresBefore = await readEmployeeTable(page)
+    await tab(page, 'Global Columns').click()
+
+    // Cancelling the question changes nothing.
+    let form = await openEditColumn(page, 'Basic Salary')
+    await form.getByLabel('Key', { exact: true }).fill('basePay')
+    await form.getByRole('button', { name: 'Save', exact: true }).click()
+    const question = dialog(page, "Change this column's key?")
+    expect(await question.textContent()).toContain(
+      'The key changes from "basicSalary" to "basePay". 1 formula that uses it will be updated: New Basic. Its saved figures will be moved in 3 months across 2 companies. Nothing is lost.'
+    )
+    await question.getByRole('button', { name: 'Cancel', exact: true }).click()
+    await form.getByRole('button', { name: 'Cancel', exact: true }).click()
+    await form.waitFor({ state: 'hidden' })
+    expect((await storedState(page)).globalColumns.find((c) => c.name === 'Basic Salary').key).toBe('basicSalary')
+
+    // Confirming it.
+    form = await openEditColumn(page, 'Basic Salary')
+    await form.getByLabel('Key', { exact: true }).fill('basePay')
+    await form.getByRole('button', { name: 'Save', exact: true }).click()
+    await question.getByRole('button', { name: 'Change key', exact: true }).click()
+    await form.waitFor({ state: 'hidden' })
+
+    const state = await storedState(page)
+    expect(state.globalColumns.find((c) => c.name === 'Basic Salary').key).toBe('basePay')
+    expect(state.globalColumns.find((c) => c.key === 'newBasic').formula).toBe('basePay + govtIncrement')
+    expect(state.companies[0].columnWidths).toEqual({ basePay: 180 })
+    expect((await readColumnList(page)).find((c) => c.name === 'New Basic').formula).toBe('Basic Salary + Govt Increment')
+
+    // Every figure on screen is exactly as before.
+    await tab(page, 'Employee Table').click()
+    expect(await readEmployeeTable(page)).toEqual(figuresBefore)
+
+    // Every saved month of every company now holds the figure under the new key.
+    for (const [company, period, expected] of [[A, '2026-09', '18115'], [A, '2026-10', '19000'], [B, '2026-09', '77000']]) {
+      const [first] = await storedPeriod(page, company, period)
+      expect(first.values.basePay, `${company} ${period}`).toBe(expected)
+      expect('basicSalary' in first.values, `${company} ${period}`).toBe(false)
+    }
+    await goToMonth(page, /October →/)
+    expect((await readEmployeeTable(page))[0]['New Basic']).toBe('19,100.00')
+    await switchCompany(page, 'TEST Co B')
+    expect((await readEmployeeTable(page))[0]['New Basic']).toBe('77,000.00')
+
+    // And it all survives a reload.
+    await page.reload()
+    await page.getByRole('button', { name: 'TEST Co A', exact: true }).waitFor()
+    await switchCompany(page, 'TEST Co A')
+    await goToMonth(page, /← September/)
+    expect(await readEmployeeTable(page)).toEqual(figuresBefore)
+    await context.close()
+  })
+
+  test('changing the key of a column that tiered rules and an exemption are built on keeps those builders working', async () => {
+    const { context, page } = await openSeeded(app)
+    const figuresBefore = await readEmployeeTable(page)
+    await tab(page, 'Global Columns').click()
+
+    for (const [name, key, formulas] of [
+      ['New Basic', 'revisedBasic', '4 formulas that use it will be updated: Emoluments, CSG, NSF, CSG.'],
+      ['Age 60+', 'over60', '1 formula that uses it will be updated: NSF.'],
+    ]) {
+      const form = await openEditColumn(page, name)
+      await form.getByLabel('Key', { exact: true }).fill(key)
+      await form.getByRole('button', { name: 'Save', exact: true }).click()
+      const question = dialog(page, "Change this column's key?")
+      expect(await question.textContent()).toContain(formulas)
+      await question.getByRole('button', { name: 'Change key', exact: true }).click()
+      await form.waitFor({ state: 'hidden' })
+    }
+
+    // The NSF rule still opens in its visual builder, on the renamed columns.
+    const nsf = await openEditColumn(page, 'NSF')
+    expect(await nsf.getByLabel('Base value column').inputValue()).toBe('revisedBasic')
+    expect(await nsf.getByLabel('Checkbox column').inputValue()).toBe('over60')
+    expect(await nsf.getByLabel('maximum amount').inputValue()).toBe('29710')
+    // Saving it again from the builder gives the same rule.
+    await nsf.getByRole('button', { name: 'Save', exact: true }).click()
+    await nsf.waitFor({ state: 'hidden' })
+    expect((await storedState(page)).globalColumns.find((c) => c.key === 'nsf').formula).toBe('((over60 === 1)) ? (0) : ((Math.min(revisedBasic, 29710)) * (0.01))')
+
+    await tab(page, 'Employee Table').click()
+    expect(await readEmployeeTable(page)).toEqual(figuresBefore)
+    // Ticking and unticking still drives the exemption.
+    await employeeRow(page, 0).getByLabel('Age 60+', { exact: true }).check()
+    expect((await readEmployeeTable(page))[0].NSF).toBe('0.00')
+    await context.close()
+  })
+
+  test('a key that is already in use is still refused', async () => {
+    const { context, page } = await openSeeded(app)
+    await tab(page, 'Global Columns').click()
+    const form = await openEditColumn(page, 'Basic Salary')
+    await form.getByLabel('Key', { exact: true }).fill('allowances')
+    await form.getByRole('button', { name: 'Save', exact: true }).click()
+    expect((await form.getByRole('alert').textContent()).trim()).toBe('Key "allowances" is already used by another field or column')
+    expect(await dialog(page, "Change this column's key?").count()).toBe(0)
+    await context.close()
+  })
+
+  // What a figure in error looks like on screen: the broken column and
+  // everything calculated from it say "Error", never "NaN".
   test('deleting a column warns that formulas using it will break, and they show Error', async () => {
     const { context, page } = await openSeeded(app)
     await tab(page, 'Global Columns').click()
@@ -755,6 +980,19 @@ describe('Global and Company columns', () => {
     const row = (await readEmployeeTable(page))[0]
     expect(row['New Basic']).toBe('Error')
     expect(Object.keys(row)).not.toContain('Govt Increment')
+    // Everything calculated from New Basic says Error too - not "NaN".
+    for (const label of ['Emoluments', 'CSG (Employee Contribution)', 'NSF', 'PAYE', 'Net Pay', 'Chargeable']) expect(row[label], label).toBe('Error')
+    expect(JSON.stringify(row)).not.toContain('NaN')
+    // Columns that do not depend on it are unaffected.
+    expect(row.Bonus).toBe('100.00')
+
+    // The breakdown gives the reason and lets the cause be opened.
+    const index = Object.keys(row).indexOf('Net Pay')
+    await employeeRow(page, 0).locator('td').nth(index).getByRole('button').click()
+    const box = page.getByRole('dialog')
+    expect(await box.textContent()).toContain('Error: "Emoluments" is in error')
+    await box.getByRole('button', { name: /Emoluments/ }).click()
+    expect(await box.textContent()).toContain('Error: "New Basic" is in error')
     await context.close()
   })
 })

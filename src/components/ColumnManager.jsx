@@ -121,6 +121,9 @@ export default function ColumnManager({
   targetCompanyName,
   companyDetails,
   onChangeScope,
+  getScopeBlockers,
+  getKeyChangePreview,
+  onRenameKey,
 }) {
   const [editing, setEditing] = useState(null) // 'new' | column | null
   const [deleting, setDeleting] = useState(null)
@@ -157,7 +160,10 @@ export default function ColumnManager({
     return [...crossScopeExistingKeys.slice(0, idx), ...crossScopeExistingKeys.slice(idx + 1)]
   }
 
-  function handleSave(col, scopeChange) {
+  function handleSave(col, scopeChange, keyChange) {
+    // A changed key is carried through every formula and saved month first;
+    // the edit below then gives the column itself its new key.
+    if (editing !== 'new' && keyChange) onRenameKey?.(editing, keyChange.to, scope)
     if (editing === 'new') {
       onAdd(col)
     } else if (scopeChange) {
@@ -274,6 +280,8 @@ export default function ColumnManager({
           crossScopeAvailableKeys={crossScopeAvailableKeys}
           totalCompanyCount={totalCompanyCount}
           targetCompanyName={targetCompanyName}
+          scopeBlockers={editing === 'new' || !getScopeBlockers ? [] : getScopeBlockers(editing)}
+          keyChangePreview={editing === 'new' || !getKeyChangePreview ? null : () => getKeyChangePreview(editing, scope)}
           onSave={handleSave}
           onClose={() => setEditing(null)}
         />

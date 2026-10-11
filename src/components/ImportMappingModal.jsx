@@ -1,7 +1,7 @@
 import { useMemo, useState } from 'react'
 import { Upload } from 'lucide-react'
 import Modal from './Modal'
-import { guessMapping, projectRows } from '../lib/excelImport'
+import { guessMapping, projectRows, convertImportValue, findUnreadableValues } from '../lib/excelImport'
 
 const PREVIEW_ROW_COUNT = 5
 
@@ -17,13 +17,35 @@ const PREVIEW_ROW_COUNT = 5
 // autoNote: an explanatory message shown above the mapping UI when the
 //   file looked like a system export but couldn't be fully auto-applied
 //   (wrong company, or a column since removed).
-export default function ImportMappingModal({ headers, rows, systemFields, initialMapping, recognized, autoNote, onConfirm, onClose }) {
+export default function ImportMappingModal({ headers, rows, systemFields, initialMapping, recognized, autoNote, meta, onConfirm, onClose }) {
   const [mapping, setMapping] = useState(() => initialMapping ?? guessMapping(systemFields, headers))
 
   const previewRows = useMemo(
     () => projectRows(rows.slice(0, PREVIEW_ROW_COUNT), systemFields, mapping),
     [rows, systemFields, mapping]
   )
+
+  // Number cells in the WHOLE file (not just the previewed rows) that cannot
+  // be read as numbers. They are left blank on import, never written as 0.
+  const unreadable = useMemo(() => findUnreadableValues({ rows, systemFields, mapping, meta }), [rows, systemFields, mapping, meta])
+
+  // What a previewed cell will be stored as - the same conversion the import
+  // itself uses, so the preview and the imported value always match.
+  function previewCell(field, raw) {
+    if (field.kind === 'identity' || field.valueType === 'text' || field.valueType === 'checkbox') {
+      return raw === undefined || raw === '' ? <span className="font-sans italic text-subtle">empty</span> : String(raw)
+    }
+    if (raw === undefined || raw === null || raw === '') return <span className="font-sans italic text-subtle">empty</span>
+    const converted = convertImportValue(field, raw)
+    if (converted.unreadable) {
+      return (
+        <span className="text-warn" title="Not a number: this cell will be left blank">
+          {String(raw)} <span className="font-sans italic">(not a number)</span>
+        </span>
+      )
+    }
+    return String(converted.value)
+  }
 
   function setFieldMapping(fieldKey, indexStr) {
     setMapping((prev) => ({ ...prev, [fieldKey]: indexStr === '' ? null : Number(indexStr) }))
@@ -75,6 +97,22 @@ export default function ImportMappingModal({ headers, rows, systemFields, initia
           </div>
         )}
 
+        {unreadable.length > 0 && (
+          <div role="alert" className="note note-warn">
+            <p className="font-medium">
+              {unreadable.length} value{unreadable.length === 1 ? '' : 's'} can't be read as a number and will be left blank (not
+              imported as 0):
+            </p>
+            <ul className="mt-1 max-h-24 overflow-y-auto">
+              {unreadable.map((u, i) => (
+                <li key={i}>
+                  {u.employee} — {u.field}: “{u.raw}”
+                </li>
+              ))}
+            </ul>
+          </div>
+        )}
+
         <div>
           <p className="mb-2 text-[11px] font-medium uppercase tracking-wider text-subtle">
             Preview (first {Math.min(PREVIEW_ROW_COUNT, rows.length)} rows)
@@ -95,11 +133,7 @@ export default function ImportMappingModal({ headers, rows, systemFields, initia
                   <tr key={i}>
                     {systemFields.map((field) => (
                       <td key={field.key} className="num whitespace-nowrap px-3 py-2 text-fg">
-                        {row[field.key] === undefined || row[field.key] === '' ? (
-                          <span className="font-sans italic text-subtle">empty</span>
-                        ) : (
-                          String(row[field.key])
-                        )}
+                        {previewCell(field, row[field.key])}
                       </td>
                     ))}
                   </tr>

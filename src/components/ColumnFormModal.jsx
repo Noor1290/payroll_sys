@@ -17,6 +17,23 @@ const DEFAULT_TIERED_STATE = { baseKey: null, tiers: [{ operator: 'below', thres
 const DEFAULT_COMPARE_STATE = { columnAKey: null, operator: '>', columnBKey: null, trueExpr: '0', falseExpr: '0' }
 const DEFAULT_PROGRESSIVE_STATE = { baseKey: null, brackets: [{ width: 0, rate: 0 }, { width: 0, rate: 0 }] }
 
+// What the "Change this column's key?" question says will be updated.
+function describeKeyChange({ keyChange, preview }) {
+  const formulas =
+    preview.formulas.length === 0
+      ? 'No formula uses this column.'
+      : `${preview.formulas.length} formula${preview.formulas.length === 1 ? '' : 's'} that use${
+          preview.formulas.length === 1 ? 's' : ''
+        } it will be updated: ${preview.formulas.join(', ')}.`
+  const figures =
+    preview.periods === 0
+      ? 'No saved figures need to move.'
+      : `Its saved figures will be moved in ${preview.periods} month${preview.periods === 1 ? '' : 's'} across ${preview.companies} compan${
+          preview.companies === 1 ? 'y' : 'ies'
+        }.`
+  return `The key changes from "${keyChange.from}" to "${keyChange.to}". ${formulas} ${figures} Nothing is lost.`
+}
+
 // Shared add/edit form for both global and company-scoped columns.
 //
 // availableColumns: columns (excluding the one being edited) that this
@@ -35,6 +52,8 @@ export default function ColumnFormModal({
   crossScopeAvailableKeys = null,
   totalCompanyCount,
   targetCompanyName,
+  scopeBlockers = [],
+  keyChangePreview = null,
   onSave,
   onClose,
 }) {
@@ -55,7 +74,8 @@ export default function ColumnFormModal({
   const [exemptionState, setExemptionState] = useState(initial?.exemption ?? defaultExemptionState())
   const [includeInExport, setIncludeInExport] = useState(!initial?.excludeFromExport)
   const [scope, setScope] = useState(currentScope ?? 'company')
-  const [pendingScopeChange, setPendingScopeChange] = useState(null) // { patch, to } | null
+  const [pendingScopeChange, setPendingScopeChange] = useState(null) // { patch, to, keyChange } | null
+  const [pendingKeyChange, setPendingKeyChange] = useState(null) // { patch, keyChange, preview } | null
   const [error, setError] = useState(null)
   const formulaRef = useRef(null)
 
@@ -142,19 +162,31 @@ export default function ColumnFormModal({
   // changing from Global to "this company only" and other companies would
   // actually lose it - pauses for an explicit confirmation first, since
   // that step removes the column from every other company.
-  function finalizeSave(patch) {
+  function finalizeSave(patch, keyChange = null) {
     const fullPatch = { ...(initial ?? {}), ...patch }
-    if (!scopeChanged) return onSave(fullPatch, null)
+    if (!scopeChanged) return onSave(fullPatch, null, keyChange)
 
     if (scope === 'company') {
       if (!totalCompanyCount || totalCompanyCount <= 1) {
-        return onSave(fullPatch, { to: 'company' })
+        return onSave(fullPatch, { to: 'company' }, keyChange)
       }
-      setPendingScopeChange({ patch: fullPatch, to: 'company' })
+      setPendingScopeChange({ patch: fullPatch, to: 'company', keyChange })
       return
     }
 
-    return onSave(fullPatch, { to: 'global' })
+    return onSave(fullPatch, { to: 'global' }, keyChange)
+  }
+
+  // The last step of every Save. Changing the key of an existing column
+  // moves its saved figures and rewrites the formulas that use it, so that
+  // is spelled out and confirmed first.
+  function saveValidated(patch) {
+    if (isEdit && patch.key !== initial.key) {
+      const keyChange = { from: initial.key, to: patch.key }
+      setPendingKeyChange({ patch, keyChange, preview: keyChangePreview ? keyChangePreview() : { formulas: [], periods: 0, companies: 0 } })
+      return
+    }
+    finalizeSave(patch)
   }
 
   function handleSave() {
@@ -176,8 +208,18 @@ export default function ColumnFormModal({
       )
     }
 
+    // Making a Global column company-only takes it away from every Global
+    // formula and from the other companies. Refuse while anything uses it.
+    if (scopeChanged && scope === 'company' && scopeBlockers.length > 0) {
+      return setError(
+        `Can't make this column Company-specific yet. These formulas use it and would stop working: ${scopeBlockers
+          .map((b) => `${b.name} (${b.where})`)
+          .join(', ')}. Change those formulas first, or keep this column Global.`
+      )
+    }
+
     if (type !== 'formula') {
-      return finalizeSave({
+      return saveValidated({
         name: trimmedName,
         key: trimmedKey,
         type,
@@ -259,7 +301,7 @@ export default function ColumnFormModal({
       return setError(`Circular reference detected: ${cyclePath.join(' → ')}`)
     }
 
-    finalizeSave({
+    saveValidated({
       name: trimmedName,
       key: trimmedKey,
       type,
@@ -659,8 +701,22 @@ export default function ColumnFormModal({
         confirmLabel="Convert"
         onCancel={() => setPendingScopeChange(null)}
         onConfirm={() => {
-          onSave(pendingScopeChange.patch, { to: pendingScopeChange.to })
+          onSave(pendingScopeChange.patch, { to: pendingScopeChange.to }, pendingScopeChange.keyChange ?? null)
           setPendingScopeChange(null)
+        }}
+      />
+    )}
+
+    {pendingKeyChange && (
+      <ConfirmDialog
+        title="Change this column's key?"
+        message={describeKeyChange(pendingKeyChange)}
+        confirmLabel="Change key"
+        onCancel={() => setPendingKeyChange(null)}
+        onConfirm={() => {
+          const { patch, keyChange } = pendingKeyChange
+          setPendingKeyChange(null)
+          finalizeSave(patch, keyChange)
         }}
       />
     )}

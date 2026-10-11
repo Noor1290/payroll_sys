@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { CircleAlert, CircleCheck, Send, X } from 'lucide-react'
 import { buildPdfFillColumns, buildCompanyDetailFields, resolveCompanyFieldHeaders, buildPdfFillRows } from '../lib/pdfFillExport'
 import { periodKey } from '../lib/periods'
+import { findErrorCells } from '../lib/exportErrors'
 
 // Sends the month currently shown to the Payroll Hub dashboard: the same
 // rows "Export for PDF fill (JSON)" writes with every column and every
@@ -23,12 +24,20 @@ export default function SendToDashboardButton({
 
   if (!window.PayrollHubBridge.isEmbedded()) return null
 
+  // A figure in error is never sent as a number, and the dashboard takes
+  // figures only - so nothing is sent until it is fixed.
+  const errors = findErrorCells(employees, buildPdfFillColumns(identityFields, effectiveColumns), computedGrid, identityFields)
+
   const blockedReason =
     employees.length === 0
       ? 'Nothing to send: there are no employees for this month.'
       : !(companyDetails?.brn ?? '').trim()
         ? "Can't send yet: this company has no BRN. Add it in Company Details (the ⓘ next to the company name)."
-        : null
+        : errors.length > 0
+          ? `Can't send yet: ${errors.length} figure${errors.length === 1 ? ' is' : 's are'} in error (${errors[0].employee} — ${errors[0].column}${
+              errors.length > 1 ? ', …' : ''
+            }). Fix ${errors.length === 1 ? 'it' : 'them'} first.`
+          : null
 
   async function handleSend() {
     const columns = buildPdfFillColumns(identityFields, effectiveColumns)

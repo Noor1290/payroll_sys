@@ -20,9 +20,13 @@ import {
   describeUnrecognizedMeta,
   buildImportedEmployees,
   parseCheckboxValue,
+  parseNumberCell,
+  findUnreadableValues,
 } from '../../src/lib/excelImport'
+import { ERROR_TEXT, findErrorCells, isErrorCell } from '../../src/lib/exportErrors'
 import {
   buildPdfFillColumns,
+  buildPdfFillColumnGroups,
   buildPdfFillRows,
   buildCompanyDetailFields,
   resolveCompanyFieldHeaders,
@@ -258,41 +262,52 @@ describe('Excel export with live formulas', () => {
     expect(sheet.getCell(row, columnOf('age60')).value).toBe('1 ticked')
   })
 
-  test('worked out as a spreadsheet would, the formulas match the app when no checkbox is ticked', () => {
-    for (const index of [0, 2]) {
+  // The exemption formulas test a checkbox against 1, and in a spreadsheet
+  // the text "Yes" is never equal to 1. So in this file a checkbox cell
+  // holds 1 or 0 and is only displayed as Yes / No.
+  test('a checkbox cell holds 1 or 0, displayed as Yes / No', () => {
+    expect([7, 8, 9].map((r) => sheet.getCell(r, columnOf('age60')).value)).toEqual([0, 1, 0])
+    for (const r of [7, 8, 9]) expect(sheet.getCell(r, columnOf('age60')).numFmt).toBe('"Yes";"Yes";"No"')
+    expect(sheet.getCell(7, columnOf('nsf')).formula).toBe('IF((J7=1),0,(MIN(F7,29710)*0.01))')
+  })
+
+  test('worked out as a spreadsheet would, EVERY formula in every row matches the app', () => {
+    employees.forEach((_e, index) => {
       for (const key of FORMULA_KEYS) {
         const live = liveValue(7 + index, key)
         expect(isExcelError(live), `${key} row ${7 + index}`).toBe(false)
         expect(live, `${key} row ${7 + index}`).toBeCloseTo(appValue(index, key), 8)
       }
-    }
+    })
   })
 
-  // BUG (wrong figures): the checkbox column is written as "Yes" / "No", but
-  // the exemption formula tests it against 1. In a spreadsheet "Yes" = 1 is
-  // FALSE, so the exemption never applies once the sheet recalculates.
-  test.fails('BUG: the live NSF of an employee ticked "Age 60+" is 0, as in the app', () => {
+  test('the live NSF of the employee ticked "Age 60+" is 0, as in the app', () => {
+    expect(employees[1].values.age60).toBe(true)
     expect(appValue(1, 'nsf')).toBe(0)
     expect(liveValue(8, 'nsf')).toBe(0)
   })
 
-  test.fails('BUG: the live Net Pay of that employee matches the app', () => {
-    expect(liveValue(8, 'netPay')).toBeCloseTo(appValue(1, 'netPay'), 8)
+  test('the live Net Pay of that employee matches the app: 88,400', () => {
+    expect(liveValue(8, 'netPay')).toBe(88400)
+    expect(appValue(1, 'netPay')).toBe(88400)
   })
 
-  test.fails('BUG: the live totals match the app\'s totals', () => {
+  test('the live totals match the app\'s totals', () => {
     const row = 7 + employees.length
-    for (const key of ['nsf', 'netPay']) {
+    for (const key of NUMBER_KEYS) {
       const expected = employees.reduce((sum, _e, index) => sum + appValue(index, key), 0)
       expect(evaluateExcelFormula(sheet.getCell(row, columnOf(key)).formula, getCell), key).toBeCloseTo(expected, 8)
     }
   })
 
-  // What the recalculated file shows instead (kept as evidence).
-  test('evidence: the recalculated file gives NSF 297.10 and Net Pay 88,102.90 for TST002', () => {
-    expect(liveValue(8, 'nsf')).toBeCloseTo(297.1, 8)
-    expect(liveValue(8, 'netPay')).toBeCloseTo(88102.9, 8)
-    expect(appValue(1, 'netPay')).toBe(88400)
+  test('changing the cell to 0 in the spreadsheet brings the NSF back, as unticking does in the app', () => {
+    const unticked = (ref) => (ref === 'J8' ? 0 : getCell(ref))
+    expect(evaluateExcelFormula(sheet.getCell('N8').formula, unticked)).toBeCloseTo(297.1, 8)
+  })
+
+  test('a values export keeps Yes / No as text, as before', async () => {
+    const values = (await openWorkbook(await buildWorkbookBuffer(planFor('values')))).getWorksheet('Payroll')
+    expect([7, 8, 9].map((r) => values.getCell(r, columnOf('age60')).value)).toEqual(['No', 'Yes', 'No'])
   })
 
   // BUG: Math.round / Math.floor / Math.ceil work in the app and are accepted
@@ -318,20 +333,64 @@ describe('a formula in error', () => {
     expect(g.e1.paye.trace.error).toContain('rateThatWasDeleted is not defined')
   })
 
-  // BUG (wrong figures): the table shows "Error", but every export writes 0.
-  test.fails('BUG: the Excel export does not write 0 for it', () => {
-    const plan = buildExportPlan({ title: 'TEST Co A', companyId: COMPANY_ID, employees: people, identityFields, effectiveColumns: broken, computedGrid: g })
-    expect(plan.rows[0][4]).not.toBe(0)
+  // A figure in error is never exported as a number: every export writes
+  // the text "Error", after warning which employees and columns are affected.
+  const planOf = (exportMode) => buildExportPlan({ title: 'TEST Co A', companyId: COMPANY_ID, exportMode, employees: people, identityFields, effectiveColumns: broken, computedGrid: g })
+
+  test('the cells to warn about are listed by employee and column', () => {
+    expect(findErrorCells(people, planOf('values').columns, g, identityFields)).toEqual([{ employee: 'TST001', column: 'PAYE' }])
+    expect(findErrorCells(testEmployees(), planFor('values').columns, grid, identityFields)).toEqual([])
   })
 
-  test.fails('BUG: the PDF fill export does not write 0 for it', () => {
+  test('an employee with no identity values is named by position', () => {
+    const anonymous = [{ id: 'e1', values: { basicSalary: '1' } }]
+    const ga = computeGridForEmployees(anonymous, broken, getColumnsByKey(broken))
+    expect(findErrorCells(anonymous, broken, ga, identityFields)).toEqual([{ employee: 'Row 1', column: 'PAYE' }])
+  })
+
+  test('the Excel export writes "Error" for it, and for the column\'s total', () => {
+    const plan = planOf('values')
+    expect(plan.rows[0]).toEqual(['TST001', '', '', 50000, ERROR_TEXT])
+    expect(plan.totalsRow).toEqual(['TOTAL', '', '', 50000, ERROR_TEXT])
+  })
+
+  test.each(['values', 'formulas'])('in the %s file the cell is the text "Error": no number, no formula', async (mode) => {
+    const ws = (await openWorkbook(await buildWorkbookBuffer(planOf(mode)))).getWorksheet('Payroll')
+    for (const row of [7, 8]) {
+      expect(ws.getCell(row, 5).value).toBe('Error')
+      expect(ws.getCell(row, 5).formula).toBeUndefined()
+    }
+    expect(ws.getCell(7, 4).value).toBe(50000)
+  })
+
+  test('the PDF fill export writes "Error" for it', () => {
     const rows = buildPdfFillRows(buildPdfFillColumns(identityFields, broken), people, g)
-    expect(rows[0].PAYE).not.toBe(0)
+    expect(rows[0]).toEqual({ ID: 'TST001', Name: '', Surname: '', 'Basic Salary': 50000, PAYE: 'Error' })
+    expect(buildCsvContent(['ID', 'PAYE'], rows)).toBe('ID,PAYE\r\nTST001,Error')
   })
 
-  test.fails('BUG: Totals does not count it as 0', () => {
-    const totals = computeTotals([{ year: 2026, month: 9, employees: people }], broken, getColumnsByKey(broken), idFieldKey)
-    expect(totals.computedGrid['id:TST001'].paye.value).not.toBe(0)
+  test('Totals marks it as an error, saying which month, and the Totals export writes "Error"', () => {
+    const fine = [{ id: 'e2', values: { id: 'TST002', basicSalary: '100' } }]
+    const totals = computeTotals(
+      [{ year: 2026, month: 8, employees: fine }, { year: 2026, month: 9, employees: people }],
+      broken,
+      getColumnsByKey(broken),
+      idFieldKey
+    )
+    const cell = totals.computedGrid['id:TST001'].paye
+    expect(isErrorCell(cell)).toBe(true)
+    expect(cell.error).toBe('In error in September 2026')
+    // The figures that are fine are still added up.
+    expect(totals.computedGrid['id:TST001'].basicSalary.value).toBe(50000)
+    const plan = buildExportPlan({ title: 'TEST Co A', companyId: COMPANY_ID, kind: 'totals', employees: totals.employees, identityFields, effectiveColumns: broken, computedGrid: totals.computedGrid })
+    expect(plan.rows.map((r) => r[4])).toEqual([ERROR_TEXT, ERROR_TEXT])
+  })
+
+  test('a division by zero is exported as "Error" too', () => {
+    const cols = [input('Basic Salary', 'basicSalary'), input('Days', 'days'), simple('Daily', 'daily', 'basicSalary / days')]
+    const one = [{ id: 'e1', values: { id: 'TST001', basicSalary: '100', days: '0' } }]
+    const rows = buildPdfFillRows(buildPdfFillColumns(identityFields, cols), one, computeGridForEmployees(one, cols, getColumnsByKey(cols)))
+    expect(rows[0].Daily).toBe('Error')
   })
 })
 
@@ -404,20 +463,81 @@ describe('Import from Excel: an outside file, mapped by hand', () => {
     expect(parseCheckboxValue(raw)).toBe(expected)
   })
 
-  // BUG (wrong figures): a figure typed as text with a thousands separator,
-  // which is how many payroll files hold them, becomes 0 with no warning.
-  test.fails('BUG: "18,115.00" stored as text in the file is imported as 18115', async () => {
+  // Many payroll files hold figures as text. They are read as the numbers
+  // they are; anything that is not a number is left blank and reported.
+  test('"18,115.00" stored as text in the file is imported as 18115', async () => {
     const bytes = workbookBytes([['ID', 'Basic Salary'], ['TST201', '18,115.00']])
     const { headers, rows } = await parseWorkbookFile(asFile(bytes))
     const imported = buildImportedEmployees({ rows, systemFields: fields, mapping: guessMapping(fields, headers), makeId })
     expect(imported[0].values.basicSalary).toBe(18115)
   })
 
-  test.fails('BUG: "Rs 18115" stored as text in the file is not silently imported as 0', async () => {
+  test('"Rs 18115" stored as text in the file is imported as 18115', async () => {
     const bytes = workbookBytes([['ID', 'Basic Salary'], ['TST202', 'Rs 18115']])
     const { headers, rows } = await parseWorkbookFile(asFile(bytes))
     const imported = buildImportedEmployees({ rows, systemFields: fields, mapping: guessMapping(fields, headers), makeId })
-    expect(imported[0].values.basicSalary).not.toBe(0)
+    expect(imported[0].values.basicSalary).toBe(18115)
+  })
+
+  test.each([
+    [18115, 18115],
+    ['18115', 18115],
+    ['18,115.00', 18115],
+    ['1,234,567.89', 1234567.89],
+    ['Rs 18115', 18115],
+    ['Rs. 18,115.50', 18115.5],
+    ['Rs18,115', 18115],
+    ['MUR 18 115.25', 18115.25],
+    ['18 115', 18115],
+    ['  18115.75  ', 18115.75],
+    ['18115 Rs', 18115],
+    ['-250.5', -250.5],
+    ['(1,200.00)', -1200],
+    ['+42', 42],
+    ['.5', 0.5],
+    ['0', 0],
+    ['1e3', 1000],
+  ])('the cell %o is read as %f', (raw, expected) => {
+    expect(parseNumberCell(raw)).toEqual({ ok: true, value: expected })
+  })
+
+  test.each([[''], [undefined], [null], ['   ']])('a blank cell %o is 0, as before', (raw) => {
+    expect(parseNumberCell(raw)).toEqual({ ok: true, value: 0 })
+  })
+
+  test.each([['n/a'], ['abc'], ['-'], ['Rs'], ['12,34'], ['1.2.3'], ['18115 per month'], ['TBC'], [true]])('the cell %o is not a number', (raw) => {
+    expect(parseNumberCell(raw)).toEqual({ ok: false })
+  })
+
+  test('a cell that is not a number is left blank and reported, never written as 0', async () => {
+    const bytes = workbookBytes([
+      ['ID', 'Name', 'Basic Salary', 'Allowances', 'Status'],
+      ['TST301', 'Uno', 'n/a', '1,500.50', 'n/a'],
+      ['TST302', 'Dos', 20000, 'TBC', 'Full Time'],
+      ['', '', 'pending', 5, ''],
+    ])
+    const { headers, rows } = await parseWorkbookFile(asFile(bytes))
+    const mapping = guessMapping(fields, headers)
+    const imported = buildImportedEmployees({ rows, systemFields: fields, mapping, makeId })
+    expect(imported.map((e) => [e.values.basicSalary, e.values.allowances, e.values.status])).toEqual([
+      ['', 1500.5, 'n/a'],
+      [20000, '', 'Full Time'],
+      ['', 5, ''],
+    ])
+    // Reported with who and which column. A text column holding "n/a" is not a problem.
+    expect(findUnreadableValues({ rows, systemFields: fields, mapping })).toEqual([
+      { rowIndex: 0, employee: 'TST301 Uno', field: 'Basic Salary', raw: 'n/a' },
+      { rowIndex: 1, employee: 'TST302 Dos', field: 'Allowances', raw: 'TBC' },
+      { rowIndex: 2, employee: 'Row 3', field: 'Basic Salary', raw: 'pending' },
+    ])
+    // A blank cell left blank calculates as 0, like any empty cell in the table.
+    const regrid = computeGridForEmployees(imported, columns, getColumnsByKey(columns))
+    expect(regrid[imported[0].id].newBasic.value).toBe(0)
+  })
+
+  test('a file with nothing unreadable reports nothing', async () => {
+    const { headers, rows } = await parseWorkbookFile(asFile(external()))
+    expect(findUnreadableValues({ rows, systemFields: fields, mapping: { ...guessMapping(fields, headers), basicSalary: 3 } })).toEqual([])
   })
 
   // BUG: Import matches by column NAME, so two input columns with the same
@@ -535,7 +655,8 @@ describe('Export for PDF fill', () => {
 
   test('figures are rounded to the column\'s decimals', () => {
     const rows = buildPdfFillRows(pick('Bonus', 'Net Pay'), employees, grid)
-    expect(rows[2]).toEqual({ Bonus: 25.08, 'Net Pay': 57978.42 })
+    // Net Pay is 57,978.425: an exact half cent, rounded up.
+    expect(rows[2]).toEqual({ Bonus: 25.08, 'Net Pay': 57978.43 })
   })
 
   test('Company Details, when ticked, repeat on every row', () => {
@@ -584,25 +705,57 @@ describe('Export for PDF fill', () => {
     expect(buildPdfFillFilename('csv', 'TEST/Co: A', 2026, 12)).toBe('TESTCo A-pdf-fill-2026-12.csv')
   })
 
-  // BUG (wrong figures): rows are keyed by column NAME, so the two columns
-  // called "CSG" collapse into one and the employee figure is lost.
-  test.fails('BUG: employee CSG and employer CSG are both in the JSON, each with its own figure', () => {
-    const rows = buildPdfFillRows(allColumns.filter((c) => c.name === 'CSG'), employees, grid)
-    const figures = Object.values(rows[0])
-    expect(figures).toContain(281.25)
-    expect(figures).toContain(562.5)
+  // Rows are keyed by the exported name, so two columns must never share
+  // one. Columns that share a name are both exported with their category.
+  const bothCsg = allColumns.filter((c) => c.key === 'csg' || c.key === 'csg_employer')
+
+  test('two columns called "CSG" are exported as "CSG (Employee Contribution)" and "CSG (Employer Contribution)"', () => {
+    expect(bothCsg.map((c) => c.name)).toEqual(['CSG (Employee Contribution)', 'CSG (Employer Contribution)'])
   })
 
-  test.fails('BUG: in the CSV the two CSG columns hold different figures', () => {
-    const cols = allColumns.filter((c) => c.name === 'CSG')
-    const csv = buildCsvContent(cols.map((c) => c.name), buildPdfFillRows(cols, employees, grid))
-    expect(csv.split('\r\n')[1]).toBe('281.25,562.5')
+  test('employee CSG and employer CSG are both in the JSON, each with its own figure', () => {
+    expect(buildPdfFillRows(bothCsg, employees, grid)).toEqual([
+      { 'CSG (Employee Contribution)': 281.25, 'CSG (Employer Contribution)': 562.5 },
+      { 'CSG (Employee Contribution)': 3000, 'CSG (Employer Contribution)': 6000 },
+      { 'CSG (Employee Contribution)': 1800, 'CSG (Employer Contribution)': 3600 },
+    ])
   })
 
-  test('evidence: both CSG columns export the employer figure', () => {
-    const cols = allColumns.filter((c) => c.name === 'CSG')
-    expect(buildPdfFillRows(cols, employees, grid)[0]).toEqual({ CSG: 562.5 })
-    expect(buildCsvContent(cols.map((c) => c.name), buildPdfFillRows(cols, employees, grid)).split('\r\n')).toEqual(['CSG,CSG', '562.5,562.5', '6000,6000', '3600,3600'])
+  test('in the CSV the two CSG columns have their own headers and figures', () => {
+    const csv = buildCsvContent(bothCsg.map((c) => c.name), buildPdfFillRows(bothCsg, employees, grid))
+    expect(csv.split('\r\n')).toEqual(['CSG (Employee Contribution),CSG (Employer Contribution)', '281.25,562.5', '3000,6000', '1800,3600'])
+  })
+
+  test('the picker lists the same names as the file uses', () => {
+    const names = buildPdfFillColumnGroups(identityFields, columns).flatMap((g) => g.columns.map((c) => c.name))
+    expect(names).toEqual(allColumns.map((c) => c.name))
+    expect(names.filter((n) => n.startsWith('CSG'))).toEqual(['CSG (Employee Contribution)', 'CSG (Employer Contribution)'])
+  })
+
+  test('a column whose name is unique keeps its plain name', () => {
+    expect(allColumns.filter((c) => !c.name.startsWith('CSG')).map((c) => c.name)).toEqual([
+      'ID', 'Name', 'Surname', 'Basic Salary', 'Govt Increment', 'New Basic', 'Status', 'Allowances', 'Emoluments', 'Age 60+', 'Bonus Base', 'Bonus', 'Net Pay', 'NSF', 'PAYE', 'EDF', 'Chargeable',
+    ])
+  })
+
+  test('every exported name is different, whatever the columns are called', () => {
+    const awkward = [
+      input('Name', 'name_2'),
+      input('Rate', 'rate', { category: 'employeeContribution' }),
+      input('Rate', 'rate_2', { category: 'employeeContribution' }),
+      input('Rate', 'rate_employer', { category: 'employerContribution' }),
+    ]
+    const names = buildPdfFillColumns(identityFields, awkward).map((c) => c.name)
+    expect(names).toEqual(['ID', 'Name (Identifiers)', 'Surname', 'Name (General)', 'Rate (Employee Contribution)', 'Rate (Employee Contribution) (2)', 'Rate (Employer Contribution)'])
+    expect(new Set(names).size).toBe(names.length)
+    const one = [{ id: 'e1', values: { id: 'TST001', name: 'Alpha', name_2: '7', rate: '1', rate_2: '2', rate_employer: '3' } }]
+    const row = buildPdfFillRows(buildPdfFillColumns(identityFields, awkward), one, computeGridForEmployees(one, awkward, getColumnsByKey(awkward)))[0]
+    expect(Object.values(row)).toEqual(['TST001', 'Alpha', '', 7, 1, 2, 3])
+  })
+
+  test('a company field is prefixed against the exported names, including the category ones', () => {
+    const fields = buildCompanyDetailFields('TEST Co A', { address: '', brn: '', customFields: [{ id: 'c1', label: 'CSG (Employee Contribution)', value: 'ref' }, { id: 'c2', label: 'CSG', value: 'plain' }] }).slice(3)
+    expect(resolveCompanyFieldHeaders(fields, bothCsg.map((c) => c.name)).map((f) => f.header)).toEqual(['Company: CSG (Employee Contribution)', 'CSG'])
   })
 
   // BUG: two custom company fields with the same label overwrite each other.

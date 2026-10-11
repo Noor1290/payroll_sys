@@ -20,6 +20,8 @@ import { describeTieredRule, describeCompareRule } from '../../src/lib/tieredFor
 import { describeProgressiveRule } from '../../src/lib/progressiveFormula'
 import { buildColumnSetupExport, parseColumnSetupFile, planColumnImport } from '../../src/lib/columnSetup'
 import { input, simple, tiered, EMPLOYEE, EMPLOYER, OTHER, testColumns, testEmployees, computeRow } from './build'
+import { findFormulasUsingColumn, findScopeChangeBlockers, renameKeyInColumn, renameKeyInExpression, renameKeyInWidths } from '../../src/lib/columnUsage'
+import { renameValueKey } from '../../src/lib/storage'
 
 const portable = ({ id: _id, ...rest }) => JSON.parse(JSON.stringify(rest))
 
@@ -103,12 +105,54 @@ describe('renaming', () => {
     expect(formatFormulaForDisplay(renamed[2].formula, { basicSalary: 'Base Pay', govtIncrement: 'Govt Increment' })).toBe('Base Pay + Govt Increment')
   })
 
-  // BUG: the Edit form also lets the Key be changed. Nothing else is updated:
-  // formulas still use the old key, and the figures typed under it are hidden.
-  test.fails('BUG: changing a column\'s key keeps the formulas that use it working', () => {
+  // The Edit form also lets the Key be changed. The change is carried through
+  // every formula that uses the column and every saved value held under it.
+  test('changing a column\'s key keeps the formulas that use it working, and its figures with it', () => {
     const columns = [input('Basic Salary', 'basicSalary'), input('Govt Increment', 'govtIncrement'), simple('New Basic', 'newBasic', 'basicSalary + govtIncrement')]
-    const rekeyed = edit(columns, 'basicSalary', { key: 'basePay' })
-    expect(computeRow(rekeyed, values).newBasic.value).toBe(18750)
+    const rekeyed = edit(columns.map((c) => renameKeyInColumn(c, 'basicSalary', 'basePay')), 'basicSalary', { key: 'basePay' })
+    expect(rekeyed.map((c) => c.key)).toEqual(['basePay', 'govtIncrement', 'newBasic'])
+    expect(rekeyed[2].formula).toBe('basePay + govtIncrement')
+    const moved = renameValueKey({ id: 'e1', values }, 'basicSalary', 'basePay')
+    expect(moved.values).toEqual({ govtIncrement: '635', basePay: '18115' })
+    expect(computeRow(rekeyed, moved.values).newBasic.value).toBe(18750)
+  })
+
+  test('a key that is part of a longer key is left alone', () => {
+    expect(renameKeyInExpression('csg + csg_employer * csg', 'csg', 'csgEmployee')).toBe('csgEmployee + csg_employer * csgEmployee')
+  })
+
+  test('a key change reaches the visual builder settings too, so the builders still open on the right column', () => {
+    const all = testColumns().map((c) => renameKeyInColumn(c, 'newBasic', 'revisedBasic')).map((c) => renameKeyInColumn(c, 'age60', 'over60')).map((c) => renameKeyInColumn(c, 'edf', 'edfClaim'))
+    const of = (key) => all.find((c) => c.key === key)
+    expect(of('csg').tiered.baseKey).toBe('revisedBasic')
+    expect(of('csg').formula).toBe('(revisedBasic) * (revisedBasic < 50001 ? 0.015 : revisedBasic > 50000 ? 0.03 : 0)')
+    expect(of('nsf').tiered.baseKey).toBe('revisedBasic')
+    expect(of('nsf').exemption.conditions).toEqual([{ type: 'checkbox', columnKey: 'over60', checked: true }])
+    expect(of('nsf').formula).toBe('((over60 === 1)) ? (0) : ((Math.min(revisedBasic, 29710)) * (0.01))')
+    expect(of('chargeable').compare.columnAKey).toBe('edfClaim')
+    expect(of('chargeable').formula).toBe('(edfClaim > emoluments) ? (0) : (emoluments - edfClaim)')
+    // Emoluments (which PAYE is based on) was not renamed.
+    expect(of('paye').progressive.baseKey).toBe('emoluments')
+    expect(of('emoluments').formula).toBe('revisedBasic + allowances')
+    // Input columns have nothing to rewrite.
+    const plain = input('Basic Salary', 'basicSalary')
+    expect(renameKeyInColumn(plain, 'newBasic', 'revisedBasic')).toBe(plain)
+  })
+
+  test('after a key change every figure calculates as before', () => {
+    const before = testColumns()
+    const after = before.map((c) => renameKeyInColumn(c, 'newBasic', 'revisedBasic')).map((c) => (c.key === 'newBasic' ? { ...c, key: 'revisedBasic' } : c))
+    for (const employee of testEmployees()) {
+      const a = computeRow(before, employee.values)
+      const b = computeRow(after, employee.values)
+      for (const column of before) expect(b[column.key === 'newBasic' ? 'revisedBasic' : column.key].value, column.name).toBe(a[column.key].value)
+    }
+  })
+
+  test('a remembered column width moves to the new key', () => {
+    expect(renameKeyInWidths({ basicSalary: 200, edf: 90 }, 'basicSalary', 'basePay')).toEqual({ edf: 90, basePay: 200 })
+    const untouched = { edf: 90 }
+    expect(renameKeyInWidths(untouched, 'basicSalary', 'basePay')).toBe(untouched)
   })
 })
 
@@ -339,16 +383,41 @@ describe('column setup: export, delete, import again', () => {
 })
 
 describe('scope: a Global column that becomes Company-specific', () => {
-  // What handleChangeColumnScope does: the column leaves the global list and
-  // joins one company's list. Another company then only has the global list.
-  test.fails('BUG: another company\'s Global formula that uses it still works', () => {
-    const base = input('Basic Salary', 'basicSalary')
-    const doubled = simple('Doubled', 'doubled', 'basicSalary * 2')
-    const globalAfter = [doubled]
-    const otherCompany = { columns: [] }
-    const columns = getEffectiveColumns(otherCompany, globalAfter)
-    expect(base.key).toBe('basicSalary')
-    expect(computeRow(columns, { basicSalary: '100' }).doubled.trace.error).toBeUndefined()
+  // Making a Global column company-only takes it away from every Global
+  // formula and from the other companies. The form refuses while anything
+  // uses it; this is the list it shows.
+  const base = input('Basic Salary', 'basicSalary')
+  const doubled = simple('Doubled', 'doubled', 'basicSalary * 2')
+  const unrelated = simple('Fixed', 'fixed', '5 + 5')
+  const companies = [
+    { id: 'test-co-a', name: 'TEST Co A', columns: [simple('Site Total', 'siteTotal', 'basicSalary + 10')] },
+    { id: 'test-co-b', name: 'TEST Co B', columns: [simple('Shift Pay', 'shiftPay', 'basicSalary * 0.1'), input('Note', 'note', { valueType: 'text' })] },
+  ]
+
+  test('every formula that uses it is found: Global ones, and other companies\' own', () => {
+    expect(findScopeChangeBlockers(base, [base, doubled, unrelated], companies, 'test-co-a')).toEqual([
+      { name: 'Doubled', where: 'Global' },
+      { name: 'Shift Pay', where: 'TEST Co B' },
+    ])
+  })
+
+  test('the company that keeps the column may go on using it', () => {
+    const blockers = findScopeChangeBlockers(base, [base, unrelated], companies, 'test-co-a')
+    expect(blockers).toEqual([{ name: 'Shift Pay', where: 'TEST Co B' }])
+    expect(findScopeChangeBlockers(base, [base, unrelated], companies, 'test-co-b')).toEqual([{ name: 'Site Total', where: 'TEST Co A' }])
+  })
+
+  test('a column nothing uses can be converted', () => {
+    expect(findScopeChangeBlockers(unrelated, [base, doubled, unrelated], companies, 'test-co-a')).toEqual([])
+  })
+
+  test('a formula is found through any part of it: tier base, exemption, comparison', () => {
+    const users = (key) => findFormulasUsingColumn(key, testColumns()).map((c) => c.key)
+    expect(users('newBasic')).toEqual(['emoluments', 'csg', 'nsf', 'csg_employer'])
+    expect(users('age60')).toEqual(['nsf'])
+    expect(users('edf')).toEqual(['chargeable'])
+    expect(users('csg')).toEqual(['netPay'])
+    expect(users('status')).toEqual([])
   })
 })
 

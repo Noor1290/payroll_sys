@@ -13,7 +13,7 @@ import {
   computeCell,
   computeGridForEmployees,
 } from '../../src/lib/formulaEngine'
-import { formatDecimal } from '../../src/lib/format'
+import { formatDecimal, roundHalfUp } from '../../src/lib/format'
 import { input, simple, tiered, compare, progressive, checkboxExemption, computeValues, computeRow } from './build'
 
 const basic = () => input('Basic Salary', 'basicSalary')
@@ -150,14 +150,22 @@ describe('invalid formulas are rejected on save', () => {
 describe('division by zero', () => {
   const columns = () => [basic(), incr(), simple('Ratio', 'ratio', 'basicSalary / govtIncrement')]
 
-  test.fails('BUG: 0 / 0 is flagged as an error (it shows "NaN" as if it were a figure)', () => {
+  test('0 / 0 is an error, not "NaN" shown as a figure', () => {
     const row = computeRow(columns(), { basicSalary: '0', govtIncrement: '0' })
-    expect(row.ratio.trace.error).toBeTruthy()
+    expect(row.ratio.trace.error).toBe('The calculation has no result (for example 0 divided by 0)')
+    expect(Number.isNaN(row.ratio.value)).toBe(true)
   })
 
-  test.fails('BUG: 100 / 0 is flagged as an error (it shows the infinity sign as if it were a figure)', () => {
+  test('100 / 0 is an error, not an infinity sign shown as a figure', () => {
     const row = computeRow(columns(), { basicSalary: '100', govtIncrement: '0' })
-    expect(row.ratio.trace.error).toBeTruthy()
+    expect(row.ratio.trace.error).toBe('Division by zero')
+    expect(Number.isNaN(row.ratio.value)).toBe(true)
+  })
+
+  test('a division that works is unaffected', () => {
+    const row = computeRow(columns(), { basicSalary: '100', govtIncrement: '8' })
+    expect(row.ratio.trace.error).toBeUndefined()
+    expect(row.ratio.value).toBe(12.5)
   })
 })
 
@@ -426,16 +434,49 @@ describe('decimal places: display is rounded, the stored value is not', () => {
     expect(formatDecimal(computeValues(cols, { basicSalary: '0' }).s, 2)).toBe('1.00')
   })
 
-  // BUG: an exact half cent is rounded DOWN, because the figure rounded is
-  // the binary approximation (271.72499999999997), not 271.725.
-  test.fails('BUG: 1.5% of 18,115 is 271.725 and shows as 271.73', () => {
+  // An exact half cent rounds UP (away from zero), even though the computer
+  // holds 271.725 as 271.72499999999997.
+  test('1.5% of 18,115 is 271.725 and shows as 271.73', () => {
     const cols = [basic(), simple('CSG', 'csg', 'basicSalary * 0.015')]
-    expect(formatDecimal(computeValues(cols, { basicSalary: '18115' }).csg, 2)).toBe('271.73')
+    const value = computeValues(cols, { basicSalary: '18115' }).csg
+    expect(formatDecimal(value, 2)).toBe('271.73')
+    // The stored value is untouched: only the display is rounded.
+    expect(value).toBe(18115 * 0.015)
   })
 
-  test.fails('BUG: 1.5% of 20,115 is 301.725 and shows as 301.73', () => {
+  test('1.5% of 20,115 is 301.725 and shows as 301.73', () => {
     const cols = [basic(), simple('CSG', 'csg', 'basicSalary * 0.015')]
     expect(formatDecimal(computeValues(cols, { basicSalary: '20115' }).csg, 2)).toBe('301.73')
+  })
+
+  test.each([
+    [271.725, 2, 271.73],
+    [301.725, 2, 301.73],
+    [905.175, 2, 905.18],
+    [260000.555, 2, 260000.56],
+    [1.005, 2, 1.01],
+    [2.675, 2, 2.68],
+    [0.125, 2, 0.13],
+    [0.5, 0, 1],
+    [1.5, 0, 2],
+    [2.5, 0, 3],
+    [-271.725, 2, -271.73],
+    [-0.5, 0, -1],
+    [271.7249, 2, 271.72],
+    [271.7251, 2, 271.73],
+    [18750, 2, 18750],
+    [0.1 + 0.2, 2, 0.3],
+    [33.333333333333336, 3, 33.333],
+    [-0.001, 2, 0],
+    [0, 2, 0],
+  ])('roundHalfUp(%f, %i) is %f', (value, decimals, expected) => {
+    expect(roundHalfUp(value, decimals)).toBe(expected)
+  })
+
+  test('rounding leaves text and missing values alone', () => {
+    expect(roundHalfUp('abc', 2)).toBe('abc')
+    expect(Number.isNaN(roundHalfUp(NaN, 2))).toBe(true)
+    expect(formatDecimal(-0.001, 2)).toBe('0.00')
   })
 })
 
@@ -461,13 +502,23 @@ describe('the grid', () => {
     expect(cell.trace.error).toContain('gone is not defined')
   })
 
-  // BUG: only the broken column says Error. Everything calculated from it
-  // shows "NaN" in the ordinary style, as if that were a figure.
-  test.fails('BUG: a column calculated from a column in error is itself flagged as an error', () => {
-    const columns = [basic(), simple('X', 'x', 'basicSalary + gone'), simple('Y', 'y', 'x * 2')]
+  // A figure worked out from a figure in error is in error too, and says
+  // which column to look at - it is never "NaN" shown as a figure.
+  test('a column calculated from a column in error is itself an error, naming that column', () => {
+    const columns = [basic(), simple('X', 'x', 'basicSalary + gone'), simple('Y', 'y', 'x * 2'), simple('Z', 'z', 'y + 1')]
     const row = computeRow(columns, { basicSalary: '5' })
-    expect(row.x.trace.error).toBeTruthy()
-    expect(row.y.trace.error).toBeTruthy()
+    expect(row.x.trace.error).toContain('gone is not defined')
+    expect(row.y.trace.error).toBe('"X" is in error')
+    expect(row.z.trace.error).toBe('"Y" is in error')
+    // The breakdown still lists what it depends on, so the cause can be opened.
+    expect(row.z.trace.dependencies.map((d) => d.name)).toEqual(['Y'])
+  })
+
+  test('an error never turns into a figure through a condition', () => {
+    // Before, "bad > 100 ? 5 : 10" quietly gave 10 when "bad" was in error.
+    const columns = [basic(), simple('Bad', 'bad', 'basicSalary / 0'), simple('Pick', 'pick', 'bad > 100 ? 5 : 10')]
+    const row = computeRow(columns, { basicSalary: '5' })
+    expect(row.pick.trace.error).toBe('"Bad" is in error')
   })
 
   test('a text column used in a formula counts as 0', () => {

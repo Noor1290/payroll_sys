@@ -208,15 +208,39 @@ export function computeCell(key, employee, columnsByKey, memo, visiting = new Se
   }
   visiting.delete(key)
 
+  // A figure worked out from a figure in error is itself in error: it is
+  // never calculated from a made-up value, and it says which column to look at.
+  const brokenDependency = depTraces.find((t) => t.error)
+  if (brokenDependency) {
+    const result = {
+      value: NaN,
+      trace: {
+        key,
+        name: col.name,
+        type: 'formula',
+        formula: col.formula,
+        value: NaN,
+        decimals: col.decimals ?? 2,
+        error: `"${brokenDependency.name}" is in error`,
+        dependencies: depTraces,
+      },
+    }
+    memo.set(key, result)
+    return result
+  }
+
   let value
   let error
   try {
     value = evaluateFormula(col.formula, depValues)
-    if (typeof value !== 'number' || Number.isNaN(value)) {
-      if (typeof value !== 'number') {
-        error = `Formula did not return a number (got ${typeof value})`
-        value = NaN
-      }
+    if (typeof value !== 'number') {
+      error = `Formula did not return a number (got ${typeof value})`
+      value = NaN
+    } else if (!Number.isFinite(value)) {
+      // Infinity comes from dividing by zero; "not a number" from 0 / 0 and
+      // the like. Neither is a figure.
+      error = Number.isNaN(value) ? 'The calculation has no result (for example 0 divided by 0)' : 'Division by zero'
+      value = NaN
     }
   } catch (e) {
     error = e.message

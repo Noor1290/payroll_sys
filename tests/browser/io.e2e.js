@@ -24,6 +24,9 @@ import {
   switchCompany,
 } from './app'
 import { evaluateExcelFormula } from '../audit/excelEval'
+import { simple } from '../audit/build'
+import { formatDecimal } from '../../src/lib/format'
+import { seededState } from './app'
 
 let app
 beforeAll(async () => {
@@ -37,7 +40,8 @@ const A = 'test-co-a'
 const XLSX_INPUT = 'input[type="file"][accept=".xlsx"]'
 const JSON_INPUT = 'input[type="file"][accept=".json"]'
 const XLSX_TYPE = 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
-const money = (n) => n.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
+// A figure as the app shows it: two decimals, half cents rounded up.
+const money = (n) => formatDecimal(n, 2)
 
 const HEADERS = ['ID', 'Name', 'Surname', 'Basic Salary', 'Govt Increment', 'New Basic (calc)', 'Status', 'Allowances', 'Emoluments (calc)', 'Age 60+', 'Bonus (calc)', 'Net Pay (calc)', 'CSG (calc)', 'NSF (calc)', 'PAYE (calc)', 'CSG (calc)', 'EDF', 'Chargeable (calc)']
 // The same columns as the Employee Table labels them (Bonus Base is on screen but not exported).
@@ -135,9 +139,9 @@ describe('Export to Excel', () => {
     expect(sheet.getColumn(19).hidden).toBe(true)
     expect(sheet.getCell(10, 4).formula).toBe('SUM(D7:D9)')
 
-    // Worked out as a spreadsheet would, for the two employees with no ticked checkbox.
+    // Worked out as a spreadsheet would, for every employee.
     const getCell = (ref) => (sheet.getCell(ref).formula ? { formula: sheet.getCell(ref).formula } : (sheet.getCell(ref).value ?? null))
-    for (const row of [7, 9]) {
+    for (const row of [7, 8, 9]) {
       for (const c of FORMULA_COLUMNS) {
         const live = evaluateExcelFormula(sheet.getCell(row, c).formula, getCell)
         expect(money(live), sheet.getCell(row, c).address).toBe(screen[row - 7][SCREEN[c - 1]])
@@ -146,7 +150,7 @@ describe('Export to Excel', () => {
     await context.close()
   })
 
-  test('evidence (BUG): in the live-formula file, NSF for the employee ticked "Age 60+" recalculates to 297.10; the app shows 0.00', async () => {
+  test('in the live-formula file, NSF for the employee ticked "Age 60+" recalculates to 0.00, as the app shows', async () => {
     const { context, page } = await openSeeded(app)
     const screen = await readEmployeeTable(page)
     expect(screen[1]['Age 60+']).toBe(true)
@@ -156,10 +160,14 @@ describe('Export to Excel', () => {
     const file = await downloadExcel(page, 'formulas')
     const sheet = (await openWorkbook(file.bytes)).getWorksheet('Payroll')
     const getCell = (ref) => (sheet.getCell(ref).formula ? { formula: sheet.getCell(ref).formula } : (sheet.getCell(ref).value ?? null))
-    expect(sheet.getCell('J8').value).toBe('Yes')
+    // The checkbox cell holds the number 1 (shown as "Yes"), so the formula's test against 1 works.
+    expect(['J7', 'J8', 'J9'].map((ref) => sheet.getCell(ref).value)).toEqual([0, 1, 0])
+    expect(sheet.getCell('J8').numFmt).toBe('"Yes";"Yes";"No"')
     expect(sheet.getCell('N8').formula).toBe('IF((J8=1),0,(MIN(F8,29710)*0.01))')
-    expect(money(evaluateExcelFormula(sheet.getCell('N8').formula, getCell))).toBe('297.10')
-    expect(money(evaluateExcelFormula(sheet.getCell('L8').formula, getCell))).toBe('88,102.90')
+    expect(money(evaluateExcelFormula(sheet.getCell('N8').formula, getCell))).toBe('0.00')
+    expect(money(evaluateExcelFormula(sheet.getCell('L8').formula, getCell))).toBe('88,400.00')
+    // The totals recalculate to the app's totals too: 187.50 + 0 + 297.10.
+    expect(money(evaluateExcelFormula(sheet.getCell('N10').formula, getCell))).toBe('484.60')
     await context.close()
   })
 })
@@ -329,21 +337,62 @@ describe('Import from Excel', () => {
     await context.close()
   })
 
-  test('evidence (BUG): a figure held as text with a thousands separator is imported as 0, with no warning', async () => {
-    const { context, page } = await openSeeded(app)
+  function textFiguresWorkbook(rows) {
     const workbook = XLSX.utils.book_new()
-    XLSX.utils.book_append_sheet(workbook, XLSX.utils.aoa_to_sheet([['ID', 'Name', 'Basic Salary'], ['TST201', 'Texty', '18,115.00']]), 'Sheet1')
-    await chooseExcel(page, XLSX.write(workbook, { type: 'array', bookType: 'xlsx' }), 'text-figures.xlsx')
+    XLSX.utils.book_append_sheet(workbook, XLSX.utils.aoa_to_sheet([['ID', 'Name', 'Basic Salary', 'Govt Increment', 'Allowances'], ...rows]), 'Sheet1')
+    return XLSX.write(workbook, { type: 'array', bookType: 'xlsx' })
+  }
+
+  test('figures held as text ("18,115.00", "Rs 635", "1 250.50") are imported as the numbers they are; the preview shows the same', async () => {
+    const { context, page } = await openSeeded(app)
+    await chooseExcel(page, textFiguresWorkbook([['TST201', 'Texty', '18,115.00', 'Rs 635', '1 250.50']]), 'text-figures.xlsx')
     const box = dialog(page, 'Import from Excel')
     await box.waitFor()
-    // The preview shows the figure as it is in the file...
-    expect(await box.locator('tbody').textContent()).toContain('18,115.00')
+    // The preview shows what will be stored, not the raw text.
+    const previewRow = await box.locator('tbody tr').first().locator('td').allTextContents()
+    expect(previewRow.slice(0, 5)).toEqual(['TST201', 'Texty', 'empty', '18115', '635'])
     expect(await box.getByRole('alert').count()).toBe(0)
     await box.getByRole('button', { name: 'Import 1 row' }).click()
     await box.waitFor({ state: 'hidden' })
-    // ...and what arrives is 0.
+
     const row = (await readEmployeeTable(page))[3]
-    expect([row.ID, row['Basic Salary'], row['New Basic']]).toEqual(['TST201', '0.00', '0.00'])
+    expect([row.ID, row['Basic Salary'], row['Govt Increment'], row.Allowances, row['New Basic'], row.Emoluments]).toEqual(['TST201', '18115.00', '635.00', '1250.50', '18,750.00', '20,000.50'])
+    const stored = (await storedPeriod(page, A, '2026-09'))[3].values
+    expect([stored.basicSalary, stored.govtIncrement, stored.allowances]).toEqual([18115, 635, 1250.5])
+    // Nothing to report, so no summary.
+    expect(await page.getByRole('alert').count()).toBe(0)
+    await context.close()
+  })
+
+  test('a cell that is not a number is flagged in the preview, left blank on import, and listed in a summary afterwards', async () => {
+    const { context, page } = await openSeeded(app)
+    await chooseExcel(page, textFiguresWorkbook([['TST202', 'Texty', 'n/a', 100, 'TBC'], ['TST203', 'Fine', 5000, '', 0]]), 'unreadable.xlsx')
+    const box = dialog(page, 'Import from Excel')
+    await box.waitFor()
+
+    const flagged = box.getByRole('alert')
+    expect((await flagged.locator('p').textContent()).replace(/\s+/g, ' ').trim()).toBe("2 values can't be read as a number and will be left blank (not imported as 0):")
+    expect(await flagged.locator('li').allTextContents()).toEqual(['TST202 Texty — Basic Salary: “n/a”', 'TST202 Texty — Allowances: “TBC”'])
+    const previewRow = await box.locator('tbody tr').first().locator('td').allTextContents()
+    expect(previewRow[3]).toBe('n/a (not a number)')
+    expect(previewRow[4]).toBe('100')
+
+    await box.getByRole('button', { name: 'Import 2 rows' }).click()
+    await box.waitFor({ state: 'hidden' })
+
+    // Left blank - not 0 - and the rest of the row is imported normally.
+    const rows = await readEmployeeTable(page)
+    expect([rows[3].ID, rows[3]['Basic Salary'], rows[3]['Govt Increment'], rows[3].Allowances]).toEqual(['TST202', '', '100.00', ''])
+    expect([rows[4].ID, rows[4]['Basic Salary'], rows[4]['Govt Increment'], rows[4].Allowances]).toEqual(['TST203', '5000.00', '0.00', '0.00'])
+    const stored = (await storedPeriod(page, A, '2026-09'))[3].values
+    expect([stored.basicSalary, stored.allowances]).toEqual(['', ''])
+
+    // The summary after the import repeats what was left blank.
+    const summary = page.getByRole('alert')
+    expect((await summary.locator('p').textContent()).replace(/\s+/g, ' ').trim()).toBe('Imported 2 rows. 2 values could not be read as a number and were left blank:')
+    expect(await summary.locator('li').allTextContents()).toEqual(['TST202 Texty — Basic Salary: “n/a”', 'TST202 Texty — Allowances: “TBC”'])
+    await summary.getByRole('button', { name: 'Dismiss' }).click()
+    expect(await page.getByRole('alert').count()).toBe(0)
     await context.close()
   })
 })
@@ -415,29 +464,199 @@ describe('Export for PDF fill', () => {
     await context.close()
   })
 
-  test('evidence (BUG): the two "CSG" columns cannot be told apart in the picker, and the export gives both the employer figure', async () => {
+  test('the two "CSG" columns are named with their category in the picker and in the files, each with its own figure', async () => {
     const { context, page } = await openSeeded(app)
     const screen = (await readEmployeeTable(page))[0]
     expect([screen['CSG (Employee Contribution)'], screen['CSG (Employer Contribution)']]).toEqual(['281.25', '562.50'])
 
     let box = await openPdfFill(page, 'JSON')
-    expect(await box.getByLabel('CSG', { exact: true }).count()).toBe(2)
-    expect(await box.textContent()).not.toContain('CSG (Employee Contribution)')
+    // No plain "CSG" any more: one tick box each, named as the file will name them.
+    expect(await box.getByLabel('CSG', { exact: true }).count()).toBe(0)
     await box.getByRole('button', { name: 'Select None' }).click()
     await box.getByLabel('ID', { exact: true }).check()
-    await box.getByLabel('CSG', { exact: true }).nth(0).check()
-    await box.getByLabel('CSG', { exact: true }).nth(1).check()
+    await box.getByLabel('CSG (Employee Contribution)', { exact: true }).check()
+    await box.getByLabel('CSG (Employer Contribution)', { exact: true }).check()
     const json = await download(page, () => box.getByRole('button', { name: 'Export JSON' }).click())
-    // The employee's 281.25 is not in the file at all.
-    expect(JSON.parse(json.bytes.toString('utf8'))[0]).toEqual({ ID: 'TST001', CSG: 562.5 })
+    expect(JSON.parse(json.bytes.toString('utf8'))).toEqual([
+      { ID: 'TST001', 'CSG (Employee Contribution)': 281.25, 'CSG (Employer Contribution)': 562.5 },
+      { ID: 'TST002', 'CSG (Employee Contribution)': 3000, 'CSG (Employer Contribution)': 6000 },
+      { ID: 'TST003', 'CSG (Employee Contribution)': 1800, 'CSG (Employer Contribution)': 3600 },
+    ])
 
     box = await openPdfFill(page, 'CSV')
     await box.getByRole('button', { name: 'Select None' }).click()
     await box.getByLabel('ID', { exact: true }).check()
-    await box.getByLabel('CSG', { exact: true }).nth(0).check()
-    await box.getByLabel('CSG', { exact: true }).nth(1).check()
+    await box.getByLabel('CSG (Employee Contribution)', { exact: true }).check()
+    await box.getByLabel('CSG (Employer Contribution)', { exact: true }).check()
     const csv = await download(page, () => box.getByRole('button', { name: 'Export CSV' }).click())
-    expect(csv.bytes.toString('utf8').split('\r\n').slice(0, 2)).toEqual(['ID,CSG,CSG', 'TST001,562.5,562.5'])
+    expect(csv.bytes.toString('utf8').split('\r\n')).toEqual([
+      'ID,CSG (Employee Contribution),CSG (Employer Contribution)',
+      'TST001,281.25,562.5',
+      'TST002,3000,6000',
+      'TST003,1800,3600',
+    ])
+
+    // Exporting only the employee's column gives the employee's figure.
+    box = await openPdfFill(page, 'JSON')
+    await box.getByRole('button', { name: 'Select None' }).click()
+    await box.getByLabel('CSG (Employee Contribution)', { exact: true }).check()
+    const one = await download(page, () => box.getByRole('button', { name: 'Export JSON' }).click())
+    expect(JSON.parse(one.bytes.toString('utf8'))[0]).toEqual({ 'CSG (Employee Contribution)': 281.25 })
+    await context.close()
+  })
+
+  test('half cents are rounded up in the file, as on screen', async () => {
+    const { context, page } = await openSeeded(app)
+    // TST003's Net Pay is 57,978.425.
+    expect((await readEmployeeTable(page))[2]['Net Pay']).toBe('57,978.43')
+    const box = await openPdfFill(page, 'JSON')
+    await box.getByRole('button', { name: 'Select None' }).click()
+    await box.getByLabel('Net Pay', { exact: true }).check()
+    const file = await download(page, () => box.getByRole('button', { name: 'Export JSON' }).click())
+    expect(JSON.parse(file.bytes.toString('utf8')).map((r) => r['Net Pay'])).toEqual([18381.25, 88400, 57978.43])
+    await context.close()
+  })
+})
+
+describe('a figure in error is never exported as a number', () => {
+  // "Rate Check" uses a column that no longer exists; "After Check" is worked out from it.
+  const seed = () => {
+    const s = seededState()
+    s.state.globalColumns.push(simple('Rate Check', 'rateCheck', 'basicSalary * rateThatWasDeleted'), simple('After Check', 'afterCheck', 'rateCheck + 1'))
+    return s
+  }
+
+  async function openPdfFill(page, format) {
+    await openExportMenu(page, `Export for PDF fill (${format})`)
+    const box = dialog(page, `Export for PDF fill (${format})`)
+    await box.waitFor()
+    return box
+  }
+
+  test('on screen both columns say Error', async () => {
+    const { context, page } = await openSeeded(app, seed())
+    const rows = await readEmployeeTable(page)
+    expect(rows.map((r) => [r['Rate Check'], r['After Check']])).toEqual([['Error', 'Error'], ['Error', 'Error'], ['Error', 'Error']])
+    expect(rows[0]['Net Pay']).toBe('18,381.25')
+    await context.close()
+  })
+
+  test('Export to Excel warns first, listing the employees and columns; Cancel exports nothing', async () => {
+    const { context, page } = await openSeeded(app, seed())
+    await page.getByRole('button', { name: 'Export to Excel', exact: true }).click()
+    const warning = dialog(page, '6 figures are in error')
+    await warning.waitFor()
+    expect(await warning.textContent()).toContain('If you export anyway, each one is written as the text "Error", never as a number.')
+    expect(await warning.locator('li').allTextContents()).toEqual([
+      'TST001 Alpha Tester — Rate Check',
+      'TST001 Alpha Tester — After Check',
+      'TST002 Beta Tester — Rate Check',
+      'TST002 Beta Tester — After Check',
+      'TST003 Gamma Tester — Rate Check',
+      'TST003 Gamma Tester — After Check',
+    ])
+    await warning.getByRole('button', { name: 'Cancel', exact: true }).click()
+    await warning.waitFor({ state: 'hidden' })
+    expect(await dialog(page, 'Export Preview').count()).toBe(0)
+    await context.close()
+  })
+
+  for (const mode of ['values', 'formulas']) {
+    test(`"Export anyway" (${mode}): the cells and their totals are the text "Error" in the preview and in the file`, async () => {
+      const { context, page } = await openSeeded(app, seed())
+      if (mode === 'formulas') await openExportMenu(page, 'Export with Live Formulas')
+      else await page.getByRole('button', { name: 'Export to Excel', exact: true }).click()
+      await dialog(page, '6 figures are in error').getByRole('button', { name: 'Export anyway', exact: true }).click()
+
+      const preview = dialog(page, 'Export Preview')
+      await preview.waitFor()
+      const headers = await preview.locator('thead tr').nth(1).locator('th').allTextContents()
+      const at = headers.indexOf('Rate Check (calc)')
+      expect(at).toBeGreaterThan(0)
+      const firstRow = await preview.locator('tbody tr').first().locator('td').allTextContents()
+      expect([firstRow[at], firstRow[at + 1]]).toEqual(['Error', 'Error'])
+
+      const file = await download(page, () => preview.getByRole('button', { name: 'Download .xlsx' }).click())
+      const sheet = (await openWorkbook(file.bytes)).getWorksheet('Payroll')
+      for (const row of [7, 8, 9, 10]) {
+        for (const column of [at + 1, at + 2]) {
+          expect(sheet.getCell(row, column).value, sheet.getCell(row, column).address).toBe('Error')
+          expect(sheet.getCell(row, column).formula).toBeUndefined()
+        }
+      }
+      // Every other figure is exported as usual.
+      expect(sheet.getCell(7, headers.indexOf('Net Pay (calc)') + 1).result ?? sheet.getCell(7, headers.indexOf('Net Pay (calc)') + 1).value).toBe(18381.25)
+      await context.close()
+    })
+  }
+
+  test('Export for PDF fill warns only when a chosen column is in error, and writes "Error"', async () => {
+    const { context, page } = await openSeeded(app, seed())
+
+    // Without the two broken columns: no warning.
+    let box = await openPdfFill(page, 'JSON')
+    await box.getByLabel('Rate Check', { exact: true }).uncheck()
+    await box.getByLabel('After Check', { exact: true }).uncheck()
+    const clean = await download(page, () => box.getByRole('button', { name: 'Export JSON' }).click())
+    expect(JSON.stringify(JSON.parse(clean.bytes.toString('utf8')))).not.toContain('Error')
+
+    // With them: a warning first; Cancel keeps the picker open and exports nothing.
+    box = await openPdfFill(page, 'JSON')
+    await box.getByRole('button', { name: 'Select None' }).click()
+    await box.getByLabel('ID', { exact: true }).check()
+    await box.getByLabel('Rate Check', { exact: true }).check()
+    await box.getByRole('button', { name: 'Export JSON' }).click()
+    const warning = dialog(page, '3 figures are in error')
+    expect(await warning.locator('li').allTextContents()).toEqual(['TST001 Alpha Tester — Rate Check', 'TST002 Beta Tester — Rate Check', 'TST003 Gamma Tester — Rate Check'])
+    await warning.getByRole('button', { name: 'Cancel', exact: true }).click()
+    await warning.waitFor({ state: 'hidden' })
+    expect(await box.isVisible()).toBe(true)
+
+    await box.getByRole('button', { name: 'Export JSON' }).click()
+    const json = await download(page, () => warning.getByRole('button', { name: 'Export anyway', exact: true }).click())
+    expect(JSON.parse(json.bytes.toString('utf8'))).toEqual([
+      { ID: 'TST001', 'Rate Check': 'Error' },
+      { ID: 'TST002', 'Rate Check': 'Error' },
+      { ID: 'TST003', 'Rate Check': 'Error' },
+    ])
+
+    box = await openPdfFill(page, 'CSV')
+    await box.getByRole('button', { name: 'Select None' }).click()
+    await box.getByLabel('ID', { exact: true }).check()
+    await box.getByLabel('After Check', { exact: true }).check()
+    await box.getByRole('button', { name: 'Export CSV' }).click()
+    const csv = await download(page, () => dialog(page, '3 figures are in error').getByRole('button', { name: 'Export anyway', exact: true }).click())
+    expect(csv.bytes.toString('utf8')).toBe('ID,After Check\r\nTST001,Error\r\nTST002,Error\r\nTST003,Error')
+    await context.close()
+  })
+
+  test('Totals shows Error and its export warns too', async () => {
+    const { context, page } = await openSeeded(app, seed())
+    await tab(page, 'Totals').click()
+    await page.getByText('Summing September 2026').waitFor()
+    const cells = await page.locator('table tbody tr').first().locator('td').allTextContents()
+    expect(cells.filter((c) => c.trim() === 'Error')).toHaveLength(2)
+    expect(cells.join('|')).not.toContain('NaN')
+
+    await page.getByRole('button', { name: 'Export to Excel' }).click()
+    const warning = dialog(page, '6 figures are in error')
+    await warning.waitFor()
+    await warning.getByRole('button', { name: 'Export anyway', exact: true }).click()
+    const preview = dialog(page, 'Export Preview')
+    await preview.waitFor()
+    const file = await download(page, () => preview.getByRole('button', { name: 'Download .xlsx' }).click())
+    const sheet = (await openWorkbook(file.bytes)).getWorksheet('Payroll')
+    const headers = Array.from({ length: sheet.columnCount }, (_, i) => String(sheet.getCell(6, i + 1).value))
+    expect(sheet.getCell(7, headers.indexOf('Rate Check (calc)') + 1).value).toBe('Error')
+    expect(sheet.getCell(7, headers.indexOf('New Basic (calc)') + 1).value).toBe(18750)
+    await context.close()
+  })
+
+  test('when nothing is in error there is no warning: the export opens straight away', async () => {
+    const { context, page } = await openSeeded(app)
+    await page.getByRole('button', { name: 'Export to Excel', exact: true }).click()
+    await dialog(page, 'Export Preview').waitFor()
+    expect(await page.getByRole('dialog').count()).toBe(1)
     await context.close()
   })
 })

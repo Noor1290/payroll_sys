@@ -60,10 +60,10 @@
       },
       "CSG": {
         "value": 301.72499999999997,
-        "shown": "301.72",
+        "shown": "301.73",
         "breakdown": {
           "substituted": "(20115.00) * (20115.00 < 50000 ? 0.015 : 20115.00 >= 50000 ? 0.03 : 0)",
-          "tiered": "Emoluments: 20,115.00. This is below 50,000.00 → rate: 1.5%. 20,115.00 × 1.5% = 301.72."
+          "tiered": "Emoluments: 20,115.00. This is below 50,000.00 → rate: 1.5%. 20,115.00 × 1.5% = 301.73."
         }
       },
       "NSF": {
@@ -88,7 +88,7 @@
         "value": 502.875,
         "shown": "502.88",
         "breakdown": {
-          "substituted": "301.72 + 201.15 + 0"
+          "substituted": "301.73 + 201.15 + 0"
         }
       },
       "Levy": {
@@ -110,9 +110,9 @@
       },
       "Total MRA contributions": {
         "value": 1709.7749999999999,
-        "shown": "1,709.77",
+        "shown": "1,709.78",
         "breakdown": {
-          "substituted": "301.72 + 201.15 + 0 + 301.725 + 905.18"
+          "substituted": "301.73 + 201.15 + 0 + 301.725 + 905.18"
         }
       },
       "EDF": {

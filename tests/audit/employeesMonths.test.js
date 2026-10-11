@@ -7,7 +7,15 @@
 
 import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest'
 import { getColumnsByKey } from '../../src/lib/model'
-import { loadState, saveState, loadPeriod, savePeriod } from '../../src/lib/storage'
+import {
+  loadState,
+  saveState,
+  loadPeriod,
+  savePeriod,
+  deletePeriodsForCompany,
+  countPeriodsHoldingKey,
+  renameValueKeyInPeriods,
+} from '../../src/lib/storage'
 import { shiftPeriod, enumeratePeriods, periodKey, formatPeriodLabel } from '../../src/lib/periods'
 import { buildCopyableColumnGroups, matchPreviousEmployees, applyCopyFromPreviousMonth } from '../../src/lib/copyPreviousMonth'
 import { computeTotals } from '../../src/lib/totals'
@@ -90,21 +98,56 @@ describe('storage: one entry per company and month', () => {
     expect(loadState()).toBeNull()
   })
 
-  // BUG (data loss): when the browser refuses the write (storage full), the
-  // caller is told nothing, so the screen keeps showing figures that are gone
-  // after a reload.
-  test.fails('BUG: a save the browser refuses is reported to the caller', () => {
+  // When the browser refuses the write (storage full) the caller is told, so
+  // the app can warn that the change was NOT saved and take it off the screen.
+  test('a save the browser refuses is reported to the caller', () => {
+    expect(savePeriod('test-co-a', 2026, 9, { employees: sept })).toBe(true)
+    expect(saveState({ companies: [] })).toBe(true)
+
     vi.spyOn(console, 'error').mockImplementation(() => {})
     vi.spyOn(Storage.prototype, 'setItem').mockImplementation(() => {
       throw new DOMException('The quota has been exceeded.', 'QuotaExceededError')
     })
-    let reported = false
-    try {
-      reported = savePeriod('test-co-a', 2026, 9, { employees: sept }) === false
-    } catch {
-      reported = true
-    }
-    expect(reported).toBe(true)
+    expect(savePeriod('test-co-a', 2026, 9, { employees: oct })).toBe(false)
+    expect(saveState({ companies: [{ id: 'x' }] })).toBe(false)
+    vi.restoreAllMocks()
+    // What was there before the refused save is still there.
+    expect(loadPeriod('test-co-a', 2026, 9).employees).toEqual(sept)
+  })
+
+  test('deleting a company\'s months removes every month of that company, and nothing else', () => {
+    savePeriod('test-co-a', 2026, 8, { employees: sept })
+    savePeriod('test-co-a', 2026, 9, { employees: sept })
+    savePeriod('test-co-a', 2027, 1, { employees: oct })
+    savePeriod('test-co-b', 2026, 9, { employees: oct })
+    // A company whose id merely starts with the other's id is not touched.
+    savePeriod('test-co-a_x', 2026, 9, { employees: oct })
+    saveState({ companies: [] })
+    localStorage.setItem('pdf-editor:templates', '[]')
+
+    deletePeriodsForCompany('test-co-a')
+    expect(Object.keys(localStorage).sort()).toEqual(['payroll_app_state_v1', 'payroll_period_test-co-a_x_2026-09', 'payroll_period_test-co-b_2026-09', 'pdf-editor:templates'])
+    expect(loadPeriod('test-co-b', 2026, 9).employees).toEqual(oct)
+  })
+
+  test('a changed column key moves the saved values in every month of the companies concerned', () => {
+    const other = [{ id: 'e3', values: { id: 'TST003', name: 'No salary yet' } }]
+    savePeriod('test-co-a', 2026, 8, { employees: sept })
+    savePeriod('test-co-a', 2026, 9, { employees: oct })
+    savePeriod('test-co-a', 2026, 10, { employees: other })
+    savePeriod('test-co-b', 2026, 9, { employees: sept })
+    savePeriod('test-co-c', 2026, 9, { employees: sept })
+
+    expect(countPeriodsHoldingKey(['test-co-a', 'test-co-b'], 'basicSalary')).toEqual({ periods: 3, companies: 2 })
+    expect(renameValueKeyInPeriods(['test-co-a', 'test-co-b'], 'basicSalary', 'basePay')).toBe(true)
+
+    expect(loadPeriod('test-co-a', 2026, 8).employees).toEqual([{ id: 'e1', values: { id: 'TST001', basePay: '18115' } }])
+    expect(loadPeriod('test-co-a', 2026, 9).employees).toEqual([{ id: 'e2', values: { id: 'TST001', basePay: '20000' } }])
+    expect(loadPeriod('test-co-a', 2026, 10).employees).toEqual(other)
+    expect(loadPeriod('test-co-b', 2026, 9).employees).toEqual([{ id: 'e1', values: { id: 'TST001', basePay: '18115' } }])
+    // A company outside the column's reach keeps the old key.
+    expect(loadPeriod('test-co-c', 2026, 9).employees).toEqual(sept)
+    expect(countPeriodsHoldingKey(['test-co-a', 'test-co-b'], 'basicSalary')).toEqual({ periods: 0, companies: 0 })
   })
 })
 
@@ -223,10 +266,16 @@ describe('Totals across a month range', () => {
     expect(totals().employees[0].values.name).toBe('Alpha')
   })
 
-  test('a text column is never turned into a number', () => {
+  test('a text column is never turned into a number: it is carried as text, from the first month', () => {
     const grid = totals().computedGrid['id:TST001']
-    expect(grid.status).toBeUndefined()
-    expect(totals().employees[0].values.status).toBe('Full Time')
+    // September says "Full Time", October "Part Time".
+    expect(grid.status).toEqual({ value: 'Full Time' })
+    expect(totals().computedGrid['id:TST003'].status).toEqual({ value: '' })
+  })
+
+  test('a checkbox column is carried as ticked / not ticked, from the first month', () => {
+    expect(totals().computedGrid['id:TST001'].age60).toEqual({ value: 0 })
+    expect(totals().computedGrid['id:TST002'].age60).toEqual({ value: 1 })
   })
 
   test('an empty range gives no rows', () => {
@@ -249,9 +298,8 @@ describe('Totals across a month range', () => {
     expect(t.computedGrid['id:TST001'].newBasic.value).toBe(37500)
   })
 
-  // BUG: on screen, Totals shows the text and checkbox columns from the
-  // employee's record. The Totals EXPORT reads them from the summed grid,
-  // where they do not exist, so text is blank and every checkbox is "No".
+  // The Totals screen and the Totals export read the same grid, so the
+  // export shows the text and checkbox columns exactly as the screen does.
   describe('the Totals export', () => {
     const plan = () => {
       const t = totals()
@@ -268,13 +316,15 @@ describe('Totals across a month range', () => {
       expect(cell(1, 'paye')).toBe(8600)
     })
 
-    test.fails('BUG: the text column keeps its text in the export', () => {
-      expect(cell(0, 'status')).toBe('Full Time')
+    test('the text column keeps its text in the export', () => {
+      expect([0, 1, 2].map((i) => cell(i, 'status'))).toEqual(['Full Time', 'Part Time', ''])
     })
 
-    test.fails('BUG: a ticked checkbox is "Yes" in the export', () => {
+    test('a ticked checkbox is "Yes" in the export, and the total row counts the ticks', () => {
       expect(second.values.age60).toBe(true)
-      expect(cell(1, 'age60')).toBe('Yes')
+      expect([0, 1, 2].map((i) => cell(i, 'age60'))).toEqual(['No', 'Yes', 'No'])
+      const p = plan()
+      expect(p.totalsRow[p.columns.findIndex((c) => c.key === 'age60')]).toBe('1 ticked')
     })
   })
 })
