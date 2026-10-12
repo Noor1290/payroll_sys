@@ -223,6 +223,76 @@
     {
       "text": "aria-label: Compare to",
       "why": "approved: screen-reader label only, no visible change; new wording (a fixed value / another column)"
+    },
+    {
+      "text": "text: 301.73",
+      "why": "approved: audit fix, an exact half cent now rounds up (was 301.72)"
+    },
+    {
+      "text": "text: 1,709.78",
+      "why": "approved: audit fix, an exact half cent now rounds up (was 1,709.77)"
+    },
+    {
+      "text": "text: 301.73 + 201.15 + 0",
+      "why": "approved: audit fix, an exact half cent now rounds up (breakdown of a total)"
+    },
+    {
+      "text": "text: 301.73 + 201.15 + 0 + 301.725 + 905.18",
+      "why": "approved: audit fix, an exact half cent now rounds up (breakdown of a total)"
+    },
+    {
+      "text": "text: Emoluments: 20,115.00. This is below 50,000.00 → rate: 1.5%. 20,115.00 × 1.5% = 301.73.",
+      "why": "approved: audit fix, an exact half cent now rounds up (breakdown sentence, was = 301.72.)"
+    },
+    {
+      "text": "text: 3 ticked",
+      "why": "approved: audit fix, the Totals export preview shows the same data as the Totals screen (was 0 ticked)",
+      "onlyOn": ["52 totals export preview"]
+    },
+    {
+      "text": "text: Yes",
+      "why": "approved: audit fix, the Totals export preview shows the same data as the Totals screen (was No)",
+      "onlyOn": ["52 totals export preview"]
+    },
+    {
+      "text": "text: Full time",
+      "why": "approved: audit fix, the Totals export preview no longer leaves text columns blank",
+      "onlyOn": ["52 totals export preview"]
+    },
+    {
+      "text": "text: Part time",
+      "why": "approved: audit fix, the Totals export preview no longer leaves text columns blank",
+      "onlyOn": ["52 totals export preview"]
+    },
+    {
+      "text": "text: Can't make this column Company-specific yet. These formulas use it and would stop working: Total deductions (Global). Change those formulas first, or keep this column Global.",
+      "why": "approved: audit fix, a Global column that formulas use cannot be made company-only"
+    },
+    {
+      "text": "text: Change this field's key?",
+      "why": "approved: title of the question asked before an identity field's key is changed (audit H1)"
+    },
+    {
+      "text": "text: Change key",
+      "why": "approved: confirm button of the same question (audit H1)"
+    },
+    {
+      "text": "text: The key changes from \"id\" to \"employeeNo\". Its saved values will be moved in 2 months across 1 company. It stays the ID field. Nothing is lost.",
+      "why": "approved: message of the same question, for the ID field with values in saved months (audit H1)"
+    },
+    {
+      "text": "text: The key changes from \"surname\" to \"familyName\". No saved values need to move. Nothing is lost.",
+      "why": "approved: message of the same question, when no saved month holds a value (audit H1)"
+    },
+    {
+      "text": "text: Cancel",
+      "why": "existing wording, not new: the Cancel button of the new \"Change this field's key?\" question, which the base version does not have",
+      "onlyOn": ["57 change identity field key confirm (the ID field, values in saved months)", "58 change identity field key confirm (no saved values)"]
+    },
+    {
+      "text": "aria-label: Close",
+      "why": "existing wording, not new: the close button of the new \"Change this field's key?\" question, which the base version does not have",
+      "onlyOn": ["57 change identity field key confirm (the ID field, values in saved months)", "58 change identity field key confirm (no saved values)"]
     }
   ],
   "removed": [
@@ -261,6 +331,41 @@
     {
       "text": "alert/error message: Could not read that file. Please make sure it is a valid .xlsx file.",
       "why": "approved: same message, now shown in a panel instead of a browser alert"
+    },
+    {
+      "text": "text: 301.72",
+      "why": "approved: audit fix, an exact half cent now rounds up (now 301.73)"
+    },
+    {
+      "text": "text: 1,709.77",
+      "why": "approved: audit fix, an exact half cent now rounds up (now 1,709.78)"
+    },
+    {
+      "text": "text: 301.72 + 201.15 + 0",
+      "why": "approved: audit fix, an exact half cent now rounds up (breakdown of a total)"
+    },
+    {
+      "text": "text: 301.72 + 201.15 + 0 + 301.725 + 905.18",
+      "why": "approved: audit fix, an exact half cent now rounds up (breakdown of a total)"
+    },
+    {
+      "text": "text: Emoluments: 20,115.00. This is below 50,000.00 → rate: 1.5%. 20,115.00 × 1.5% = 301.72.",
+      "why": "approved: audit fix, an exact half cent now rounds up (breakdown sentence, now = 301.73.)"
+    },
+    {
+      "text": "text: 0 ticked",
+      "why": "approved: audit fix, the Totals export preview shows the same data as the Totals screen (now 3 ticked)",
+      "onlyOn": ["52 totals export preview"]
+    },
+    {
+      "text": "text: No",
+      "why": "approved: audit fix, the Totals export preview shows the same data as the Totals screen (now Yes)",
+      "onlyOn": ["52 totals export preview"]
+    },
+    {
+      "text": "text: Enter a cap amount, or uncheck the cap option",
+      "why": "not removed from the app: on this one screen the new \"Can't make this column Company-specific yet\" refusal is shown first. The message itself is still shown, and still checked, on screen 28d",
+      "onlyOn": ["28c edit global column, save result"]
     }
   ]
 }

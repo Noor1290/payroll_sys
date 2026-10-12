@@ -43,9 +43,9 @@ function squash(s) {
   return s.replace(/\s+/g, ' ').trim()
 }
 
-function snapshot() {
+function snapshot(within = document.body) {
   const out = []
-  const walker = document.createTreeWalker(document.body, NodeFilter.SHOW_ELEMENT)
+  const walker = document.createTreeWalker(within, NodeFilter.SHOW_ELEMENT)
   for (let el = walker.currentNode; el; el = walker.nextNode()) {
     if (el.tagName === 'SCRIPT' || el.tagName === 'STYLE') continue
     // Text written directly inside this element (pieces joined, so "Summing " + "May" is one string).
@@ -80,6 +80,15 @@ function snap(name) {
   expect(collected[name], `duplicate step name ${name}`).toBeUndefined()
   collected[name] = snapshot()
   sweepUnlabelled(name)
+}
+
+// Only the dialog on top, for a dialog the base version does not have: there
+// the same step leaves a different screen behind, so only the dialog's own
+// words are recorded (nothing at all when no dialog is open).
+function snapTopDialog(name) {
+  expect(collected[name], `duplicate step name ${name}`).toBeUndefined()
+  const dialog = all('[role="dialog"]').pop()
+  collected[name] = dialog ? snapshot(dialog) : []
 }
 
 // ---- driving the app ----
@@ -336,6 +345,11 @@ test('collect every visible string', async () => {
       snap('28b edit global column, scope changed to company')
       await clickButton('Save')
       snap('28c edit global column, save result')
+      // Back to Global and saved again: the fixture's CSG has its cap box
+      // ticked and no amount in it, which is what Save says in both versions.
+      await clickButton('Global')
+      await clickButton('Save')
+      snap('28d edit global column, save with no cap amount')
     }
     if (all('button').some((b) => textOf(b) === 'Cancel')) await cancel()
     if (all('button').some((b) => textOf(b) === 'Cancel')) await cancel()
@@ -384,6 +398,24 @@ test('collect every visible string', async () => {
   snap('55 totals, no ID field designated')
   await tab('Global Columns')
   snap('56 global columns, no ID field designated')
+
+  // ---------- Changing an identity field's key ----------
+  // Kept to the end, each from a fresh start: the base version has no
+  // question to ask here and changes the key at once.
+  async function changeIdentityFieldKey(fieldName, newKey) {
+    await start()
+    await vi.waitFor(() => expect(document.body.textContent).toContain('October 2026'))
+    await tab('Global Columns')
+    await click(all('tr').find((tr) => [...tr.querySelectorAll('td')].some((td) => textOf(td) === fieldName)).querySelectorAll('button')[1])
+    await setValue(document.querySelector('input[placeholder="employeeCode"]'), newKey)
+    await clickButton('Save')
+  }
+  seed()
+  await changeIdentityFieldKey('ID', 'employeeNo')
+  snapTopDialog('57 change identity field key confirm (the ID field, values in saved months)')
+  seed({ october: [], september: [] })
+  await changeIdentityFieldKey('Surname', 'familyName')
+  snapTopDialog('58 change identity field key confirm (no saved values)')
 
   expect(OUT, 'TEXT_CHECK_OUT').toBeTruthy()
   fs.writeFileSync(OUT, JSON.stringify(collected, null, 2))
