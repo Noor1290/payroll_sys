@@ -676,6 +676,46 @@ describe('identity fields', () => {
   })
 })
 
+// Known, not fixed: an identity field's key can be edited too, and nothing is
+// carried along - the same problem that was fixed for columns.
+describe('identity field keys', () => {
+  test('evidence (BUG): changing an identity field\'s key hides what was typed under it, and the ID field is no longer designated', async () => {
+    const { context, page } = await openSeeded(app)
+    await tab(page, 'Global Columns').click()
+    const fieldRow = (name) => page.locator('section', { hasText: 'Identity Fields' }).first().locator('tbody tr').filter({ has: page.locator('td:first-child', { hasText: new RegExp(`^${name}$`) }) })
+
+    // The Surname field: its values vanish from the table, with no question asked.
+    await fieldRow('Surname').getByRole('button', { name: 'Edit', exact: true }).click()
+    let edit = dialog(page, 'Edit identity field')
+    await edit.getByLabel('Key', { exact: true }).fill('familyName')
+    await edit.getByRole('button', { name: 'Save', exact: true }).click()
+    await edit.waitFor({ state: 'hidden' })
+    expect(await page.getByRole('dialog').count()).toBe(0)
+
+    // The ID field: its key changes, but the app still points at the old key.
+    await fieldRow('ID').getByRole('button', { name: 'Edit', exact: true }).click()
+    edit = dialog(page, 'Edit identity field')
+    await edit.getByLabel('Key', { exact: true }).fill('employeeNo')
+    await edit.getByRole('button', { name: 'Save', exact: true }).click()
+    await edit.waitFor({ state: 'hidden' })
+    const state = await storedState(page)
+    expect(state.identityFields.map((f) => f.key)).toEqual(['employeeNo', 'name', 'familyName'])
+    expect(state.idFieldKey).toBe('id')
+
+    await tab(page, 'Employee Table').click()
+    const rows = await readEmployeeTable(page)
+    expect(rows.map((r) => [r.ID, r.Name, r.Surname])).toEqual([['', 'Alpha', ''], ['', 'Beta', ''], ['', 'Gamma', '']])
+    // The values are still in storage under the old keys, just no longer shown.
+    const [first] = await storedPeriod(page, A, '2026-09')
+    expect([first.values.id, first.values.surname]).toEqual(['TST001', 'Tester'])
+    // With the ID field pointing at nothing, a duplicate ID is no longer flagged.
+    await addEmployee(page, { ID: 'TST900' })
+    await addEmployee(page, { ID: 'TST900' })
+    expect(await page.getByLabel('Duplicate ID').count()).toBe(0)
+    await context.close()
+  })
+})
+
 describe('Global and Company columns', () => {
   test('a company column is seen by that company only; a global column by every company', async () => {
     const { context, page } = await openSeeded(app)
