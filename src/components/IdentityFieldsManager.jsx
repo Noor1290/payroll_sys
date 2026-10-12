@@ -5,7 +5,17 @@ import ConfirmDialog from './ConfirmDialog'
 // Manages the global set of identity fields (always leftmost, plain text,
 // shared by every company) and which one is designated the "ID field" used
 // for duplicate detection on import.
-export default function IdentityFieldsManager({ identityFields, idFieldKey, existingKeys, onAdd, onEdit, onDelete, onSetIdField }) {
+export default function IdentityFieldsManager({
+  identityFields,
+  idFieldKey,
+  existingKeys,
+  onAdd,
+  onEdit,
+  onDelete,
+  onSetIdField,
+  getKeyChangePreview,
+  onRenameKey,
+}) {
   const [editing, setEditing] = useState(null) // 'new' | field | null
   const [deleting, setDeleting] = useState(null)
 
@@ -13,7 +23,10 @@ export default function IdentityFieldsManager({ identityFields, idFieldKey, exis
     return existingKeys.filter((k) => k !== field?.key)
   }
 
-  function handleSave(field) {
+  function handleSave(field, keyChange) {
+    // A changed key is carried through every saved month and the ID field
+    // first; the edit below then gives the field itself its new key.
+    if (editing !== 'new' && keyChange) onRenameKey?.(editing, keyChange.to)
     if (editing === 'new') {
       onAdd(field)
     } else {
@@ -89,6 +102,8 @@ export default function IdentityFieldsManager({ identityFields, idFieldKey, exis
         <IdentityFieldFormModal
           initial={editing === 'new' ? null : editing}
           existingKeys={existingKeysExcluding(editing === 'new' ? null : editing)}
+          isIdField={editing !== 'new' && editing.key === idFieldKey}
+          keyChangePreview={editing === 'new' || !getKeyChangePreview ? null : () => getKeyChangePreview(editing)}
           onSave={handleSave}
           onClose={() => setEditing(null)}
         />

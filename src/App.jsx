@@ -275,6 +275,25 @@ export default function App() {
     setIdFieldKey(key)
   }
 
+  // Identity fields are shared by every company, so a change of key reaches
+  // every company's saved months.
+  function getIdentityKeyChangePreview(field) {
+    return countPeriodsHoldingKey(companies.map((c) => c.id), field.key)
+  }
+
+  // Carries a change of an identity field's key through everything that
+  // refers to it: every saved month of every company, the month on screen,
+  // which field is the ID field, and the remembered column widths. The
+  // field's own key is then set by the normal edit that follows.
+  function handleRenameIdentityFieldKey(field, newKey) {
+    const oldKey = field.key
+    if (!renameValueKeyInPeriods(companies.map((c) => c.id), oldKey, newKey)) setSaveFailed(true)
+
+    if (idFieldKey === oldKey) setIdFieldKey(newKey)
+    setCompanies((prev) => prev.map((c) => ({ ...c, columnWidths: renameKeyInWidths(c.columnWidths, oldKey, newKey) })))
+    setPeriodEmployees((prev) => prev.map((e) => renameValueKey(e, oldKey, newKey)))
+  }
+
   // ---- Global columns ----
   function handleAddGlobalColumn(col) {
     setGlobalColumns((prev) => [...prev, newColumn(col)])
@@ -666,6 +685,8 @@ export default function App() {
                     onEdit={handleEditIdentityField}
                     onDelete={handleDeleteIdentityField}
                     onSetIdField={handleSetIdField}
+                    getKeyChangePreview={getIdentityKeyChangePreview}
+                    onRenameKey={handleRenameIdentityFieldKey}
                   />
                   <ColumnManager
                     title="Global Columns"

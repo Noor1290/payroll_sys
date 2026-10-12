@@ -1,14 +1,28 @@
 import { useState } from 'react'
 import { CircleAlert, IdCard } from 'lucide-react'
 import Modal from './Modal'
+import ConfirmDialog from './ConfirmDialog'
 import { slugify, isValidKey } from '../lib/slugify'
 
-export default function IdentityFieldFormModal({ initial, existingKeys, onSave, onClose }) {
+// What the "Change this field's key?" question says will be updated.
+function describeKeyChange({ keyChange, preview }, isIdField) {
+  const values =
+    preview.periods === 0
+      ? 'No saved values need to move.'
+      : `Its saved values will be moved in ${preview.periods} month${preview.periods === 1 ? '' : 's'} across ${preview.companies} compan${
+          preview.companies === 1 ? 'y' : 'ies'
+        }.`
+  const idField = isIdField ? ' It stays the ID field.' : ''
+  return `The key changes from "${keyChange.from}" to "${keyChange.to}". ${values}${idField} Nothing is lost.`
+}
+
+export default function IdentityFieldFormModal({ initial, existingKeys, isIdField = false, keyChangePreview = null, onSave, onClose }) {
   const isEdit = Boolean(initial)
   const [name, setName] = useState(initial?.name ?? '')
   const [key, setKey] = useState(initial?.key ?? '')
   const [keyTouched, setKeyTouched] = useState(isEdit)
   const [error, setError] = useState(null)
+  const [pendingKeyChange, setPendingKeyChange] = useState(null) // { field, keyChange, preview } | null
 
   function handleNameChange(value) {
     setName(value)
@@ -28,10 +42,19 @@ export default function IdentityFieldFormModal({ initial, existingKeys, onSave, 
       return setError(`Key "${trimmedKey}" is already used by another field or column`)
     }
 
-    onSave({ ...(initial ?? {}), name: trimmedName, key: trimmedKey })
+    const field = { ...(initial ?? {}), name: trimmedName, key: trimmedKey }
+    // Changing the key of an existing field moves its saved values in every
+    // month of every company, so that is spelled out and confirmed first.
+    if (isEdit && trimmedKey !== initial.key) {
+      const keyChange = { from: initial.key, to: trimmedKey }
+      setPendingKeyChange({ field, keyChange, preview: keyChangePreview ? keyChangePreview() : { periods: 0, companies: 0 } })
+      return
+    }
+    onSave(field)
   }
 
   return (
+    <>
     <Modal title={isEdit ? 'Edit identity field' : 'Add identity field'} onClose={onClose} width="max-w-md" icon={<IdCard />}>
       <div className="space-y-4">
         <div>
@@ -80,5 +103,20 @@ export default function IdentityFieldFormModal({ initial, existingKeys, onSave, 
         </div>
       </div>
     </Modal>
+
+    {pendingKeyChange && (
+      <ConfirmDialog
+        title="Change this field's key?"
+        message={describeKeyChange(pendingKeyChange, isIdField)}
+        confirmLabel="Change key"
+        onCancel={() => setPendingKeyChange(null)}
+        onConfirm={() => {
+          const { field, keyChange } = pendingKeyChange
+          setPendingKeyChange(null)
+          onSave(field, keyChange)
+        }}
+      />
+    )}
+    </>
   )
 }

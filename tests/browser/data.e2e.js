@@ -676,42 +676,132 @@ describe('identity fields', () => {
   })
 })
 
-// Known, not fixed: an identity field's key can be edited too, and nothing is
-// carried along - the same problem that was fixed for columns.
+// An identity field's key can be edited too. As for columns, the change is
+// confirmed first, then carried through every saved month of every company
+// and the ID field designation.
 describe('identity field keys', () => {
-  test('evidence (BUG): changing an identity field\'s key hides what was typed under it, and the ID field is no longer designated', async () => {
-    const { context, page } = await openSeeded(app)
+  const fieldRow = (page, name) =>
+    page.locator('section', { hasText: 'Identity Fields' }).first().locator('tbody tr').filter({ has: page.locator('td:first-child', { hasText: new RegExp(`^${name}$`) }) })
+  const question = (page) => dialog(page, "Change this field's key?")
+
+  async function editKey(page, name, key) {
+    await fieldRow(page, name).getByRole('button', { name: 'Edit', exact: true }).click()
+    const edit = dialog(page, 'Edit identity field')
+    await edit.getByLabel('Key', { exact: true }).fill(key)
+    await edit.getByRole('button', { name: 'Save', exact: true }).click()
+    return edit
+  }
+
+  const seed = () =>
+    seedWith((s) => {
+      s.periods[periodStorageKey(A, '2026-10')] = { employees: [{ id: 'oct-1', values: { id: 'TST001', name: 'Alpha', surname: 'Tester', basicSalary: '19000' } }] }
+      s.periods[periodStorageKey(B, '2026-09')] = { employees: [{ id: 'b-1', values: { id: 'TST001', name: 'Other', surname: 'Sample', basicSalary: '77000' } }] }
+      s.state.companies[0].columnWidths = { id: 140, surname: 200, basicSalary: 180 }
+      s.state.companies[1].columnWidths = { surname: 210 }
+    })
+
+  test('changing an identity field\'s key asks first, then moves its values in every month and company and keeps the ID field', async () => {
+    const { context, page } = await openSeeded(app, seed())
+    const tableBefore = await readEmployeeTable(page)
+    expect(tableBefore.map((r) => [r.ID, r.Name, r.Surname])).toEqual([['TST001', 'Alpha', 'Tester'], ['TST002', 'Beta', 'Tester'], ['TST003', 'Gamma', 'Tester']])
     await tab(page, 'Global Columns').click()
-    const fieldRow = (name) => page.locator('section', { hasText: 'Identity Fields' }).first().locator('tbody tr').filter({ has: page.locator('td:first-child', { hasText: new RegExp(`^${name}$`) }) })
 
-    // The Surname field: its values vanish from the table, with no question asked.
-    await fieldRow('Surname').getByRole('button', { name: 'Edit', exact: true }).click()
-    let edit = dialog(page, 'Edit identity field')
-    await edit.getByLabel('Key', { exact: true }).fill('familyName')
-    await edit.getByRole('button', { name: 'Save', exact: true }).click()
+    // Cancelling the question changes nothing.
+    let edit = await editKey(page, 'Surname', 'familyName')
+    expect(await question(page).textContent()).toContain(
+      'The key changes from "surname" to "familyName". Its saved values will be moved in 3 months across 2 companies. Nothing is lost.'
+    )
+    await question(page).getByRole('button', { name: 'Cancel', exact: true }).click()
+    await edit.getByRole('button', { name: 'Cancel', exact: true }).click()
     await edit.waitFor({ state: 'hidden' })
-    expect(await page.getByRole('dialog').count()).toBe(0)
+    expect((await storedState(page)).identityFields.map((f) => f.key)).toEqual(['id', 'name', 'surname'])
+    expect((await storedPeriod(page, A, '2026-09'))[0].values.surname).toBe('Tester')
 
-    // The ID field: its key changes, but the app still points at the old key.
-    await fieldRow('ID').getByRole('button', { name: 'Edit', exact: true }).click()
-    edit = dialog(page, 'Edit identity field')
-    await edit.getByLabel('Key', { exact: true }).fill('employeeNo')
-    await edit.getByRole('button', { name: 'Save', exact: true }).click()
+    // The Surname field, confirmed.
+    edit = await editKey(page, 'Surname', 'familyName')
+    await question(page).getByRole('button', { name: 'Change key', exact: true }).click()
     await edit.waitFor({ state: 'hidden' })
+
+    // The ID field: the question says it stays the ID field.
+    edit = await editKey(page, 'ID', 'employeeNo')
+    expect(await question(page).textContent()).toContain(
+      'The key changes from "id" to "employeeNo". Its saved values will be moved in 3 months across 2 companies. It stays the ID field. Nothing is lost.'
+    )
+    await question(page).getByRole('button', { name: 'Change key', exact: true }).click()
+    await edit.waitFor({ state: 'hidden' })
+
     const state = await storedState(page)
     expect(state.identityFields.map((f) => f.key)).toEqual(['employeeNo', 'name', 'familyName'])
-    expect(state.idFieldKey).toBe('id')
+    expect(state.idFieldKey).toBe('employeeNo')
+    expect(await fieldRow(page, 'ID').getByRole('button', { name: 'ID field ✓' }).count()).toBe(1)
+    // The remembered column widths follow the keys, in every company.
+    expect(state.companies[0].columnWidths).toEqual({ basicSalary: 180, familyName: 200, employeeNo: 140 })
+    expect(state.companies[1].columnWidths).toEqual({ familyName: 210 })
 
+    // Everything on screen is exactly as before.
     await tab(page, 'Employee Table').click()
-    const rows = await readEmployeeTable(page)
-    expect(rows.map((r) => [r.ID, r.Name, r.Surname])).toEqual([['', 'Alpha', ''], ['', 'Beta', ''], ['', 'Gamma', '']])
-    // The values are still in storage under the old keys, just no longer shown.
-    const [first] = await storedPeriod(page, A, '2026-09')
-    expect([first.values.id, first.values.surname]).toEqual(['TST001', 'Tester'])
-    // With the ID field pointing at nothing, a duplicate ID is no longer flagged.
-    await addEmployee(page, { ID: 'TST900' })
-    await addEmployee(page, { ID: 'TST900' })
-    expect(await page.getByLabel('Duplicate ID').count()).toBe(0)
+    expect(await readEmployeeTable(page)).toEqual(tableBefore)
+
+    // Every saved month of every company holds the values under the new keys only.
+    for (const [company, period, expected] of [[A, '2026-09', ['TST001', 'Tester']], [A, '2026-10', ['TST001', 'Tester']], [B, '2026-09', ['TST001', 'Sample']]]) {
+      const [first] = await storedPeriod(page, company, period)
+      expect([first.values.employeeNo, first.values.familyName], `${company} ${period}`).toEqual(expected)
+      expect('id' in first.values || 'surname' in first.values, `${company} ${period}`).toBe(false)
+    }
+
+    // The ID field still does its job: a duplicate ID is flagged.
+    await addEmployee(page, { ID: 'TST001' })
+    expect(await page.getByLabel('Duplicate ID').count()).toBe(2)
+
+    // The other months and the other company show their values too.
+    await goToMonth(page, /October →/)
+    expect((await readEmployeeTable(page)).map((r) => [r.ID, r.Name, r.Surname])).toEqual([['TST001', 'Alpha', 'Tester']])
+    await switchCompany(page, 'TEST Co B')
+    expect((await readEmployeeTable(page)).map((r) => [r.ID, r.Name, r.Surname])).toEqual([['TST001', 'Other', 'Sample']])
+
+    // And it all survives a reload.
+    await page.reload()
+    await page.getByRole('button', { name: 'TEST Co A', exact: true }).waitFor()
+    await switchCompany(page, 'TEST Co A')
+    await goToMonth(page, /← September/)
+    expect((await readEmployeeTable(page)).slice(0, 3)).toEqual(tableBefore)
+    expect((await storedState(page)).idFieldKey).toBe('employeeNo')
+    await context.close()
+  })
+
+  test('Totals still adds an employee\'s months together after the ID field\'s key is changed', async () => {
+    const { context, page } = await openSeeded(app, seed())
+    await tab(page, 'Global Columns').click()
+    const edit = await editKey(page, 'ID', 'employeeNo')
+    await question(page).getByRole('button', { name: 'Change key', exact: true }).click()
+    await edit.waitFor({ state: 'hidden' })
+
+    await tab(page, 'Totals').click()
+    await page.getByLabel('To', { exact: true }).fill('2026-10')
+    await page.getByText('Summing September 2026 to October 2026').waitFor()
+    const rows = await readPlainTable(page)
+    // TST001 has 18,115 in September and 19,000 in October: one row, added up.
+    const first = rows.filter((r) => r.ID === 'TST001')
+    expect(first.length).toBe(1)
+    expect(first[0]['Basic Salary']).toBe('37,115.00')
+    await context.close()
+  })
+
+  test('changing only an identity field\'s name asks nothing, and a key already in use is still refused', async () => {
+    const { context, page } = await openSeeded(app)
+    await tab(page, 'Global Columns').click()
+
+    await fieldRow(page, 'Surname').getByRole('button', { name: 'Edit', exact: true }).click()
+    let edit = dialog(page, 'Edit identity field')
+    await edit.getByLabel('Name', { exact: true }).fill('Family Name')
+    await edit.getByRole('button', { name: 'Save', exact: true }).click()
+    await edit.waitFor({ state: 'hidden' })
+    expect(await question(page).count()).toBe(0)
+    expect((await storedState(page)).identityFields[2]).toEqual({ id: 'idf-surname', name: 'Family Name', key: 'surname' })
+
+    edit = await editKey(page, 'ID', 'basicSalary')
+    expect((await edit.getByRole('alert').textContent()).trim()).toBe('Key "basicSalary" is already used by another field or column')
+    expect(await question(page).count()).toBe(0)
     await context.close()
   })
 })
