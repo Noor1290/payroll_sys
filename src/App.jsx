@@ -17,16 +17,8 @@ import CompanyDetailsModal from './components/CompanyDetailsModal'
 import CopyPreviousMonthModal from './components/CopyPreviousMonthModal'
 import ExportErrorsDialog from './components/ExportErrorsDialog'
 import SaveFailedDialog from './components/SaveFailedDialog'
-import {
-  loadState,
-  saveState,
-  loadPeriod,
-  savePeriod,
-  deletePeriodsForCompany,
-  countPeriodsHoldingKey,
-  renameValueKeyInPeriods,
-  renameValueKey,
-} from './lib/storage'
+import BackupMessage from './components/BackupMessage'
+import { dataStore, renameValueKey } from './lib/dataStore'
 import { findErrorCells } from './lib/exportErrors'
 import { findFormulasUsingColumn, findScopeChangeBlockers, renameKeyInColumn, renameKeyInWidths } from './lib/columnUsage'
 import {
@@ -65,7 +57,30 @@ const TABS = [
   { id: 'totals', label: 'Totals' },
 ]
 
+// Every read and save goes through the data store (see lib/dataStore.js).
+const { loadState, saveState, loadPeriod, savePeriod, deletePeriodsForCompany, countPeriodsHoldingKey, renameValueKeyInPeriods } = dataStore
+
+// The app, started from whatever is stored. After a backup has been restored
+// it is started again from scratch, so nothing of the replaced data stays on
+// screen or in memory.
 export default function App() {
+  const [startedFrom, setStartedFrom] = useState(0)
+  const [restoreMessage, setRestoreMessage] = useState(null) // { title, description, tone } | null
+
+  function handleRestored(message) {
+    setRestoreMessage(message)
+    setStartedFrom((n) => n + 1)
+  }
+
+  return (
+    <>
+      <PayrollApp key={startedFrom} onRestored={handleRestored} />
+      {restoreMessage && <BackupMessage {...restoreMessage} onClose={() => setRestoreMessage(null)} />}
+    </>
+  )
+}
+
+function PayrollApp({ onRestored }) {
   const [identityFields, setIdentityFields] = useState([])
   const [idFieldKey, setIdFieldKey] = useState(null)
   const [globalColumns, setGlobalColumns] = useState([])
@@ -541,6 +556,7 @@ export default function App() {
         onRenameCompany={handleRenameCompany}
         onDeleteCompany={handleDeleteCompany}
         onOpenDetails={setDetailsCompanyId}
+        onRestored={onRestored}
         open={sidebarOpen}
         onClose={() => setSidebarOpen(false)}
       />

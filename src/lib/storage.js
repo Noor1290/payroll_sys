@@ -226,3 +226,59 @@ export function renameValueKey(employee, oldKey, newKey) {
   const { [oldKey]: value, ...rest } = employee.values
   return { ...employee, values: { ...rest, [newKey]: value } }
 }
+
+// ---- Everything this app keeps in the browser, as it is stored ----------
+// Used by the full backup (see backup.js): the app state and every saved
+// month, whatever company they belong to. The theme is a display preference
+// and is not part of it.
+
+function isOwnKey(key) {
+  return key === STORAGE_KEY || key.startsWith(PERIOD_KEY_PREFIX)
+}
+
+function ownKeys() {
+  const keys = []
+  for (let i = 0; i < localStorage.length; i++) {
+    const key = localStorage.key(i)
+    if (key && isOwnKey(key)) keys.push(key)
+  }
+  return keys.sort()
+}
+
+// { storage key: the text stored under it }, for every key of this app.
+export function readBrowserData() {
+  const data = {}
+  for (const key of ownKeys()) data[key] = localStorage.getItem(key)
+  return data
+}
+
+// Replaces everything this app keeps in the browser with `entries`
+// ({ storage key: text }). All or nothing: if the browser refuses any write
+// (storage full), what was there before is put back.
+//   { ok: true }                     replaced
+//   { ok: false, unchanged: true }   refused; the browser holds what it held before
+//   { ok: false, unchanged: false }  refused, and the earlier data could not be put back either
+export function replaceBrowserData(entries) {
+  if (Object.keys(entries).some((key) => !isOwnKey(key))) return { ok: false, unchanged: true }
+
+  const before = readBrowserData()
+  try {
+    for (const key of Object.keys(before)) localStorage.removeItem(key)
+    for (const [key, text] of Object.entries(entries)) localStorage.setItem(key, text)
+    return { ok: true }
+  } catch (e) {
+    console.error('Failed to replace the payroll data in localStorage:', e)
+  }
+
+  try {
+    for (const key of ownKeys()) localStorage.removeItem(key)
+    for (const [key, text] of Object.entries(before)) localStorage.setItem(key, text)
+    return { ok: false, unchanged: true }
+  } catch (e) {
+    console.error('Failed to put the earlier payroll data back:', e)
+    return { ok: false, unchanged: false }
+  }
+}
+
+export const BROWSER_STATE_KEY = STORAGE_KEY
+export const BROWSER_PERIOD_KEY_PREFIX = PERIOD_KEY_PREFIX

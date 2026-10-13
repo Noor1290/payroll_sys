@@ -286,13 +286,173 @@
     },
     {
       "text": "text: Cancel",
-      "why": "existing wording, not new: the Cancel button of the new \"Change this field's key?\" question, which the base version does not have",
-      "onlyOn": ["57 change identity field key confirm (the ID field, values in saved months)", "58 change identity field key confirm (no saved values)"]
+      "why": "existing wording, not new: the Cancel button of the new \"Change this field's key?\" question, which the base version does not have; and the same button in the new backup dialogs (migration plan step 0a), which the base version does not have",
+      "onlyOn": ["57 change identity field key confirm (the ID field, values in saved months)", "58 change identity field key confirm (no saved values)", "59 restore a backup, what is in the file and in the browser", "59b restore a backup, a file that does not say when it was saved"]
     },
     {
       "text": "aria-label: Close",
-      "why": "existing wording, not new: the close button of the new \"Change this field's key?\" question, which the base version does not have",
-      "onlyOn": ["57 change identity field key confirm (the ID field, values in saved months)", "58 change identity field key confirm (no saved values)"]
+      "why": "existing wording, not new: the close button of the new \"Change this field's key?\" question, which the base version does not have; and the same button in the new backup dialogs (migration plan step 0a), which the base version does not have",
+      "onlyOn": ["57 change identity field key confirm (the ID field, values in saved months)", "58 change identity field key confirm (no saved values)", "59 restore a backup, what is in the file and in the browser", "59b restore a backup, a file that does not say when it was saved", "60 backup restored", "61 restore, not a backup file", "61b restore, a backup of another version", "61c restore, a damaged backup", "61d restore, an empty backup", "62 backup not restored, storage full", "62b backup not restored, earlier data could not be put back"]
+    },
+    {
+      "text": "text: 1 item that could not be read, kept as it is",
+      "why": "new wording, migration plan step 0a (full backup file): what the Restore dialog lists, here for the fake data",
+      "onlyOn": ["59 restore a backup, what is in the file and in the browser"]
+    },
+    {
+      "text": "text: 1 month (October 2026), 0 employee rows",
+      "why": "new wording, migration plan step 0a (full backup file): what the Restore dialog lists, here for the fake data",
+      "onlyOn": ["59 restore a backup, what is in the file and in the browser"]
+    },
+    {
+      "text": "text: 1 month of a company that is no longer in the list",
+      "why": "new wording, migration plan step 0a (full backup file): what the Restore dialog lists, here for the fake data",
+      "onlyOn": ["59 restore a backup, what is in the file and in the browser", "59b restore a backup, a file that does not say when it was saved"]
+    },
+    {
+      "text": "text: 14 Global columns",
+      "why": "new wording, migration plan step 0a (full backup file): what the Restore dialog lists, here for the fake data",
+      "onlyOn": ["59 restore a backup, what is in the file and in the browser", "59b restore a backup, a file that does not say when it was saved"]
+    },
+    {
+      "text": "text: 2 months (September 2026 to October 2026), 10 employee rows",
+      "why": "new wording, migration plan step 0a (full backup file): what the Restore dialog lists, here for the fake data",
+      "onlyOn": ["59 restore a backup, what is in the file and in the browser", "59b restore a backup, a file that does not say when it was saved"]
+    },
+    {
+      "text": "text: 2 months of a company that is no longer in the list",
+      "why": "new wording, migration plan step 0a (full backup file): what the Restore dialog lists, here for the fake data",
+      "onlyOn": ["59 restore a backup, what is in the file and in the browser"]
+    },
+    {
+      "text": "text: Back up what is here",
+      "why": "new wording, migration plan step 0a (full backup file): the Restore dialogs",
+      "onlyOn": ["59 restore a backup, what is in the file and in the browser", "59b restore a backup, a file that does not say when it was saved"]
+    },
+    {
+      "text": "text: Back up",
+      "why": "new wording, migration plan step 0a (full backup file): \"Back up\" and \"Restore\" at the foot of the company list, on every screen"
+    },
+    {
+      "text": "text: Backup restored",
+      "why": "new wording, migration plan step 0a (full backup file): the Restore dialogs",
+      "onlyOn": ["60 backup restored"]
+    },
+    {
+      "text": "text: Everything from the backup file is now in this browser.",
+      "why": "new wording, migration plan step 0a (full backup file): the Restore dialogs",
+      "onlyOn": ["60 backup restored"]
+    },
+    {
+      "text": "text: Fake Co Ltd",
+      "why": "not wording: the fake company's name, listed in the new Restore dialog (migration plan step 0a)",
+      "onlyOn": ["59 restore a backup, what is in the file and in the browser", "59b restore a backup, a file that does not say when it was saved"]
+    },
+    {
+      "text": "text: In the backup file",
+      "why": "new wording, migration plan step 0a (full backup file): the Restore dialogs",
+      "onlyOn": ["59 restore a backup, what is in the file and in the browser", "59b restore a backup, a file that does not say when it was saved"]
+    },
+    {
+      "text": "text: In this browser now",
+      "why": "new wording, migration plan step 0a (full backup file): the Restore dialogs",
+      "onlyOn": ["59 restore a backup, what is in the file and in the browser", "59b restore a backup, a file that does not say when it was saved"]
+    },
+    {
+      "text": "text: OK",
+      "why": "existing wording, not new: a button of the new backup dialogs (migration plan step 0a), which the base version does not have",
+      "onlyOn": ["60 backup restored", "61 restore, not a backup file", "61b restore, a backup of another version", "61c restore, a damaged backup", "61d restore, an empty backup", "62 backup not restored, storage full", "62b backup not restored, earlier data could not be put back"]
+    },
+    {
+      "text": "text: Replace with this backup",
+      "why": "new wording, migration plan step 0a (full backup file): the Restore dialogs",
+      "onlyOn": ["59 restore a backup, what is in the file and in the browser", "59b restore a backup, a file that does not say when it was saved"]
+    },
+    {
+      "text": "text: Restore this backup?",
+      "why": "new wording, migration plan step 0a (full backup file): the Restore dialogs",
+      "onlyOn": ["59 restore a backup, what is in the file and in the browser", "59b restore a backup, a file that does not say when it was saved"]
+    },
+    {
+      "text": "text: Restore",
+      "why": "new wording, migration plan step 0a (full backup file): \"Back up\" and \"Restore\" at the foot of the company list, on every screen"
+    },
+    {
+      "text": "text: Restoring replaces everything Payroll keeps in this browser with what is in the file.",
+      "why": "new wording, migration plan step 0a (full backup file): the Restore dialogs",
+      "onlyOn": ["59 restore a backup, what is in the file and in the browser", "59b restore a backup, a file that does not say when it was saved"]
+    },
+    {
+      "text": "text: Sample Traders Ltd",
+      "why": "not wording: the fake company's name, listed in the new Restore dialog (migration plan step 0a)",
+      "onlyOn": ["59 restore a backup, what is in the file and in the browser"]
+    },
+    {
+      "text": "text: Saved in this browser only",
+      "why": "new wording, migration plan step 0a (full backup file): \"Back up\" and \"Restore\" at the foot of the company list, on every screen"
+    },
+    {
+      "text": "text: The backup was NOT restored",
+      "why": "new wording, migration plan step 0a (full backup file): the Restore dialogs",
+      "onlyOn": ["62 backup not restored, storage full", "62b backup not restored, earlier data could not be put back"]
+    },
+    {
+      "text": "text: The browser refused to store the backup, and what was here before could not be put back either. Keep this page open and restore your latest backup file again.",
+      "why": "new wording, migration plan step 0a (full backup file): the Restore dialogs",
+      "onlyOn": ["62b backup not restored, earlier data could not be put back"]
+    },
+    {
+      "text": "text: The browser's storage for this site is full, so the backup could not be put back. Nothing was changed: this browser holds what it held before.",
+      "why": "new wording, migration plan step 0a (full backup file): the Restore dialogs",
+      "onlyOn": ["62 backup not restored, storage full"]
+    },
+    {
+      "text": "text: This backup cannot be restored: one of its months has no list of employees. Nothing was changed.",
+      "why": "new wording, migration plan step 0a (full backup file): the Restore dialogs",
+      "onlyOn": ["61c restore, a damaged backup"]
+    },
+    {
+      "text": "text: This backup is empty: it holds no companies and no months. Nothing was changed.",
+      "why": "new wording, migration plan step 0a (full backup file): the Restore dialogs",
+      "onlyOn": ["61d restore, an empty backup"]
+    },
+    {
+      "text": "text: This backup was made by a different version of Payroll and cannot be restored here. Nothing was changed.",
+      "why": "new wording, migration plan step 0a (full backup file): the Restore dialogs",
+      "onlyOn": ["61b restore, a backup of another version"]
+    },
+    {
+      "text": "text: This file cannot be restored",
+      "why": "new wording, migration plan step 0a (full backup file): the Restore dialogs",
+      "onlyOn": ["61 restore, not a backup file", "61b restore, a backup of another version", "61c restore, a damaged backup", "61d restore, an empty backup"]
+    },
+    {
+      "text": "text: This file is not a Payroll backup. Choose a file saved with \"Back up\".",
+      "why": "new wording, migration plan step 0a (full backup file): the Restore dialogs",
+      "onlyOn": ["61 restore, not a backup file"]
+    },
+    {
+      "text": "text: What is in this browser now will be removed. To keep it, back it up first.",
+      "why": "new wording, migration plan step 0a (full backup file): the Restore dialogs",
+      "onlyOn": ["59 restore a backup, what is in the file and in the browser", "59b restore a backup, a file that does not say when it was saved"]
+    },
+    {
+      "text": "text: payroll-backup-2026-10-13.json, saved on 13 October 2026 at 08:05",
+      "why": "new wording, migration plan step 0a (full backup file): what the Restore dialog lists, here for the fake data",
+      "onlyOn": ["59 restore a backup, what is in the file and in the browser"]
+    },
+    {
+      "text": "text: payroll-backup-2026-10-13.json",
+      "why": "new wording, migration plan step 0a (full backup file): what the Restore dialog lists, here for the fake data",
+      "onlyOn": ["59b restore a backup, a file that does not say when it was saved"]
+    },
+    {
+      "text": "title: Put a backup file back into this browser",
+      "why": "new wording, migration plan step 0a (full backup file): \"Back up\" and \"Restore\" at the foot of the company list, on every screen"
+    },
+    {
+      "text": "title: Save everything in this browser to one file",
+      "why": "new wording, migration plan step 0a (full backup file): \"Back up\" and \"Restore\" at the foot of the company list, on every screen"
     }
   ],
   "removed": [

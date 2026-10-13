@@ -417,6 +417,72 @@ test('collect every visible string', async () => {
   await changeIdentityFieldKey('Surname', 'familyName')
   snapTopDialog('58 change identity field key confirm (no saved values)')
 
+  // ---------- Back up and Restore ----------
+  // Also from a fresh start each, recording only the dialog: the base version
+  // has no backup, so there these steps choose no file and record nothing.
+  process.env.TZ = 'UTC' // the dialog shows when the backup was saved, in the computer's own time
+  const BACKUP_ACCEPT = '.json,application/json'
+  const backupFile = (obj) => ({ name: 'payroll-backup-2026-10-13.json', text: async () => (typeof obj === 'string' ? obj : JSON.stringify(obj)) })
+  const fakeBackup = {
+    _meta: { app: 'payroll-sys-backup', version: 1, exportedAt: '2026-10-13T08:05:00.000Z' },
+    state: { identityFields, idFieldKey, globalColumns, companies: [company], activeCompanyId: company.id },
+    periods: {
+      [`payroll_period_${company.id}_2026-09`]: { employees: septemberEmployees },
+      [`payroll_period_${company.id}_2026-10`]: { employees: octoberEmployees },
+      'payroll_period_company-fake-gone_2026-08': { employees: septemberEmployees },
+    },
+    unreadable: { 'payroll_period_company-fake-gone_2026-07': '{"employees":[' },
+  }
+  async function chooseBackup(file) {
+    await start()
+    if (!document.querySelector(`input[type="file"][accept="${BACKUP_ACCEPT}"]`)) return false
+    await chooseFile(BACKUP_ACCEPT, file)
+    return true
+  }
+
+  seed({ companies: [{ ...company, id: 'company-fake-2', name: 'Sample Traders Ltd', columns: [] }], active: 'company-fake-2' })
+  await chooseBackup(backupFile(fakeBackup))
+  snapTopDialog('59 restore a backup, what is in the file and in the browser')
+
+  seed()
+  await chooseBackup(backupFile({ ...fakeBackup, _meta: { ...fakeBackup._meta, exportedAt: undefined }, unreadable: {} }))
+  snapTopDialog('59b restore a backup, a file that does not say when it was saved')
+
+  localStorage.clear()
+  if (await chooseBackup(backupFile(fakeBackup))) await clickButton('Replace with this backup')
+  snapTopDialog('60 backup restored')
+
+  for (const [step, file] of [
+    ['61 restore, not a backup file', 'this is not a backup'],
+    ['61b restore, a backup of another version', { ...fakeBackup, _meta: { ...fakeBackup._meta, version: 2 } }],
+    ['61c restore, a damaged backup', { ...fakeBackup, periods: { 'payroll_period_x_2026-09': {} } }],
+    ['61d restore, an empty backup', { ...fakeBackup, state: null, periods: {}, unreadable: {} }],
+  ]) {
+    seed()
+    await chooseBackup(backupFile(file))
+    snapTopDialog(step)
+  }
+
+  // The browser refuses to store the backup: first only the backup, then also what was there before.
+  for (const [step, refuseFrom] of [
+    ['62 backup not restored, storage full', (write) => write === 2],
+    ['62b backup not restored, earlier data could not be put back', (write) => write >= 2],
+  ]) {
+    seed()
+    const chosen = await chooseBackup(backupFile(fakeBackup))
+    const realSetItem = Storage.prototype.setItem
+    let writes = 0
+    const refusing = vi.spyOn(Storage.prototype, 'setItem').mockImplementation(function (key, value) {
+      if (String(key).startsWith('payroll_') && refuseFrom(++writes)) throw new DOMException('The quota has been exceeded.', 'QuotaExceededError')
+      return realSetItem.call(this, key, value)
+    })
+    const quiet = vi.spyOn(console, 'error').mockImplementation(() => {})
+    if (chosen) await clickButton('Replace with this backup')
+    refusing.mockRestore()
+    quiet.mockRestore()
+    snapTopDialog(step)
+  }
+
   expect(OUT, 'TEXT_CHECK_OUT').toBeTruthy()
   fs.writeFileSync(OUT, JSON.stringify(collected, null, 2))
   fs.writeFileSync(OUT.replace(/\.json$/, '.unlabelled.json'), JSON.stringify([...unlabelled].sort(), null, 2))

@@ -22,11 +22,24 @@ Each app of the payroll system has its own fixed local port and refuses to start
 
 If an app ever opens empty, check the address bar first: the data is still there under the port it was saved on.
 
+## Backup
+
+Everything the app holds is in this browser only. At the foot of the company list:
+
+- **Back up** saves one file, `payroll-backup-YYYY-MM-DD.json`, with the setup (identity fields, Global columns), every company with its columns and details, and every saved month of every company, exactly as stored. The theme is not in it.
+- **Restore** puts such a file back. It first shows what is in the file and what is in the browser now, and replaces nothing until "Replace with this backup" is chosen. Restoring replaces everything the app keeps in this browser; it is all or nothing, so a restore the browser refuses (storage full) leaves what was there.
+
+A backup file holds real payroll figures: keep it where the payroll itself is kept, and never in this repository.
+
+## Where the data is read and saved
+
+Screens never touch the browser's storage themselves. They call the operations in `src/lib/dataStore.js`, and a store carries them out. Today the only store is the browser (`src/lib/storage.js`), so the app behaves as it always has. Saving through the Payroll Hub dashboard (see `docs/MIGRATION_PLAN.md` in the payroll_hub repository) will be a second store with the same operations. `tests/audit/dataStore.test.jsx` fails if a screen reaches past the interface.
+
 ## Checks
 
 | Command | What it checks |
 |---|---|
-| `npm test` | The safety-net recordings (`tests/safetyNet`) and the audit unit tests (`tests/audit`): formula engine, columns, months, import and export |
+| `npm test` | The safety-net recordings (`tests/safetyNet`) and the audit unit tests (`tests/audit`): formula engine, columns, months, import and export, the backup file, the storage interface, and the bridge's `activity` message |
 | `npm run test:browser` | The real app driven in a throwaway Chromium profile (`tests/browser`); about 5 minutes. Never touches the data in your own browser |
 | `npm run lint` | oxlint |
 | `npm run build` | The production build |
