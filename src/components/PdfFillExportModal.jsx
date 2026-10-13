@@ -1,6 +1,8 @@
 import { useMemo, useState } from 'react'
 import { FileOutput } from 'lucide-react'
 import Modal from './Modal'
+import ExportErrorsDialog from './ExportErrorsDialog'
+import { findErrorCells } from '../lib/exportErrors'
 import {
   buildPdfFillColumnGroups,
   buildCompanyDetailFields,
@@ -63,6 +65,16 @@ export default function PdfFillExportModal({
   }
 
   const selectedCount = selected.size
+
+  // Figures in error among the chosen columns, waiting for the user's answer.
+  const [pendingErrors, setPendingErrors] = useState(null)
+
+  function handleExportClick() {
+    const chosenColumns = groups.flatMap((g) => g.columns).filter((c) => selected.has(c.key))
+    const errors = findErrorCells(employees, chosenColumns, computedGrid, identityFields)
+    if (errors.length > 0) setPendingErrors(errors)
+    else handleExport()
+  }
 
   function handleExport() {
     const chosenColumns = groups.flatMap((g) => g.columns).filter((c) => selected.has(c.key))
@@ -138,11 +150,22 @@ export default function PdfFillExportModal({
           <button onClick={onClose} className="btn btn-secondary">
             Cancel
           </button>
-          <button onClick={handleExport} disabled={selectedCount === 0} className="btn btn-primary">
+          <button onClick={handleExportClick} disabled={selectedCount === 0} className="btn btn-primary">
             Export {FORMAT_LABEL[format]}
           </button>
         </div>
       </div>
+
+      {pendingErrors && (
+        <ExportErrorsDialog
+          errors={pendingErrors}
+          onCancel={() => setPendingErrors(null)}
+          onConfirm={() => {
+            setPendingErrors(null)
+            handleExport()
+          }}
+        />
+      )}
     </Modal>
   )
 }

@@ -2,6 +2,7 @@ import { useMemo } from 'react'
 import { CalendarSearch } from 'lucide-react'
 import { getOrderedEffectiveColumns, getCategoryGroups, labelColumnsForHelper } from '../lib/categories'
 import { formatDecimal } from '../lib/format'
+import { ERROR_TEXT, isErrorCell } from '../lib/exportErrors'
 
 // Sticky header cells: a solid background (rows scroll underneath) and the
 // bottom rule drawn as an inset shadow, since a collapsed border doesn't
@@ -75,21 +76,31 @@ export default function TotalsTable({ identityFields, idFieldKey, effectiveColum
                   </td>
                 ))}
                 {orderedColumns.map((col) => {
+                  // Text and checkbox cells come from the same grid the
+                  // Totals export reads, so the two can never disagree.
+                  const cell = computedGrid[emp.id]?.[col.key]
                   if (col.valueType === 'text') {
                     return (
                       <td key={col.key} className="px-3 py-2 text-fg">
-                        {emp.values?.[col.key] ?? ''}
+                        {cell?.value ?? ''}
                       </td>
                     )
                   }
                   if (col.valueType === 'checkbox') {
                     return (
                       <td key={col.key} className="px-3 py-2 text-fg">
-                        {emp.values?.[col.key] ? 'Yes' : 'No'}
+                        {cell?.value === 1 ? 'Yes' : 'No'}
                       </td>
                     )
                   }
-                  const value = computedGrid[emp.id]?.[col.key]?.value ?? 0
+                  if (isErrorCell(cell)) {
+                    return (
+                      <td key={col.key} className="num px-3 py-2 text-right text-danger" title={cell.error}>
+                        {ERROR_TEXT}
+                      </td>
+                    )
+                  }
+                  const value = cell?.value ?? 0
                   return (
                     <td key={col.key} className={`num px-3 py-2 text-right text-fg ${col.type === 'formula' ? 'bg-glow/10' : ''}`}>
                       {formatDecimal(value, col.decimals ?? 2)}

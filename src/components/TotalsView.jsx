@@ -1,7 +1,7 @@
 import { useMemo, useState } from 'react'
 import { FileSpreadsheet, TriangleAlert } from 'lucide-react'
 import TotalsTable from './TotalsTable'
-import { loadPeriod } from '../lib/storage'
+import { dataStore } from '../lib/dataStore'
 import { enumeratePeriods, periodKey, parsePeriodKey, formatPeriodLabel } from '../lib/periods'
 import { computeTotals } from '../lib/totals'
 import { getColumnsByKey } from '../lib/model'
@@ -23,7 +23,7 @@ export default function TotalsView({ company, identityFields, idFieldKey, effect
     const periodsWithData = periodsList.map(({ year, month }) => ({
       year,
       month,
-      employees: loadPeriod(company.id, year, month).employees,
+      employees: dataStore.loadPeriod(company.id, year, month).employees,
     }))
     const result = computeTotals(periodsWithData, effectiveColumns, columnsByKey, idFieldKey)
 

@@ -190,38 +190,112 @@ export function parseCheckboxValue(raw) {
   return s === 'yes' || s === 'y' || s === 'true' || s === '1' || s === 'x'
 }
 
+// Reads one cell meant for a Number column. Real payroll files often hold
+// figures as TEXT: "18,115.00", "Rs 18115", "Rs. 18 115.50", "(1,200.00)".
+// Those are read as the numbers they are. Returns:
+//   { ok: true, value }   a number (a blank cell is 0, as it always was)
+//   { ok: false }         text that is not a number, e.g. "n/a"
+export function parseNumberCell(raw) {
+  if (raw === undefined || raw === null || raw === '') return { ok: true, value: 0 }
+  if (typeof raw === 'number') return Number.isFinite(raw) ? { ok: true, value: raw } : { ok: false }
+  if (typeof raw !== 'string') return { ok: false }
+
+  // Ordinary and non-breaking spaces are only ever separators in a figure.
+  let text = raw.replace(/[\s\u00a0\u202f]+/g, ' ').trim()
+  if (text === '') return { ok: true, value: 0 }
+
+  // Accounting style: (1,200.00) is minus 1,200.00.
+  let negative = false
+  const bracketed = text.match(/^\((.*)\)$/)
+  if (bracketed) {
+    negative = true
+    text = bracketed[1].trim()
+  }
+
+  // A currency label before or after the figure: "Rs", "Rs.", "MUR", "$".
+  text = text.replace(/^(?:[A-Za-z]{1,4}\.?|[$€£₨])\s*(?=[-+.\d])/, '').replace(/(?<=\d)\s*(?:[A-Za-z]{1,4}\.?|[$€£₨])$/, '')
+  text = text.replace(/ /g, '')
+
+  if (/^[-+]/.test(text)) {
+    if (text[0] === '-') negative = !negative
+    text = text.slice(1)
+  }
+
+  const grouped = /^\d{1,3}(,\d{3})+(\.\d*)?$/.test(text)
+  const plain = /^(\d+\.?\d*|\.\d+)(e[-+]?\d+)?$/i.test(text)
+  if (!grouped && !plain) return { ok: false }
+
+  const value = Number(grouped ? text.replace(/,/g, '') : text)
+  if (!Number.isFinite(value)) return { ok: false }
+  return { ok: true, value: negative ? -value : value }
+}
+
+// The value one file cell becomes for one system field, plus whether it was
+// a Number cell that could not be read. This one function decides both what
+// the import preview shows and what is stored, so the two always match.
+//
+// Text-based fields (identity fields, and Input columns explicitly typed as
+// Text) keep the raw value as-is - never forced through a numeric parser, so
+// non-numeric text like "Full Time" survives instead of becoming 0. A Number
+// cell that cannot be read is left BLANK and reported, never written as 0.
+export function convertImportValue(field, raw) {
+  if (field.kind === 'identity' || field.valueType === 'text') {
+    return { value: raw === undefined || raw === null ? '' : String(raw), unreadable: false }
+  }
+  if (field.valueType === 'checkbox') return { value: parseCheckboxValue(raw), unreadable: false }
+  const parsed = parseNumberCell(raw)
+  return parsed.ok ? { value: parsed.value, unreadable: false } : { value: '', unreadable: true }
+}
+
+// `meta` (a recognized system export's hidden _meta, if any) supplies
+// values for fields excluded from export - they were never written as a
+// visible/mapped column, so `mapping`/`projectRows` alone can't see them;
+// this falls back to the value the exporter stashed for that exact row.
+function rawValuesForRow(row, rowIndex, systemFields, mapping, meta) {
+  const raw = {}
+  for (const field of systemFields) {
+    raw[field.key] = row[field.key]
+    if (mapping[field.key] === null && meta?.excludedValues?.[field.key]) {
+      raw[field.key] = meta.excludedValues[field.key][rowIndex]
+    }
+  }
+  return raw
+}
+
+// Every Number cell in the file that cannot be read as a number, as
+// [{ rowIndex, employee, field, raw }] - shown in the import preview before
+// anything is imported, and again in the summary afterwards.
+export function findUnreadableValues({ rows, systemFields, mapping, meta }) {
+  const identity = systemFields.filter((f) => f.kind === 'identity')
+  const found = []
+  projectRows(rows, systemFields, mapping).forEach((row, rowIndex) => {
+    const raw = rawValuesForRow(row, rowIndex, systemFields, mapping, meta)
+    const who = identity
+      .slice(0, 3)
+      .map((f) => raw[f.key])
+      .filter((v) => v !== undefined && v !== null && String(v).trim() !== '')
+      .join(' ')
+    for (const field of systemFields) {
+      if (convertImportValue(field, raw[field.key]).unreadable) {
+        found.push({ rowIndex, employee: who || `Row ${rowIndex + 1}`, field: field.name, raw: String(raw[field.key]) })
+      }
+    }
+  })
+  return found
+}
+
 // Turns mapped rows into new employee records, defaulting unmapped/missing
 // values (empty string for identity fields, unticked for checkboxes, 0 for
 // other input columns). Duplicate ID detection is computed live wherever
 // the table is displayed (see EmployeeTable), so it stays correct even
 // after rows are edited later.
-//
-// `meta` (a recognized system export's hidden _meta, if any) supplies
-// values for fields excluded from export - they were never written as a
-// visible/mapped column, so `mapping`/`projectRows` alone can't see them;
-// this falls back to the value the exporter stashed for that exact row.
 export function buildImportedEmployees({ rows, systemFields, mapping, makeId, meta }) {
   const projected = projectRows(rows, systemFields, mapping)
 
   return projected.map((row, rowIndex) => {
+    const raw = rawValuesForRow(row, rowIndex, systemFields, mapping, meta)
     const values = {}
-    for (const field of systemFields) {
-      let raw = row[field.key]
-      if (mapping[field.key] === null && meta?.excludedValues?.[field.key]) {
-        raw = meta.excludedValues[field.key][rowIndex]
-      }
-      // Text-based fields (identity fields, and Input columns explicitly
-      // typed as Text) import the raw value as-is - never forced through a
-      // numeric parser, so non-numeric text like "Full Time" survives
-      // instead of silently becoming 0.
-      if (field.kind === 'identity' || field.valueType === 'text') {
-        values[field.key] = raw === undefined || raw === null ? '' : String(raw)
-      } else if (field.valueType === 'checkbox') {
-        values[field.key] = parseCheckboxValue(raw)
-      } else {
-        values[field.key] = raw === undefined || raw === null || raw === '' ? 0 : Number(raw) || 0
-      }
-    }
+    for (const field of systemFields) values[field.key] = convertImportValue(field, raw[field.key]).value
     return { id: makeId(), values }
   })
 }

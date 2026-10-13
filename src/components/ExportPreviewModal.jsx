@@ -3,6 +3,7 @@ import { CircleAlert, Download, FileSpreadsheet } from 'lucide-react'
 import Modal from './Modal'
 import { downloadExportPlan, formatCompanyDetailsLine } from '../lib/excelExport'
 import { formatDecimal } from '../lib/format'
+import { ERROR_TEXT } from '../lib/exportErrors'
 
 function isTextLikeColumn(col) {
   return col.kind === 'identity' || col.valueType === 'text' || col.valueType === 'checkbox'
@@ -10,6 +11,7 @@ function isTextLikeColumn(col) {
 
 function formatCell(value, col) {
   if (isTextLikeColumn(col)) return value === '' || value === undefined ? '' : String(value)
+  if (value === ERROR_TEXT) return ERROR_TEXT
   const n = typeof value === 'number' ? value : Number(value) || 0
   return formatDecimal(n, col.decimals ?? 2)
 }

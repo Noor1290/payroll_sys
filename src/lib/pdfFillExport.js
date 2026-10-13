@@ -5,17 +5,49 @@
 // into this app (that's what the xlsx system-export round-trip is for).
 
 import { periodKey } from './periods'
-import { getCategoryGroups, getOrderedEffectiveColumns } from './categories'
+import { getCategoryGroups, getOrderedEffectiveColumns, getCategoryLabel, DEFAULT_CATEGORY } from './categories'
+import { roundHalfUp } from './format'
+import { ERROR_TEXT, isErrorCell } from './exportErrors'
 
 // The flat, ordered list of every column a PDF-fill export could include:
 // identity fields first, then Global/Company columns in their normal
 // category order - same shape (key/name/kind/valueType/decimals) the
 // checklist UI and the row-builder both work from.
+// The name each column is exported under (its CSV header / JSON key, and
+// its label in the picker), by column key. Normally that is just the
+// column's own name. Rows are keyed by this name, so two columns must never
+// share one: when names clash, BOTH get their category appended, e.g.
+// "CSG (Employee Contribution)" and "CSG (Employer Contribution)" - the same
+// wording the Employee Table's header tooltip already uses. An identity
+// field that shares a name with a column becomes "Name (Identifiers)". Two
+// columns with the same name in the same category are numbered as a last
+// resort, so no figure can ever overwrite another.
+function buildExportNames(identityFields, orderedColumns) {
+  const entries = [
+    ...identityFields.map((f) => ({ key: f.key, name: f.name, qualified: `${f.name} (${getCategoryLabel('identifiers')})` })),
+    ...orderedColumns.map((c) => ({ key: c.key, name: c.name, qualified: `${c.name} (${getCategoryLabel(c.category ?? DEFAULT_CATEGORY)})` })),
+  ]
+  const nameCounts = new Map()
+  for (const e of entries) nameCounts.set(e.name, (nameCounts.get(e.name) ?? 0) + 1)
+
+  const names = {}
+  const used = new Map()
+  for (const e of entries) {
+    const label = nameCounts.get(e.name) > 1 ? e.qualified : e.name
+    const seen = (used.get(label) ?? 0) + 1
+    used.set(label, seen)
+    names[e.key] = seen > 1 ? `${label} (${seen})` : label
+  }
+  return names
+}
+
 export function buildPdfFillColumns(identityFields, effectiveColumns) {
-  const identity = identityFields.map((f) => ({ key: f.key, name: f.name, kind: 'identity' }))
-  const ordered = getOrderedEffectiveColumns(effectiveColumns).map((c) => ({
+  const orderedColumns = getOrderedEffectiveColumns(effectiveColumns)
+  const exportNames = buildExportNames(identityFields, orderedColumns)
+  const identity = identityFields.map((f) => ({ key: f.key, name: exportNames[f.key], kind: 'identity' }))
+  const ordered = orderedColumns.map((c) => ({
     key: c.key,
-    name: c.name,
+    name: exportNames[c.key],
     kind: c.type,
     valueType: c.valueType,
     decimals: c.decimals ?? 2,
@@ -27,14 +59,15 @@ export function buildPdfFillColumns(identityFields, effectiveColumns) {
 // for the column-picker checklist.
 export function buildPdfFillColumnGroups(identityFields, effectiveColumns) {
   const orderedEffectiveColumns = getOrderedEffectiveColumns(effectiveColumns)
+  const exportNames = buildExportNames(identityFields, orderedEffectiveColumns)
   const groups = []
   if (identityFields.length > 0) {
-    groups.push({ label: 'Identifiers', columns: identityFields.map((f) => ({ key: f.key, name: f.name, kind: 'identity' })) })
+    groups.push({ label: 'Identifiers', columns: identityFields.map((f) => ({ key: f.key, name: exportNames[f.key], kind: 'identity' })) })
   }
   for (const group of getCategoryGroups(orderedEffectiveColumns)) {
     groups.push({
       label: group.label,
-      columns: group.columns.map((c) => ({ key: c.key, name: c.name, kind: c.type, valueType: c.valueType, decimals: c.decimals ?? 2 })),
+      columns: group.columns.map((c) => ({ key: c.key, name: exportNames[c.key], kind: c.type, valueType: c.valueType, decimals: c.decimals ?? 2 })),
     })
   }
   return groups
@@ -75,11 +108,13 @@ function cellDisplayValue(col, emp, computedGrid) {
   const value = cell?.value
   if (col.valueType === 'checkbox') return value === 1 ? 'Yes' : 'No'
   if (col.valueType === 'text') return typeof value === 'string' ? value : (value ?? '')
+  // A figure that could not be worked out is never exported as a number.
+  if (isErrorCell(cell)) return ERROR_TEXT
   const num = typeof value === 'number' && !Number.isNaN(value) ? value : 0
   // Rounded to the column's own configured precision, same as every other
   // export/display in the app - but never grouped/comma-formatted, since
   // that would corrupt a CSV's own delimiter.
-  return Number(num.toFixed(col.decimals ?? 2))
+  return roundHalfUp(num, col.decimals ?? 2)
 }
 
 // One plain { [header]: value } object per employee - this IS the JSON

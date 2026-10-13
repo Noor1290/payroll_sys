@@ -1,5 +1,6 @@
 import { useRef, useState } from 'react'
 import { Info, Trash2, WalletCards, X } from 'lucide-react'
+import { useBackupControls } from './BackupControls'
 import ConfirmDialog from './ConfirmDialog'
 import ThemeToggle from './ThemeToggle'
 import { useFocusScope } from '../hooks/useFocusScope'
@@ -17,12 +18,14 @@ export default function Sidebar({
   onRenameCompany,
   onDeleteCompany,
   onOpenDetails,
+  onRestored,
   open = false,
   onClose,
 }) {
   const [renamingId, setRenamingId] = useState(null)
   const [renameValue, setRenameValue] = useState('')
   const [deletingCompany, setDeletingCompany] = useState(null)
+  const backup = useBackupControls(onRestored)
 
   // Keyboard, only while it is open as a drawer at narrow widths: focus
   // moves in, Tab stays inside, Escape closes it, focus returns to the menu button.
@@ -131,13 +134,17 @@ export default function Sidebar({
           })}
         </div>
 
-        <div className="flex items-center gap-2 border-t border-line p-3">
+        {backup.controls}
+
+        <div className="flex items-center gap-2 p-3">
           <button onClick={onAddCompany} className="btn btn-primary flex-1">
             + New Company
           </button>
           <ThemeToggle />
         </div>
       </aside>
+
+      {backup.dialogs}
 
       {deletingCompany && (
         <ConfirmDialog

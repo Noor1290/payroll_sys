@@ -5,7 +5,8 @@
 // the base commit and the working tree - records all visible text, tooltips,
 // screen-reader labels, placeholders and alert messages, and prints every
 // difference, screen by screen. Exits with code 1 if there is any difference
-// that is not listed in tests/textCheck/approved.json.
+// that is not listed in tests/textCheck/approved.json. An entry there may name
+// the only screens it is approved on ("onlyOn").
 
 import { execFileSync, spawnSync } from 'node:child_process'
 import fs from 'node:fs'
@@ -51,7 +52,9 @@ try {
 
   const approvedFile = path.join(root, 'tests/textCheck/approved.json')
   const approved = fs.existsSync(approvedFile) ? JSON.parse(fs.readFileSync(approvedFile, 'utf8')) : { added: [], removed: [] }
-  const isApproved = (kind, s) => approved[kind].some((a) => a.text === s)
+  // An approval with "onlyOn" covers the difference on the screens it names
+  // and nowhere else; without it, on any screen.
+  const approvalFor = (kind, s, where) => approved[kind].find((a) => a.text === s && (!a.onlyOn || where.every((screen) => a.onlyOn.includes(screen))))
 
   const summary = { added: new Map(), removed: new Map() }
   const perScreen = []
@@ -81,9 +84,10 @@ try {
     const entries = [...summary[kind].entries()].sort()
     if (entries.length === 0) console.log('  none')
     for (const [s, where] of entries) {
-      const ok = isApproved(kind, s)
+      const approval = approvalFor(kind, s, where)
+      const ok = Boolean(approval)
       if (!ok) unapproved++
-      const reason = ok ? approved[kind].find((a) => a.text === s).why : 'NOT APPROVED'
+      const reason = ok ? approval.why : 'NOT APPROVED'
       console.log(`  [${ok ? 'approved' : 'CHECK'}] ${s}`)
       console.log(`        ${reason} | seen on ${where.length} screen${where.length === 1 ? '' : 's'}, e.g. ${where[0]}`)
     }

@@ -3,6 +3,7 @@ import { getOrderedEffectiveColumns, getCategoryGroups } from './categories'
 import { excelNumberFormat } from './format'
 import { translateFormulaToExcel, excelColumnLetter } from './excelFormulaTranslator'
 import { getDependencies } from './formulaEngine'
+import { ERROR_TEXT, isErrorCell } from './exportErrors'
 
 const FONT_NAME = 'Book Antiqua'
 // Approximates the reference file's header fill (Excel theme "Accent 1,
@@ -36,6 +37,9 @@ const DATA_START_ROW = 7
 const META_SHEET_NAME = '_meta'
 const META_GENERATOR = 'payroll-sys'
 const META_VERSION = 2
+// A checkbox cell that holds the number 1 or 0 (so a live formula such as
+// IF(J7=1, ...) works) but is displayed as Yes / No.
+const CHECKBOX_NUMBER_FORMAT = '"Yes";"Yes";"No"'
 
 // One line combining address + BRN for the export header, e.g.
 // "123 Main St, Port Louis   •   BRN: C12345678". A multi-line address is
@@ -127,6 +131,8 @@ export function buildExportPlan({
     const value = cell?.value
     if (isCheckboxColumn(col)) return value === 1 ? 'Yes' : 'No'
     if (isTextColumn(col)) return typeof value === 'string' ? value : (value ?? '')
+    // A figure that could not be worked out is never exported as a number.
+    if (isErrorCell(cell)) return ERROR_TEXT
     return typeof value === 'number' && !Number.isNaN(value) ? value : 0
   }
 
@@ -157,6 +163,8 @@ export function buildExportPlan({
       return `${ticked} ticked`
     }
     if (isTextColumn(col)) return ''
+    // A total over a column that holds an error is not known either.
+    if (rows.some((row) => row[i] === ERROR_TEXT)) return ERROR_TEXT
     let sum = 0
     for (const row of rows) {
       const v = row[i]
@@ -359,8 +367,18 @@ export async function buildWorkbookBuffer(plan) {
       cell.alignment = { horizontal: isText ? 'left' : 'center' }
       if (!isText) cell.numFmt = excelNumberFormat(col.decimals ?? 2)
 
-      if (col.kind === 'formula' && useLiveFormulas) {
+      if (!isText && value === ERROR_TEXT) {
+        // In error: the text "Error", never a number and never a formula.
+        cell.value = ERROR_TEXT
+      } else if (col.kind === 'formula' && useLiveFormulas) {
         cell.value = buildLiveFormulaCellValue(col.formula, columnKeyToLetter, excelRowNum, value)
+      } else if (col.valueType === 'checkbox' && useLiveFormulas) {
+        // The compiled formulas test a checkbox against 1 ("colKey === 1"),
+        // and in a spreadsheet the text "Yes" is never equal to 1. So in a
+        // live-formula file the cell holds 1 or 0 and is only SHOWN as
+        // Yes / No, which keeps every formula's result equal to the app's.
+        cell.value = value === 'Yes' ? 1 : 0
+        cell.numFmt = CHECKBOX_NUMBER_FORMAT
       } else {
         cell.value = value
       }
@@ -388,7 +406,9 @@ export async function buildWorkbookBuffer(plan) {
     cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: TOTALS_FILL } }
     if (!isText) cell.numFmt = excelNumberFormat(col.decimals ?? 2)
 
-    if (!isText && useLiveFormulas && plan.rows.length > 0) {
+    if (!isText && value === ERROR_TEXT) {
+      cell.value = ERROR_TEXT
+    } else if (!isText && useLiveFormulas && plan.rows.length > 0) {
       const letter = columnKeyToLetter[col.key]
       const firstRow = DATA_START_ROW
       const lastRow = DATA_START_ROW + plan.rows.length - 1
@@ -422,7 +442,8 @@ export async function buildWorkbookBuffer(plan) {
       cell.border = THIN_BORDER
       cell.alignment = { horizontal: isText ? 'left' : 'center' }
       if (!isText) cell.numFmt = col.valueType === 'checkbox' ? '0' : excelNumberFormat(col.decimals ?? 2)
-      cell.value = col.kind === 'formula' ? buildLiveFormulaCellValue(col.formula, columnKeyToLetter, excelRowNum, value) : value
+      cell.value =
+        col.kind === 'formula' && value !== ERROR_TEXT ? buildLiveFormulaCellValue(col.formula, columnKeyToLetter, excelRowNum, value) : value
     })
   })
 

@@ -9,6 +9,12 @@ lerna-debug.log*
 
 node_modules
 dist
+
+# Backup files ("Back up" in the app) hold real payroll figures: never commit one.
+payroll-backup-*.json
+pdf-form-filler-backup-*.json
+*-backup-*.json
+
 .text-check
 dist-ssr
 *.local

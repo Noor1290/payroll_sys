@@ -53,7 +53,22 @@ function DependencyRow({ trace, labelByKey }) {
 
 function FormulaBody({ trace, labelByKey }) {
   if (trace.error) {
-    return <p className="text-sm text-danger">Error: {trace.error}</p>
+    // The columns it uses are still listed, so the one in error can be opened.
+    return (
+      <div className="space-y-4">
+        <p className="text-sm text-danger">Error: {trace.error}</p>
+        {trace.dependencies && trace.dependencies.length > 0 && (
+          <div>
+            <p className={`${SECTION_LABEL} mb-1.5`}>Depends on</p>
+            <div className="space-y-1.5">
+              {trace.dependencies.map((dep) => (
+                <DependencyRow key={dep.key} trace={dep} labelByKey={labelByKey} />
+              ))}
+            </div>
+          </div>
+        )}
+      </div>
+    )
   }
 
   return (

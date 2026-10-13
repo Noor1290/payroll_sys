@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react'
+import { useLayoutEffect, useMemo, useState } from 'react'
 import { TriangleAlert, Users } from 'lucide-react'
 import ConfirmDialog from './ConfirmDialog'
 import { getOrderedEffectiveColumns, getCategoryGroups, labelColumnsForHelper } from '../lib/categories'
@@ -59,6 +59,16 @@ export default function EmployeeTable({
   // blurred, it displays rounded to the column's configured decimal places.
   // The underlying stored value is never touched by this - display only.
   const [focusedCellKey, setFocusedCellKey] = useState(null)
+
+  // Taking focus swaps the rounded figure ("18115.00") for the raw one
+  // ("18115"), and changing an input's content drops its selection - so
+  // after tabbing in, typing used to be ADDED to the old figure. Selecting
+  // the whole figure once the swap is done makes typing replace it.
+  useLayoutEffect(() => {
+    if (!focusedCellKey) return
+    const el = document.activeElement
+    if (el instanceof HTMLInputElement && el.type === 'number') el.select()
+  }, [focusedCellKey])
 
   // Employees sharing the same (non-empty) value in the designated ID field
   // get an amber "Duplicate ID" warning next to that cell.

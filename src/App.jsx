@@ -15,7 +15,12 @@ import SendToDashboardButton from './components/SendToDashboardButton'
 import ConfirmDialog from './components/ConfirmDialog'
 import CompanyDetailsModal from './components/CompanyDetailsModal'
 import CopyPreviousMonthModal from './components/CopyPreviousMonthModal'
-import { loadState, saveState, loadPeriod, savePeriod } from './lib/storage'
+import ExportErrorsDialog from './components/ExportErrorsDialog'
+import SaveFailedDialog from './components/SaveFailedDialog'
+import BackupMessage from './components/BackupMessage'
+import { dataStore, renameValueKey } from './lib/dataStore'
+import { findErrorCells } from './lib/exportErrors'
+import { findFormulasUsingColumn, findScopeChangeBlockers, renameKeyInColumn, renameKeyInWidths } from './lib/columnUsage'
 import {
   newCompany,
   newEmployee,
@@ -39,7 +44,11 @@ import {
   isRecognizedExport,
   describeUnrecognizedMeta,
   resolveImportMapping,
+  findUnreadableValues,
 } from './lib/excelImport'
+
+// Shown while the selected month is still being loaded.
+const NO_EMPLOYEES = []
 
 const TABS = [
   { id: 'global', label: 'Global Columns' },
@@ -48,7 +57,30 @@ const TABS = [
   { id: 'totals', label: 'Totals' },
 ]
 
+// Every read and save goes through the data store (see lib/dataStore.js).
+const { loadState, saveState, loadPeriod, savePeriod, deletePeriodsForCompany, countPeriodsHoldingKey, renameValueKeyInPeriods } = dataStore
+
+// The app, started from whatever is stored. After a backup has been restored
+// it is started again from scratch, so nothing of the replaced data stays on
+// screen or in memory.
 export default function App() {
+  const [startedFrom, setStartedFrom] = useState(0)
+  const [restoreMessage, setRestoreMessage] = useState(null) // { title, description, tone } | null
+
+  function handleRestored(message) {
+    setRestoreMessage(message)
+    setStartedFrom((n) => n + 1)
+  }
+
+  return (
+    <>
+      <PayrollApp key={startedFrom} onRestored={handleRestored} />
+      {restoreMessage && <BackupMessage {...restoreMessage} onClose={() => setRestoreMessage(null)} />}
+    </>
+  )
+}
+
+function PayrollApp({ onRestored }) {
   const [identityFields, setIdentityFields] = useState([])
   const [idFieldKey, setIdFieldKey] = useState(null)
   const [globalColumns, setGlobalColumns] = useState([])
@@ -72,8 +104,24 @@ export default function App() {
   // The currently selected month's employees for the active company. Kept
   // separate from `companies` state since employee data now persists per
   // (company, year, month) period, not on the company itself.
-  const [periodEmployees, setPeriodEmployees] = useState([])
-  const [periodLoaded, setPeriodLoaded] = useState(false)
+  // Named `loadedEmployees` because it can briefly still hold the month just
+  // left - everything below reads `periodEmployees`, which is only ever the
+  // month named by `loadedPeriodKey`.
+  const [loadedEmployees, setPeriodEmployees] = useState([])
+  // Which company + month `loadedEmployees` belongs to.
+  const [loadedPeriodKey, setLoadedPeriodKey] = useState(null)
+
+  // A save the browser refused (storage full): the change is taken back off
+  // the screen and this blocking warning says it was NOT saved.
+  const [saveFailed, setSaveFailed] = useState(false)
+  // Set while the screen is being put back to what is saved, so that
+  // putting it back is not itself treated as a change to save.
+  const revertingState = useRef(false)
+  const revertingPeriod = useRef(false)
+  // An export waiting for the user's answer to "some figures are in error".
+  const [pendingExport, setPendingExport] = useState(null) // { errors, proceed } | null
+  // What the last import could not read as numbers.
+  const [importSummary, setImportSummary] = useState(null) // { count, unreadable } | null
 
   // No-op unless this app is running inside the Payroll Hub dashboard's iframe.
   useEffect(() => {
@@ -98,32 +146,58 @@ export default function App() {
 
   useEffect(() => {
     if (!loaded) return
-    saveState({ identityFields, idFieldKey, globalColumns, companies, activeCompanyId })
+    if (revertingState.current) {
+      revertingState.current = false
+      return
+    }
+    if (saveState({ identityFields, idFieldKey, globalColumns, companies, activeCompanyId })) return
+    // Not saved: never leave on screen what is not in storage.
+    const saved = loadState()
+    if (saved) {
+      revertingState.current = true
+      setIdentityFields(saved.identityFields)
+      setIdFieldKey(saved.idFieldKey)
+      setGlobalColumns(saved.globalColumns)
+      setCompanies(saved.companies)
+      setActiveCompanyId(saved.activeCompanyId)
+    }
+    setSaveFailed(true)
   }, [loaded, identityFields, idFieldKey, globalColumns, companies, activeCompanyId])
 
   const activeCompany = companies.find((c) => c.id === activeCompanyId) ?? null
   const selectedYear = activeCompany?.viewYear ?? null
   const selectedMonth = activeCompany?.viewMonth ?? null
+  const currentPeriodKey = activeCompanyId && selectedYear && selectedMonth ? `${activeCompanyId}:${selectedYear}-${selectedMonth}` : null
 
-  // Load the selected month's employees whenever the company or month
-  // changes. `periodLoaded` gates the save effect below so it never fires
-  // (and overwrites real data with []) before a load has actually happened.
+  // Load the selected month's employees whenever the company or month changes.
   useEffect(() => {
     if (!activeCompanyId || !selectedYear || !selectedMonth) {
       setPeriodEmployees([])
-      setPeriodLoaded(false)
+      setLoadedPeriodKey(null)
       return
     }
-    setPeriodLoaded(false)
     const { employees } = loadPeriod(activeCompanyId, selectedYear, selectedMonth)
     setPeriodEmployees(employees)
-    setPeriodLoaded(true)
+    setLoadedPeriodKey(`${activeCompanyId}:${selectedYear}-${selectedMonth}`)
   }, [activeCompanyId, selectedYear, selectedMonth])
 
+  // Save the month on screen. Only ever the month that was actually loaded:
+  // right after the company or month changes, `loadedEmployees` still holds
+  // the month being left, and that must never be written under the new key.
   useEffect(() => {
-    if (!periodLoaded || !activeCompanyId || !selectedYear || !selectedMonth) return
-    savePeriod(activeCompanyId, selectedYear, selectedMonth, { employees: periodEmployees })
-  }, [periodLoaded, activeCompanyId, selectedYear, selectedMonth, periodEmployees])
+    if (!currentPeriodKey || loadedPeriodKey !== currentPeriodKey) return
+    if (revertingPeriod.current) {
+      revertingPeriod.current = false
+      return
+    }
+    if (savePeriod(activeCompanyId, selectedYear, selectedMonth, { employees: loadedEmployees })) return
+    // Not saved: put the screen back to what is saved, and say so.
+    revertingPeriod.current = true
+    setPeriodEmployees(loadPeriod(activeCompanyId, selectedYear, selectedMonth).employees)
+    setSaveFailed(true)
+  }, [loadedPeriodKey, currentPeriodKey, activeCompanyId, selectedYear, selectedMonth, loadedEmployees])
+
+  const periodEmployees = currentPeriodKey && loadedPeriodKey === currentPeriodKey ? loadedEmployees : NO_EMPLOYEES
 
   // Whether "Copy from Previous Month" has anything to offer right now -
   // read fresh (not kept in React state) each time it's relevant, since
@@ -184,6 +258,9 @@ export default function App() {
   function handleDeleteCompany(id) {
     setCompanies((prev) => prev.filter((c) => c.id !== id))
     if (activeCompanyId === id) setActiveCompanyId(null)
+    // Its employees live in per-month storage, not on the company: remove
+    // every month too, so nothing of a deleted company stays in the browser.
+    deletePeriodsForCompany(id)
   }
 
   function handleSaveCompanyDetails(id, { name, details }) {
@@ -211,6 +288,25 @@ export default function App() {
   }
   function handleSetIdField(key) {
     setIdFieldKey(key)
+  }
+
+  // Identity fields are shared by every company, so a change of key reaches
+  // every company's saved months.
+  function getIdentityKeyChangePreview(field) {
+    return countPeriodsHoldingKey(companies.map((c) => c.id), field.key)
+  }
+
+  // Carries a change of an identity field's key through everything that
+  // refers to it: every saved month of every company, the month on screen,
+  // which field is the ID field, and the remembered column widths. The
+  // field's own key is then set by the normal edit that follows.
+  function handleRenameIdentityFieldKey(field, newKey) {
+    const oldKey = field.key
+    if (!renameValueKeyInPeriods(companies.map((c) => c.id), oldKey, newKey)) setSaveFailed(true)
+
+    if (idFieldKey === oldKey) setIdFieldKey(newKey)
+    setCompanies((prev) => prev.map((c) => ({ ...c, columnWidths: renameKeyInWidths(c.columnWidths, oldKey, newKey) })))
+    setPeriodEmployees((prev) => prev.map((e) => renameValueKey(e, oldKey, newKey)))
   }
 
   // ---- Global columns ----
@@ -269,6 +365,56 @@ export default function App() {
     }
   }
 
+  // ---- Checks before an edit that could break formulas ----
+  // Formulas that would stop working if this Global column became specific
+  // to the active company (see findScopeChangeBlockers).
+  function getScopeBlockers(column) {
+    return findScopeChangeBlockers(column, globalColumns, companies, activeCompanyId)
+  }
+
+  // Which companies and columns a column of the given scope can be used by.
+  function reachOf(scope) {
+    const reachCompanies = scope === 'global' ? companies : companies.filter((c) => c.id === activeCompanyId)
+    const reachColumns = scope === 'global' ? [...globalColumns, ...companies.flatMap((c) => c.columns)] : (activeCompany?.columns ?? [])
+    return { reachCompanies, reachColumns }
+  }
+
+  // What changing this column's key would have to update: the formulas that
+  // use it, and the saved months that hold a value under it.
+  function getKeyChangePreview(column, scope) {
+    const { reachCompanies, reachColumns } = reachOf(scope)
+    return {
+      formulas: findFormulasUsingColumn(column.key, reachColumns).map((c) => c.name),
+      ...countPeriodsHoldingKey(reachCompanies.map((c) => c.id), column.key),
+    }
+  }
+
+  // Carries a change of key through everything that refers to it: every
+  // formula (and its builder settings), every saved month, the month on
+  // screen and the remembered column widths. The column's own key is then
+  // set by the normal edit that follows.
+  function handleRenameColumnKey(column, newKey, scope) {
+    const oldKey = column.key
+    const { reachCompanies } = reachOf(scope)
+    const reachIds = new Set(reachCompanies.map((c) => c.id))
+    if (!renameValueKeyInPeriods([...reachIds], oldKey, newKey)) setSaveFailed(true)
+
+    const rename = (columns) => columns.map((c) => renameKeyInColumn(c, oldKey, newKey))
+    if (scope === 'global') setGlobalColumns(rename)
+    setCompanies((prev) =>
+      prev.map((c) => (reachIds.has(c.id) ? { ...c, columns: rename(c.columns), columnWidths: renameKeyInWidths(c.columnWidths, oldKey, newKey) } : c))
+    )
+    setPeriodEmployees((prev) => prev.map((e) => renameValueKey(e, oldKey, newKey)))
+  }
+
+  // ---- Exports: never let a figure in error leave as a number ----
+  // Runs `proceed` straight away when nothing is in error; otherwise asks
+  // first, listing the employees and columns affected.
+  function exportUnlessErrors(errors, proceed) {
+    if (errors.length === 0) proceed()
+    else setPendingExport({ errors, proceed })
+  }
+
   // ---- Employees (scoped to the selected company + month) ----
   function handleAddEmployee() {
     setPeriodEmployees((prev) => [...prev, newEmployee()])
@@ -292,6 +438,7 @@ export default function App() {
   // ---- Import from Excel ----
   function handleImportClick() {
     setImportError(null)
+    setImportSummary(null)
     fileInputRef.current?.click()
   }
 
@@ -322,42 +469,57 @@ export default function App() {
       makeId,
       meta: importData.meta,
     })
+    // Number cells that could not be read were left blank, not written as
+    // 0 - the same list the preview showed, repeated here after the import.
+    const unreadable = findUnreadableValues({
+      rows: importData.rows,
+      systemFields: importData.systemFields,
+      mapping,
+      meta: importData.meta,
+    })
+    setImportSummary(unreadable.length > 0 ? { count: imported.length, unreadable } : null)
     setPeriodEmployees((prev) => [...prev, ...imported])
     setImportData(null)
     setActiveTab('employees')
   }
 
+  // The columns of an export plan, named as the Employee Table names them
+  // (two columns called "CSG" are told apart by their category).
+  function namedForWarning(columns) {
+    return columns.map((c) => ({ ...c, name: formulaDisplayLabels[c.key] ?? c.name }))
+  }
+
   function handleOpenExportPreview(exportMode = 'values') {
     if (!activeCompany) return
-    setExportPlan(
-      buildExportPlan({
-        title: activeCompany.name,
-        companyId: activeCompany.id,
-        companyDetails: activeCompany.details,
-        kind: 'period',
-        exportMode,
-        employees: periodEmployees,
-        identityFields,
-        effectiveColumns,
-        computedGrid,
-      })
-    )
+    const plan = buildExportPlan({
+      title: activeCompany.name,
+      companyId: activeCompany.id,
+      companyDetails: activeCompany.details,
+      kind: 'period',
+      exportMode,
+      employees: periodEmployees,
+      identityFields,
+      effectiveColumns,
+      computedGrid,
+    })
+    const errors = findErrorCells(periodEmployees, namedForWarning(plan.columns), computedGrid, identityFields)
+    exportUnlessErrors(errors, () => setExportPlan(plan))
   }
 
   function handleOpenTotalsExportPreview(totalsEmployees, totalsGrid, rangeLabel) {
     if (!activeCompany) return
-    setExportPlan(
-      buildExportPlan({
-        title: `${activeCompany.name} — Totals (${rangeLabel})`,
-        companyId: activeCompany.id,
-        companyDetails: activeCompany.details,
-        kind: 'totals',
-        employees: totalsEmployees,
-        identityFields,
-        effectiveColumns,
-        computedGrid: totalsGrid,
-      })
-    )
+    const plan = buildExportPlan({
+      title: `${activeCompany.name} — Totals (${rangeLabel})`,
+      companyId: activeCompany.id,
+      companyDetails: activeCompany.details,
+      kind: 'totals',
+      employees: totalsEmployees,
+      identityFields,
+      effectiveColumns,
+      computedGrid: totalsGrid,
+    })
+    const errors = findErrorCells(totalsEmployees, namedForWarning(plan.columns), totalsGrid, identityFields)
+    exportUnlessErrors(errors, () => setExportPlan(plan))
   }
 
   const globalKnownKeys = useMemo(
@@ -394,6 +556,7 @@ export default function App() {
         onRenameCompany={handleRenameCompany}
         onDeleteCompany={handleDeleteCompany}
         onOpenDetails={setDetailsCompanyId}
+        onRestored={onRestored}
         open={sidebarOpen}
         onClose={() => setSidebarOpen(false)}
       />
@@ -498,6 +661,29 @@ export default function App() {
               </div>
             )}
 
+            {activeTab === 'employees' && importSummary && (
+              <div role="alert" className="panel rise-in mb-4 items-start text-sm [--panel:var(--warn)]">
+                <CircleAlert aria-hidden="true" />
+                <div className="min-w-0 flex-1">
+                  <p className="font-medium text-fg">
+                    Imported {importSummary.count} row{importSummary.count === 1 ? '' : 's'}. {importSummary.unreadable.length} value
+                    {importSummary.unreadable.length === 1 ? '' : 's'} could not be read as a number and{' '}
+                    {importSummary.unreadable.length === 1 ? 'was' : 'were'} left blank:
+                  </p>
+                  <ul className="mt-1 max-h-32 overflow-y-auto">
+                    {importSummary.unreadable.map((u, i) => (
+                      <li key={i}>
+                        {u.employee} — {u.field}: “{u.raw}”
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+                <button onClick={() => setImportSummary(null)} className="btn btn-ghost btn-icon btn-sm" aria-label="Dismiss">
+                  <X aria-hidden="true" />
+                </button>
+              </div>
+            )}
+
             {activeTab === 'employees' && selectedYear && selectedMonth && (
               <div className="mb-4">
                 <MonthSwitcher year={selectedYear} month={selectedMonth} onChange={handleChangeMonth} />
@@ -515,6 +701,8 @@ export default function App() {
                     onEdit={handleEditIdentityField}
                     onDelete={handleDeleteIdentityField}
                     onSetIdField={handleSetIdField}
+                    getKeyChangePreview={getIdentityKeyChangePreview}
+                    onRenameKey={handleRenameIdentityFieldKey}
                   />
                   <ColumnManager
                     title="Global Columns"
@@ -536,6 +724,9 @@ export default function App() {
                     totalCompanyCount={companies.length}
                     targetCompanyName={activeCompany.name}
                     onChangeScope={handleChangeColumnScope}
+                    getScopeBlockers={getScopeBlockers}
+                    getKeyChangePreview={getKeyChangePreview}
+                    onRenameKey={handleRenameColumnKey}
                   />
                 </>
               )}
@@ -560,6 +751,8 @@ export default function App() {
                   targetCompanyName={activeCompany.name}
                   companyDetails={activeCompany.details}
                   onChangeScope={handleChangeColumnScope}
+                  getKeyChangePreview={getKeyChangePreview}
+                  onRenameKey={handleRenameColumnKey}
                 />
               )}
 
@@ -607,12 +800,27 @@ export default function App() {
           initialMapping={importData.initialMapping}
           recognized={importData.recognized}
           autoNote={importData.autoNote}
+          meta={importData.meta}
           onConfirm={handleConfirmImport}
           onClose={() => setImportData(null)}
         />
       )}
 
       {exportPlan && <ExportPreviewModal plan={exportPlan} onClose={() => setExportPlan(null)} />}
+
+      {pendingExport && (
+        <ExportErrorsDialog
+          errors={pendingExport.errors}
+          onCancel={() => setPendingExport(null)}
+          onConfirm={() => {
+            const { proceed } = pendingExport
+            setPendingExport(null)
+            proceed()
+          }}
+        />
+      )}
+
+      {saveFailed && <SaveFailedDialog onClose={() => setSaveFailed(false)} />}
 
       {pdfFillFormat && activeCompany && selectedYear && selectedMonth && (
         <PdfFillExportModal

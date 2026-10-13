@@ -118,11 +118,16 @@ export function loadState() {
   }
 }
 
+// Returns true when the state is safely in the browser's storage, false when
+// the browser refused it (most often because storage is full). The caller
+// must tell the user: a refused save means the change is NOT kept.
 export function saveState(state) {
   try {
     localStorage.setItem(STORAGE_KEY, JSON.stringify(state))
+    return true
   } catch (e) {
     console.error('Failed to save payroll state to localStorage:', e)
+    return false
   }
 }
 
@@ -141,10 +146,139 @@ export function loadPeriod(companyId, year, month) {
   }
 }
 
+// Returns true when saved, false when the browser refused the write - see saveState.
 export function savePeriod(companyId, year, month, periodData) {
   try {
     localStorage.setItem(periodStorageKey(companyId, year, month), JSON.stringify(periodData))
+    return true
   } catch (e) {
     console.error('Failed to save payroll period to localStorage:', e)
+    return false
   }
 }
+
+// The storage keys of every month saved for one company.
+function periodKeysForCompany(companyId) {
+  const prefix = `${PERIOD_KEY_PREFIX}${companyId}_`
+  const keys = []
+  for (let i = 0; i < localStorage.length; i++) {
+    const key = localStorage.key(i)
+    if (key && key.startsWith(prefix) && /^\d{4}-\d{2}$/.test(key.slice(prefix.length))) keys.push(key)
+  }
+  return keys
+}
+
+// Removes every month of employee data saved for a company - used when the
+// company itself is deleted, so nothing of it is left behind in the browser.
+export function deletePeriodsForCompany(companyId) {
+  for (const key of periodKeysForCompany(companyId)) localStorage.removeItem(key)
+}
+
+function readEmployees(storageKey) {
+  try {
+    const parsed = JSON.parse(localStorage.getItem(storageKey))
+    return Array.isArray(parsed?.employees) ? parsed.employees : []
+  } catch {
+    return []
+  }
+}
+
+// How many saved months, across the given companies, hold a value under
+// `valueKey` - what a change of that column's key would have to move.
+export function countPeriodsHoldingKey(companyIds, valueKey) {
+  let periods = 0
+  const companies = new Set()
+  for (const companyId of companyIds) {
+    for (const storageKey of periodKeysForCompany(companyId)) {
+      if (readEmployees(storageKey).some((e) => e.values && valueKey in e.values)) {
+        periods++
+        companies.add(companyId)
+      }
+    }
+  }
+  return { periods, companies: companies.size }
+}
+
+// Moves every saved value from `oldKey` to `newKey`, in every month of the
+// given companies - what keeps a column's figures with it when its key is
+// changed. Returns false if the browser refused any write.
+export function renameValueKeyInPeriods(companyIds, oldKey, newKey) {
+  let ok = true
+  for (const companyId of companyIds) {
+    for (const storageKey of periodKeysForCompany(companyId)) {
+      const employees = readEmployees(storageKey)
+      if (!employees.some((e) => e.values && oldKey in e.values)) continue
+      const moved = employees.map((e) => renameValueKey(e, oldKey, newKey))
+      try {
+        localStorage.setItem(storageKey, JSON.stringify({ employees: moved }))
+      } catch (e) {
+        console.error('Failed to move saved values to the new column key:', e)
+        ok = false
+      }
+    }
+  }
+  return ok
+}
+
+// One employee record with its value moved from `oldKey` to `newKey`.
+export function renameValueKey(employee, oldKey, newKey) {
+  if (!employee.values || !(oldKey in employee.values)) return employee
+  const { [oldKey]: value, ...rest } = employee.values
+  return { ...employee, values: { ...rest, [newKey]: value } }
+}
+
+// ---- Everything this app keeps in the browser, as it is stored ----------
+// Used by the full backup (see backup.js): the app state and every saved
+// month, whatever company they belong to. The theme is a display preference
+// and is not part of it.
+
+function isOwnKey(key) {
+  return key === STORAGE_KEY || key.startsWith(PERIOD_KEY_PREFIX)
+}
+
+function ownKeys() {
+  const keys = []
+  for (let i = 0; i < localStorage.length; i++) {
+    const key = localStorage.key(i)
+    if (key && isOwnKey(key)) keys.push(key)
+  }
+  return keys.sort()
+}
+
+// { storage key: the text stored under it }, for every key of this app.
+export function readBrowserData() {
+  const data = {}
+  for (const key of ownKeys()) data[key] = localStorage.getItem(key)
+  return data
+}
+
+// Replaces everything this app keeps in the browser with `entries`
+// ({ storage key: text }). All or nothing: if the browser refuses any write
+// (storage full), what was there before is put back.
+//   { ok: true }                     replaced
+//   { ok: false, unchanged: true }   refused; the browser holds what it held before
+//   { ok: false, unchanged: false }  refused, and the earlier data could not be put back either
+export function replaceBrowserData(entries) {
+  if (Object.keys(entries).some((key) => !isOwnKey(key))) return { ok: false, unchanged: true }
+
+  const before = readBrowserData()
+  try {
+    for (const key of Object.keys(before)) localStorage.removeItem(key)
+    for (const [key, text] of Object.entries(entries)) localStorage.setItem(key, text)
+    return { ok: true }
+  } catch (e) {
+    console.error('Failed to replace the payroll data in localStorage:', e)
+  }
+
+  try {
+    for (const key of ownKeys()) localStorage.removeItem(key)
+    for (const [key, text] of Object.entries(before)) localStorage.setItem(key, text)
+    return { ok: false, unchanged: true }
+  } catch (e) {
+    console.error('Failed to put the earlier payroll data back:', e)
+    return { ok: false, unchanged: false }
+  }
+}
+
+export const BROWSER_STATE_KEY = STORAGE_KEY
+export const BROWSER_PERIOD_KEY_PREFIX = PERIOD_KEY_PREFIX
