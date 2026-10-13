@@ -483,6 +483,24 @@ test('collect every visible string', async () => {
     snapTopDialog(step)
   }
 
+  // ---------- A save the browser refuses ----------
+  // Only the dialog: the base version has none and says nothing.
+  seed()
+  await start()
+  await vi.waitFor(() => expect(document.body.textContent).toContain('October 2026'))
+  {
+    const realSetItem = Storage.prototype.setItem
+    const refusing = vi.spyOn(Storage.prototype, 'setItem').mockImplementation(function (key, value) {
+      if (String(key).startsWith('payroll_')) throw new DOMException('The quota has been exceeded.', 'QuotaExceededError')
+      return realSetItem.call(this, key, value)
+    })
+    const quiet = vi.spyOn(console, 'error').mockImplementation(() => {})
+    await clickButton('+ Add Employee')
+    refusing.mockRestore()
+    quiet.mockRestore()
+  }
+  snapTopDialog('63 this change was NOT saved (storage full)')
+
   expect(OUT, 'TEXT_CHECK_OUT').toBeTruthy()
   fs.writeFileSync(OUT, JSON.stringify(collected, null, 2))
   fs.writeFileSync(OUT.replace(/\.json$/, '.unlabelled.json'), JSON.stringify([...unlabelled].sort(), null, 2))

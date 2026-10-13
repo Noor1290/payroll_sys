@@ -16,8 +16,8 @@ export default function SaveFailedDialog({ onClose }) {
       iconTone="danger"
     >
       <p className="mb-4 text-sm leading-relaxed text-muted">
-        To free some space: export a backup first (Export to Excel for each month, and Export Column Setup), then delete
-        months or companies you no longer need, and make the change again.
+        To free some space: save a backup first ("Back up", at the foot of the company list), then delete months or
+        companies you no longer need, and make the change again.
       </p>
       <div className="flex justify-end">
         <button onClick={onClose} className="btn btn-primary">

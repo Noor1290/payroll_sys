@@ -292,7 +292,7 @@
     {
       "text": "aria-label: Close",
       "why": "existing wording, not new: the close button of the new \"Change this field's key?\" question, which the base version does not have; and the same button in the new backup dialogs (migration plan step 0a), which the base version does not have",
-      "onlyOn": ["57 change identity field key confirm (the ID field, values in saved months)", "58 change identity field key confirm (no saved values)", "59 restore a backup, what is in the file and in the browser", "59b restore a backup, a file that does not say when it was saved", "60 backup restored", "61 restore, not a backup file", "61b restore, a backup of another version", "61c restore, a damaged backup", "61d restore, an empty backup", "62 backup not restored, storage full", "62b backup not restored, earlier data could not be put back"]
+      "onlyOn": ["57 change identity field key confirm (the ID field, values in saved months)", "58 change identity field key confirm (no saved values)", "59 restore a backup, what is in the file and in the browser", "59b restore a backup, a file that does not say when it was saved", "60 backup restored", "61 restore, not a backup file", "61b restore, a backup of another version", "61c restore, a damaged backup", "61d restore, an empty backup", "62 backup not restored, storage full", "62b backup not restored, earlier data could not be put back", "63 this change was NOT saved (storage full)"]
     },
     {
       "text": "text: 1 item that could not be read, kept as it is",
@@ -361,7 +361,7 @@
     {
       "text": "text: OK",
       "why": "existing wording, not new: a button of the new backup dialogs (migration plan step 0a), which the base version does not have",
-      "onlyOn": ["60 backup restored", "61 restore, not a backup file", "61b restore, a backup of another version", "61c restore, a damaged backup", "61d restore, an empty backup", "62 backup not restored, storage full", "62b backup not restored, earlier data could not be put back"]
+      "onlyOn": ["60 backup restored", "61 restore, not a backup file", "61b restore, a backup of another version", "61c restore, a damaged backup", "61d restore, an empty backup", "62 backup not restored, storage full", "62b backup not restored, earlier data could not be put back", "63 this change was NOT saved (storage full)"]
     },
     {
       "text": "text: Replace with this backup",
@@ -453,6 +453,21 @@
     {
       "text": "title: Save everything in this browser to one file",
       "why": "new wording, migration plan step 0a (full backup file): \"Back up\" and \"Restore\" at the foot of the company list, on every screen"
+    },
+    {
+      "text": "text: This change was NOT saved",
+      "why": "audit fix 7 (a refused save is no longer silent); the walkthrough reaches this dialog since 13 October 2026",
+      "onlyOn": ["63 this change was NOT saved (storage full)"]
+    },
+    {
+      "text": "text: The browser's storage for this site is full, so your last change could not be kept. It has been removed from the screen: what you see now is what is saved.",
+      "why": "audit fix 7 (a refused save is no longer silent); the walkthrough reaches this dialog since 13 October 2026",
+      "onlyOn": ["63 this change was NOT saved (storage full)"]
+    },
+    {
+      "text": "text: To free some space: save a backup first (\"Back up\", at the foot of the company list), then delete months or companies you no longer need, and make the change again.",
+      "why": "asked for on 13 October 2026: the dialog now advises \"Back up\" instead of \"export a backup first (Export to Excel for each month, and Export Column Setup)\"",
+      "onlyOn": ["63 this change was NOT saved (storage full)"]
     }
   ],
   "removed": [

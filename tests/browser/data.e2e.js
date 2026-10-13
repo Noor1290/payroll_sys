@@ -487,7 +487,7 @@ describe('what is kept in the browser', () => {
     const warning = dialog(page, 'This change was NOT saved')
     await warning.waitFor()
     expect(await warning.textContent()).toContain("The browser's storage for this site is full, so your last change could not be kept.")
-    expect(await warning.textContent()).toContain('export a backup first')
+    expect(await warning.textContent()).toContain('save a backup first ("Back up", at the foot of the company list)')
     expect(errors.some((e) => e.includes('Failed to save payroll period to localStorage'))).toBe(true)
     // It blocks: the table behind it cannot be reached until it is acknowledged.
     expect(await warning.getAttribute('aria-modal')).toBe('true')
