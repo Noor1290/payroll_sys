@@ -22,6 +22,7 @@ import { buildColumnSetupExport, parseColumnSetupFile, planColumnImport } from '
 import { input, simple, tiered, EMPLOYEE, EMPLOYER, OTHER, testColumns, testEmployees, computeRow } from './build'
 import { findFormulasUsingColumn, findScopeChangeBlockers, renameKeyInColumn, renameKeyInExpression, renameKeyInWidths } from '../../src/lib/columnUsage'
 import { renameValueKey } from '../../src/lib/storage'
+import { compileExemptionWrapper, stripExemptionWrapper } from '../../src/lib/exemptionCondition'
 
 const portable = ({ id: _id, ...rest }) => JSON.parse(JSON.stringify(rest))
 
@@ -90,6 +91,35 @@ describe('categories and order', () => {
     const global = [input('Basic Salary', 'basicSalary')]
     const company = { columns: [input('Levy', 'levy', { category: OTHER })] }
     expect(getEffectiveColumns(company, global).map((c) => c.key)).toEqual(['basicSalary', 'levy'])
+  })
+})
+
+describe('an exemption around a Simple formula (known issue 4)', () => {
+  const age60 = { enabled: true, conditions: [{ type: 'checkbox', columnKey: 'aged60', checked: true }], combineWith: 'AND', resultType: 'fixed', resultValue: 0, resultColumnKey: null }
+  const wrapped = compileExemptionWrapper(age60, 'emoluments * 0.01')
+
+  test('the form gets back exactly what was wrapped, so saving again gives the same formula', () => {
+    expect(stripExemptionWrapper(age60, wrapped)).toBe('emoluments * 0.01')
+    expect(compileExemptionWrapper(age60, stripExemptionWrapper(age60, wrapped))).toBe(wrapped)
+  })
+
+  test('a formula wrapped several times by the old form comes back to its base, with the same figures', () => {
+    const nested = compileExemptionWrapper(age60, compileExemptionWrapper(age60, wrapped))
+    expect(stripExemptionWrapper(age60, nested)).toBe('emoluments * 0.01')
+    for (const aged60 of [0, 1]) {
+      const run = (formula) => new Function('emoluments', 'aged60', `return ${formula}`)(29710, aged60)
+      expect(run(compileExemptionWrapper(age60, stripExemptionWrapper(age60, nested)))).toBe(run(nested))
+    }
+  })
+
+  test('anything not wrapped in exactly this exemption is left as it is', () => {
+    expect(stripExemptionWrapper(age60, 'emoluments * 0.01')).toBe('emoluments * 0.01')
+    expect(stripExemptionWrapper({ ...age60, resultValue: 5 }, wrapped)).toBe(wrapped)
+    expect(stripExemptionWrapper({ ...age60, enabled: false }, wrapped)).toBe(wrapped)
+    expect(stripExemptionWrapper(undefined, wrapped)).toBe(wrapped)
+    // Starts and ends like the wrapper, but its last bracket closes something else.
+    const lookalike = '(aged60 === 1) ? (0) : (emoluments) * (0.01)'
+    expect(stripExemptionWrapper(age60, lookalike)).toBe(lookalike)
   })
 })
 

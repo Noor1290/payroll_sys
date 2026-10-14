@@ -10,6 +10,8 @@ import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest'
 import App from '../../src/App'
 import { resetDataStore } from '../../src/lib/dataStore'
 import { forgetDashboardSetup, IMPORTED_KEY } from '../../src/lib/dashboardSetup'
+import { compileExemptionWrapper } from '../../src/lib/exemptionCondition'
+import { compileTieredFormula } from '../../src/lib/tieredFormula'
 import { createFakeSetupHub, installFakeBridge } from '../helpers/fakeSetupHub'
 import { identityFields, idFieldKey, globalColumns, company, octoberEmployees } from '../safetyNet/fixture'
 
@@ -184,6 +186,106 @@ describe('inside the dashboard', () => {
     await startInDashboard({ ...attachedSeed(), supported: false }, { waitFor: /\+ New Company/ })
     expect(hub.state.log).toEqual([{ type: 'request-data', action: 'load' }])
     expect(text()).not.toContain('kept in the dashboard')
+  })
+})
+
+// Known issue 4: saving a Simple formula with an exemption wrapped it in the
+// exemption once more on every save, and with auto-save each of those saves
+// was a new revision in the dashboard.
+describe('saving a Simple formula with an exemption (known issue 4)', () => {
+  const AGE_60 = {
+    enabled: true,
+    conditions: [{ type: 'checkbox', columnKey: 'aged60', checked: true }],
+    combineWith: 'AND',
+    resultType: 'fixed',
+    resultValue: 0,
+    resultColumnKey: null,
+  }
+  const nsfFormula = (base) => compileExemptionWrapper(AGE_60, base)
+
+  // The fixture's Global NSF, built with the Simple builder and an "Age 60+" exemption.
+  function simpleNsfSeed() {
+    const seed = attachedSeed()
+    seed.shared[0].body.globalColumns = seed.shared[0].body.globalColumns.map((c) => {
+      if (c.key !== 'nsf') return c
+      const { tiered: _tiered, tieredKind: _kind, ...rest } = c
+      return { ...rest, builderMode: 'simple', exemption: AGE_60, formula: nsfFormula('emoluments * 0.01') }
+    })
+    return seed
+  }
+
+  const storedNsf = () => hub.state.shared.get(SHARED_ID).body.globalColumns.find((c) => c.key === 'nsf')
+  const saves = () => hub.state.log.filter((m) => m.type === 'send-data')
+  const longerThanAutoSave = () => act(() => new Promise((resolve) => setTimeout(resolve, 1300)))
+
+  async function openNsf() {
+    const row = [...container.querySelectorAll('tr')].find((tr) => tr.children[1]?.textContent === 'NSF')
+    await click(row && buttonIn(row, 'Edit'))
+    return dialog()
+  }
+
+  test('opening and saving with no change keeps the formula identical and creates no new revision', async () => {
+    await startInDashboard(simpleNsfSeed())
+    await click(button('Global Columns'))
+    for (let i = 0; i < 3; i += 1) {
+      const form = await openNsf()
+      // The form edits what is inside the exemption, not the whole stored formula.
+      expect(form.querySelector('[aria-label="Formula expression"]').value).toBe('emoluments * 0.01')
+      await click(buttonIn(form, 'Save'))
+      expect(dialog()).toBeNull()
+    }
+    await longerThanAutoSave()
+    expect(saves()).toEqual([])
+    expect(hub.state.shared.get(SHARED_ID).revision).toBe(1)
+    expect(storedNsf().formula).toBe(nsfFormula('emoluments * 0.01'))
+    expect(text()).toContain('Saved')
+  })
+
+  test('opening and saving every column with no change, of every kind, sends nothing', async () => {
+    const seed = simpleNsfSeed()
+    // The fixture's CSG has cap '' ("cap ticked, no amount"), which the form refuses
+    // to save; with no cap the form stores null.
+    seed.shared[0].body.globalColumns = seed.shared[0].body.globalColumns.map((c) =>
+      c.key === 'csg' ? { ...c, tiered: { ...c.tiered, cap: null }, formula: compileTieredFormula({ ...c.tiered, cap: null }) } : c
+    )
+    await startInDashboard(seed)
+    for (const tab of ['Global Columns', 'Company Columns']) {
+      await click(button(tab))
+      const names = [...container.querySelectorAll('tr')].filter((tr) => tr.querySelector('button') && buttonIn(tr, 'Edit')).map((tr) => tr.children[1].textContent)
+      expect(names.length).toBeGreaterThan(3)
+      for (const name of names) {
+        const row = [...container.querySelectorAll('tr')].find((tr) => tr.children[1]?.textContent === name)
+        await click(buttonIn(row, 'Edit'))
+        await click(buttonIn(dialog(), 'Save'))
+        expect(dialog()?.querySelector('[role="alert"]')?.textContent ?? null, `${name} saved`).toBeNull()
+      }
+    }
+    await longerThanAutoSave()
+    expect(saves()).toEqual([])
+    expect(hub.state.shared.get(SHARED_ID).revision).toBe(1)
+    expect(hub.state.setups.get('C00000001').revision).toBe(1)
+  })
+
+  test('a real change is one new revision, wrapped once; saving it again changes nothing', async () => {
+    await startInDashboard(simpleNsfSeed())
+    await click(button('Global Columns'))
+    let form = await openNsf()
+    await type(form.querySelector('[aria-label="Formula expression"]'), 'emoluments * 0.015')
+    await click(buttonIn(form, 'Save'))
+    await vi.waitFor(() => expect(saves()).toHaveLength(1), { timeout: 3000 })
+    await vi.waitFor(() => expect(text()).toContain('Saved'), { timeout: 3000 })
+    expect(storedNsf().formula).toBe(nsfFormula('emoluments * 0.015'))
+    expect(hub.state.shared.get(SHARED_ID).revision).toBe(2)
+
+    for (let i = 0; i < 2; i += 1) {
+      form = await openNsf()
+      expect(form.querySelector('[aria-label="Formula expression"]').value).toBe('emoluments * 0.015')
+      await click(buttonIn(form, 'Save'))
+    }
+    await longerThanAutoSave()
+    expect(saves()).toHaveLength(1)
+    expect(hub.state.shared.get(SHARED_ID).revision).toBe(2)
+    expect(storedNsf().formula).toBe(nsfFormula('emoluments * 0.015'))
   })
 })
 

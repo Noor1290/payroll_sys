@@ -748,6 +748,20 @@
       "text": "text: · BRN C00000001",
       "why": "approved: Phase 2: the one-time \"Import to the dashboard\" (a backup first, a preview that writes nothing, the result of each item)",
       "onlyOn": ["73 embedded: import, what it will do"]
+    },
+    {
+      "text": "text: If \"Emoluments\" is greater than 200,000 or \"Basic Salary\" is less than \"Allowances\", this amount is the value of \"Travelling\". Otherwise: emoluments * 0.045",
+      "why": "approved: known issue 4 fixed: the Edit column form opens on the formula inside the exemption, so its formula box and rule summary no longer repeat the exemption",
+      "onlyOn": [
+        "41 edit company column: PRGF"
+      ]
+    },
+    {
+      "text": "text: emoluments * 0.045",
+      "why": "approved: known issue 4 fixed: the Edit column form opens on the formula inside the exemption, so its formula box and rule summary no longer repeat the exemption",
+      "onlyOn": [
+        "41 edit company column: PRGF"
+      ]
     }
   ],
   "removed": [
@@ -876,6 +890,20 @@
       "text": "title: Used for duplicate detection when importing from Excel",
       "why": "approved: Phase 2, D1: columns someone may not change are shown read-only inside the dashboard (no add, edit, delete, import or reorder)",
       "onlyOn": ["67 embedded: Global columns read-only, shared with a company you are not an admin of"]
+    },
+    {
+      "text": "text: ((emoluments > 200000) || (basicSalary < allowances)) ? (travelling) : (emoluments * 0.045)",
+      "why": "approved: known issue 4 fixed: the Edit column form opens on the formula inside the exemption, so its formula box and rule summary no longer repeat the exemption",
+      "onlyOn": [
+        "41 edit company column: PRGF"
+      ]
+    },
+    {
+      "text": "text: If \"Emoluments\" is greater than 200,000 or \"Basic Salary\" is less than \"Allowances\", this amount is the value of \"Travelling\". Otherwise: ((emoluments > 200000) || (basicSalary < allowances)) ? (travelling) : (emoluments * 0.045)",
+      "why": "approved: known issue 4 fixed: the Edit column form opens on the formula inside the exemption, so its formula box and rule summary no longer repeat the exemption",
+      "onlyOn": [
+        "41 edit company column: PRGF"
+      ]
     }
   ]
 }

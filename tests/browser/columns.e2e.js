@@ -446,8 +446,8 @@ describe('renaming and reopening', () => {
     await form.waitFor({ state: 'hidden' })
   })
 
-  // KNOWN_ISSUES.md no. 4, still there: opening a Simple formula that has an
-  // exemption and pressing Save wraps the exemption round it a second time.
+  // KNOWN_ISSUES.md no. 4 (fixed): a Simple formula with an exemption is
+  // covered in tests/audit/dashboardApp.test.jsx.
   test('saving a tiered column again without changes leaves its formula as it was', async () => {
     const before = (await storedState(page)).globalColumns.find((c) => c.key === 'nsf').formula
     const form = await openEditColumn(page, 'NSF')

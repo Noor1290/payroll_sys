@@ -10,7 +10,7 @@ import { slugify, isValidKey } from '../lib/slugify'
 import { validateFormulaSyntax, detectCircularReference } from '../lib/formulaEngine'
 import { compileTieredFormula, compileCompareFormula, describeTieredRule, describeCompareRule } from '../lib/tieredFormula'
 import { compileProgressiveFormula, describeProgressiveRule } from '../lib/progressiveFormula'
-import { compileExemptionWrapper, defaultExemptionState } from '../lib/exemptionCondition'
+import { compileExemptionWrapper, defaultExemptionState, stripExemptionWrapper } from '../lib/exemptionCondition'
 import { SELECTABLE_CATEGORIES, DEFAULT_CATEGORY, generateUniqueKey, labelColumnsForHelper } from '../lib/categories'
 
 const DEFAULT_TIERED_STATE = { baseKey: null, tiers: [{ operator: 'below', threshold: 0, rate: 0 }], cap: null }
@@ -67,7 +67,8 @@ export default function ColumnFormModal({
   const [decimals, setDecimals] = useState(initial?.decimals ?? 2)
   const [builderMode, setBuilderMode] = useState(initial?.builderMode ?? 'simple')
   const [tieredKind, setTieredKind] = useState(initial?.tieredKind ?? 'threshold')
-  const [formula, setFormula] = useState(initial?.formula ?? '')
+  // The stored formula already includes the exemption; the form edits what is inside it.
+  const [formula, setFormula] = useState(() => stripExemptionWrapper(initial?.exemption, initial?.formula ?? ''))
   const [tieredState, setTieredState] = useState(initial?.tiered ?? DEFAULT_TIERED_STATE)
   const [compareState, setCompareState] = useState(initial?.compare ?? DEFAULT_COMPARE_STATE)
   const [progressiveState, setProgressiveState] = useState(initial?.progressive ?? DEFAULT_PROGRESSIVE_STATE)
@@ -156,6 +157,13 @@ export default function ColumnFormModal({
     setError(null)
   }
 
+  // A column with no excludeFromExport is exported, the same as one with
+  // false. Saved as it was stored unless it was changed, so that saving with
+  // no change gives the same column.
+  function storedExcludeFromExport() {
+    return !includeInExport === Boolean(initial?.excludeFromExport) ? initial?.excludeFromExport : !includeInExport
+  }
+
   const scopeChanged = Boolean(currentScope) && scope !== currentScope
 
   // finalizes a validated patch: applies it directly, or - if the scope is
@@ -226,7 +234,7 @@ export default function ColumnFormModal({
         category,
         valueType,
         decimals: valueType === 'number' ? decimals : undefined,
-        excludeFromExport: !includeInExport,
+        excludeFromExport: storedExcludeFromExport(),
         formula: undefined,
         builderMode: undefined,
         tieredKind: undefined,
@@ -308,7 +316,7 @@ export default function ColumnFormModal({
       category,
       valueType: undefined,
       decimals,
-      excludeFromExport: !includeInExport,
+      excludeFromExport: storedExcludeFromExport(),
       formula: finalFormula.trim(),
       builderMode,
       tieredKind: builderMode === 'tiered' ? tieredKind : undefined,

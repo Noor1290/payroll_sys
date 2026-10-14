@@ -64,6 +64,37 @@ export function compileExemptionWrapper(exemption, baseExpr) {
   return `(${condExpr}) ? (${resultExpr}) : (${baseExpr})`
 }
 
+// Whether every bracket in `expr` closes, and none closes before it opens.
+function bracketsBalanced(expr) {
+  let depth = 0
+  for (const ch of expr) {
+    if (ch === '(') depth += 1
+    else if (ch === ')' && --depth < 0) return false
+  }
+  return depth === 0
+}
+
+// The opposite of compileExemptionWrapper: the expression the base builder
+// mode produced, from a stored formula that already includes the exemption.
+// The Column form edits this, so that saving wraps it once, not once more on
+// every save. A formula wrapped several times by earlier versions is
+// unwrapped down to its base too (the outer condition always decided first,
+// so the figures are the same). Returns `formula` unchanged when it is not
+// wrapped in exactly this exemption.
+export function stripExemptionWrapper(exemption, formula) {
+  if (typeof formula !== 'string') return formula
+  const wrapped = compileExemptionWrapper(exemption, '')
+  if (wrapped === '') return formula
+  const prefix = wrapped.slice(0, -1)
+  let base = formula.trim()
+  while (base.startsWith(prefix) && base.endsWith(')')) {
+    const inner = base.slice(prefix.length, -1)
+    if (!bracketsBalanced(inner) || compileExemptionWrapper(exemption, inner) !== base) break
+    base = inner
+  }
+  return base
+}
+
 // Re-derives whether the condition matched, given resolved dependency
 // values - evaluates the identical logic compileCondition compiles, so it
 // can never disagree with what the actual formula computed.

@@ -92,8 +92,15 @@ with no changes:
 
 Measured on the form before and after its restyle; both behave the same.
 
-**To decide.** Whether the form should keep the un-wrapped expression separately, so
-saving again does not wrap it twice.
+**Fixed (14 October 2026).** The form now opens on the formula inside the exemption
+(`stripExemptionWrapper` in `src/lib/exemptionCondition.js`), so Save wraps it once. A
+formula already wrapped several times is brought back to one wrapper the next time it
+is saved; the figures are the same, since the outer condition always decided first.
+Inside the dashboard every Save with no change used to be a new revision too: the form
+also wrote `excludeFromExport: false` on a column stored without it. It now keeps what
+was stored when that was not changed. Proven by `tests/audit/dashboardApp.test.jsx`
+("saving a Simple formula with an exemption (known issue 4)"), which fails on the old
+form, and `tests/audit/columns.test.js`.
 
 ## 5. Export Preview: the title lines can sit off-screen on a wide sheet
 
