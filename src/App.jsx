@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { Building2, CircleAlert, Copy, Menu, Trash2, Upload, X } from 'lucide-react'
 import Sidebar from './components/Sidebar'
 import ColumnManager from './components/ColumnManager'
@@ -18,7 +18,12 @@ import CopyPreviousMonthModal from './components/CopyPreviousMonthModal'
 import ExportErrorsDialog from './components/ExportErrorsDialog'
 import SaveFailedDialog from './components/SaveFailedDialog'
 import BackupMessage from './components/BackupMessage'
-import { dataStore, renameValueKey } from './lib/dataStore'
+import DashboardBar from './components/DashboardBar'
+import DashboardStart from './components/DashboardStart'
+import ImportToDashboardModal from './components/ImportToDashboardModal'
+import { dataStore, renameValueKey, resetDataStore, setDataStore } from './lib/dataStore'
+import { connectDashboard, dashboardCompany, dashboardStore, onSetupReplaced, readImported, sharedAccess } from './lib/dashboardSetup'
+import { hasSomethingToImport } from './lib/dashboardImport'
 import { findErrorCells } from './lib/exportErrors'
 import { findFormulasUsingColumn, findScopeChangeBlockers, renameKeyInColumn, renameKeyInWidths } from './lib/columnUsage'
 import {
@@ -63,24 +68,103 @@ const { loadState, saveState, loadPeriod, savePeriod, deletePeriodsForCompany, c
 // The app, started from whatever is stored. After a backup has been restored
 // it is started again from scratch, so nothing of the replaced data stays on
 // screen or in memory.
+//
+// Inside the Payroll Hub dashboard the column setup comes from the dashboard
+// (lib/dashboardSetup.js) and is saved there; the months stay in this browser.
+// Opened on its own, or inside a dashboard that does not keep payroll setups
+// yet, everything is in this browser exactly as before.
+//   mode: 'browser' | 'starting' | 'dashboard' | 'empty' | 'failed'
 export default function App() {
   const [startedFrom, setStartedFrom] = useState(0)
   const [restoreMessage, setRestoreMessage] = useState(null) // { title, description, tone } | null
+  const [mode, setMode] = useState(() => (window.PayrollHubBridge.isEmbedded() ? 'starting' : 'browser'))
+  const [startProblem, setStartProblem] = useState('')
+  const [importOpen, setImportOpen] = useState(false)
+
+  // No-op unless this app is running inside the Payroll Hub dashboard's iframe.
+  useEffect(() => {
+    window.PayrollHubBridge.init({ appId: 'payroll' })
+  }, [])
+
+  // What a load from the dashboard answered decides what is shown.
+  const applyResult = useCallback((result) => {
+    if (result.ok && !result.empty) {
+      setDataStore(dashboardStore)
+      setMode('dashboard')
+      setStartedFrom((n) => n + 1)
+    } else if (result.ok) {
+      resetDataStore()
+      setMode('empty')
+    } else if (result.code === 'not-supported') {
+      // A dashboard that does not keep payroll setups yet: this browser, as before.
+      resetDataStore()
+      setMode('browser')
+    } else {
+      resetDataStore()
+      setStartProblem(result.error || 'The dashboard could not be reached.')
+      setMode('failed')
+    }
+  }, [])
+
+  const loadFromDashboard = useCallback(async () => {
+    setMode('starting')
+    applyResult(await connectDashboard())
+  }, [applyResult])
+
+  // Inside the dashboard, the setup comes from there. (After the bridge has
+  // started, above.) The app starts in 'starting', so only the answer is applied.
+  useEffect(() => {
+    if (window.PayrollHubBridge.isEmbedded()) void connectDashboard().then(applyResult)
+  }, [applyResult])
+
+  useEffect(() => onSetupReplaced(applyResult), [applyResult])
 
   function handleRestored(message) {
     setRestoreMessage(message)
     setStartedFrom((n) => n + 1)
   }
 
+  const importDialog = importOpen && (
+    <ImportToDashboardModal
+      onClose={() => setImportOpen(false)}
+      onDone={() => {
+        setImportOpen(false)
+        void loadFromDashboard()
+      }}
+    />
+  )
+
+  if (mode !== 'browser' && mode !== 'dashboard') {
+    return (
+      <div className="relative isolate flex h-dvh overflow-hidden bg-canvas text-fg">
+        <DashboardStart
+          mode={mode}
+          problem={startProblem}
+          canImport={mode === 'empty' && hasSomethingToImport()}
+          onRetry={() => void loadFromDashboard()}
+          onImport={() => setImportOpen(true)}
+        />
+        {importDialog}
+      </div>
+    )
+  }
+
   return (
     <>
-      <PayrollApp key={startedFrom} onRestored={handleRestored} />
+      <PayrollApp
+        key={startedFrom}
+        onRestored={handleRestored}
+        inDashboard={mode === 'dashboard'}
+        onReloadDashboard={() => void loadFromDashboard()}
+        onOpenImport={() => setImportOpen(true)}
+      />
       {restoreMessage && <BackupMessage {...restoreMessage} onClose={() => setRestoreMessage(null)} />}
+      {importDialog}
     </>
   )
 }
 
-function PayrollApp({ onRestored }) {
+function PayrollApp({ onRestored, inDashboard = false, onReloadDashboard, onOpenImport }) {
   const [identityFields, setIdentityFields] = useState([])
   const [idFieldKey, setIdFieldKey] = useState(null)
   const [globalColumns, setGlobalColumns] = useState([])
@@ -123,11 +207,6 @@ function PayrollApp({ onRestored }) {
   // What the last import could not read as numbers.
   const [importSummary, setImportSummary] = useState(null) // { count, unreadable } | null
 
-  // No-op unless this app is running inside the Payroll Hub dashboard's iframe.
-  useEffect(() => {
-    window.PayrollHubBridge.init({ appId: 'payroll' })
-  }, [])
-
   useEffect(() => {
     const saved = loadState()
     if (saved) {
@@ -163,6 +242,16 @@ function PayrollApp({ onRestored }) {
     }
     setSaveFailed(true)
   }, [loaded, identityFields, idFieldKey, globalColumns, companies, activeCompanyId])
+
+  // Inside the dashboard: who may change what. The dashboard decides; this only
+  // shows read-only from the start instead of letting a save be refused.
+  const access = inDashboard ? sharedAccess() : null
+  const companyRole = inDashboard ? dashboardCompany()?.role : 'admin'
+  const globalReadOnly = inDashboard && !access?.canChange
+  const companyReadOnly = inDashboard && companyRole !== 'admin'
+  // Opened on its own after an import: this browser's copy is not the dashboard's.
+  const [browserOnly] = useState(() => !inDashboard && Object.keys(readImported().companies).length > 0)
+  const [canImport] = useState(() => inDashboard && companyRole === 'admin' && hasSomethingToImport())
 
   const activeCompany = companies.find((c) => c.id === activeCompanyId) ?? null
   const selectedYear = activeCompany?.viewYear ?? null
@@ -545,7 +634,11 @@ function PayrollApp({ onRestored }) {
       </div>
 
       <Sidebar
-        companies={companies}
+        // Inside the dashboard, the company selected there. The others attached to the
+        // same Global columns are held only for the checks that look across companies.
+        companies={inDashboard ? companies.filter((c) => c.id === activeCompanyId) : companies}
+        inDashboard={inDashboard}
+        browserOnly={browserOnly}
         activeCompanyId={activeCompanyId}
         onSelect={(id) => {
           setActiveCompanyId(id)
@@ -570,6 +663,15 @@ function PayrollApp({ onRestored }) {
         >
           <Menu aria-hidden="true" />
         </button>
+
+        {inDashboard && dashboardCompany() && (
+          <DashboardBar
+            company={dashboardCompany()}
+            access={access}
+            onReload={onReloadDashboard}
+            onImport={canImport ? onOpenImport : null}
+          />
+        )}
 
         {!activeCompany ? (
           <div className="flex min-h-0 flex-1 flex-col items-center justify-center gap-1 text-center">
@@ -703,6 +805,7 @@ function PayrollApp({ onRestored }) {
                     onSetIdField={handleSetIdField}
                     getKeyChangePreview={getIdentityKeyChangePreview}
                     onRenameKey={handleRenameIdentityFieldKey}
+                    readOnly={globalReadOnly}
                   />
                   <ColumnManager
                     title="Global Columns"
@@ -727,6 +830,8 @@ function PayrollApp({ onRestored }) {
                     getScopeBlockers={getScopeBlockers}
                     getKeyChangePreview={getKeyChangePreview}
                     onRenameKey={handleRenameColumnKey}
+                    readOnly={globalReadOnly}
+                    allowScopeChange={!companyReadOnly}
                   />
                 </>
               )}
@@ -753,6 +858,8 @@ function PayrollApp({ onRestored }) {
                   onChangeScope={handleChangeColumnScope}
                   getKeyChangePreview={getKeyChangePreview}
                   onRenameKey={handleRenameColumnKey}
+                  readOnly={companyReadOnly}
+                  allowScopeChange={!globalReadOnly}
                 />
               )}
 
@@ -873,6 +980,8 @@ function PayrollApp({ onRestored }) {
               otherCompanies={companies.filter((c) => c.id !== detailsCompanyId)}
               onSave={(patch) => handleSaveCompanyDetails(detailsCompanyId, patch)}
               onClose={() => setDetailsCompanyId(null)}
+              fromDashboard={inDashboard}
+              readOnly={companyReadOnly}
             />
           )
         })()}

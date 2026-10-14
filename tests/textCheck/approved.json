@@ -286,13 +286,13 @@
     },
     {
       "text": "text: Cancel",
-      "why": "existing wording, not new: the Cancel button of the new \"Change this field's key?\" question, which the base version does not have; and the same button in the new backup dialogs (migration plan step 0a), which the base version does not have",
-      "onlyOn": ["57 change identity field key confirm (the ID field, values in saved months)", "58 change identity field key confirm (no saved values)", "59 restore a backup, what is in the file and in the browser", "59b restore a backup, a file that does not say when it was saved"]
+      "why": "existing wording, not new: the Cancel button of the new \"Change this field's key?\" question, which the base version does not have; and the same button in the new backup dialogs (migration plan step 0a), which the base version does not have; also on the Phase 2 dashboard screens, where it is the same control or the company's name",
+      "onlyOn": ["57 change identity field key confirm (the ID field, values in saved months)", "58 change identity field key confirm (no saved values)", "59 restore a backup, what is in the file and in the browser", "59b restore a backup, a file that does not say when it was saved", "66 embedded: company details from the dashboard", "72 embedded: import, backup first", "73 embedded: import, what it will do"]
     },
     {
       "text": "aria-label: Close",
-      "why": "existing wording, not new: the close button of the new \"Change this field's key?\" question, which the base version does not have; and the same button in the new backup dialogs (migration plan step 0a), which the base version does not have",
-      "onlyOn": ["57 change identity field key confirm (the ID field, values in saved months)", "58 change identity field key confirm (no saved values)", "59 restore a backup, what is in the file and in the browser", "59b restore a backup, a file that does not say when it was saved", "60 backup restored", "61 restore, not a backup file", "61b restore, a backup of another version", "61c restore, a damaged backup", "61d restore, an empty backup", "62 backup not restored, storage full", "62b backup not restored, earlier data could not be put back", "63 this change was NOT saved (storage full)"]
+      "why": "existing wording, not new: the close button of the new \"Change this field's key?\" question, which the base version does not have; and the same button in the new backup dialogs (migration plan step 0a), which the base version does not have; also on the Phase 2 dashboard screens, where it is the same control or the company's name",
+      "onlyOn": ["57 change identity field key confirm (the ID field, values in saved months)", "58 change identity field key confirm (no saved values)", "59 restore a backup, what is in the file and in the browser", "59b restore a backup, a file that does not say when it was saved", "60 backup restored", "61 restore, not a backup file", "61b restore, a backup of another version", "61c restore, a damaged backup", "61d restore, an empty backup", "62 backup not restored, storage full", "62b backup not restored, earlier data could not be put back", "63 this change was NOT saved (storage full)", "66 embedded: company details from the dashboard", "72 embedded: import, backup first", "73 embedded: import, what it will do", "74 embedded: import, done"]
     },
     {
       "text": "text: 1 item that could not be read, kept as it is",
@@ -345,8 +345,8 @@
     },
     {
       "text": "text: Fake Co Ltd",
-      "why": "not wording: the fake company's name, listed in the new Restore dialog (migration plan step 0a)",
-      "onlyOn": ["59 restore a backup, what is in the file and in the browser", "59b restore a backup, a file that does not say when it was saved"]
+      "why": "not wording: the fake company's name, listed in the new Restore dialog (migration plan step 0a); also on the Phase 2 dashboard screens, where it is the same control or the company's name",
+      "onlyOn": ["59 restore a backup, what is in the file and in the browser", "59b restore a backup, a file that does not say when it was saved", "65 embedded: column setup kept in the dashboard", "67 embedded: Global columns read-only, shared with a company you are not an admin of", "68 embedded: a company you are not an admin of", "69 embedded: saving", "70 embedded: NOT saved, someone else changed it", "73 embedded: import, what it will do", "74 embedded: import, done"]
     },
     {
       "text": "text: In the backup file",
@@ -468,6 +468,286 @@
       "text": "text: To free some space: save a backup first (\"Back up\", at the foot of the company list), then delete months or companies you no longer need, and make the change again.",
       "why": "asked for on 13 October 2026: the dialog now advises \"Back up\" instead of \"export a backup first (Export to Excel for each month, and Export Column Setup)\"",
       "onlyOn": ["63 this change was NOT saved (storage full)"]
+    },
+    {
+      "text": "aria-label: Move down",
+      "why": "approved: Phase 2: the Company details dialog inside the dashboard (name, address and BRN are the dashboard's, shown read-only); the base version has no such screen",
+      "onlyOn": ["66 embedded: company details from the dashboard"]
+    },
+    {
+      "text": "aria-label: Move up",
+      "why": "approved: Phase 2: the Company details dialog inside the dashboard (name, address and BRN are the dashboard's, shown read-only); the base version has no such screen",
+      "onlyOn": ["66 embedded: company details from the dashboard"]
+    },
+    {
+      "text": "aria-label: What to do with Fake Co Ltd",
+      "why": "approved: Phase 2: the one-time \"Import to the dashboard\" (a backup first, a preview that writes nothing, the result of each item)",
+      "onlyOn": ["73 embedded: import, what it will do"]
+    },
+    {
+      "text": "placeholder: 123 Main Street Port Louis, Mauritius",
+      "why": "approved: Phase 2: the Company details dialog inside the dashboard (name, address and BRN are the dashboard's, shown read-only); the base version has no such screen",
+      "onlyOn": ["66 embedded: company details from the dashboard"]
+    },
+    {
+      "text": "placeholder: Label, e.g. VAT No",
+      "why": "approved: Phase 2: the Company details dialog inside the dashboard (name, address and BRN are the dashboard's, shown read-only); the base version has no such screen",
+      "onlyOn": ["66 embedded: company details from the dashboard"]
+    },
+    {
+      "text": "placeholder: Value",
+      "why": "approved: Phase 2: the Company details dialog inside the dashboard (name, address and BRN are the dashboard's, shown read-only); the base version has no such screen",
+      "onlyOn": ["66 embedded: company details from the dashboard"]
+    },
+    {
+      "text": "text: + Add Field",
+      "why": "approved: Phase 2: the Company details dialog inside the dashboard (name, address and BRN are the dashboard's, shown read-only); the base version has no such screen",
+      "onlyOn": ["66 embedded: company details from the dashboard"]
+    },
+    {
+      "text": "text: 1 Test Street Port Louis",
+      "why": "approved: Phase 2: the Company details dialog inside the dashboard (name, address and BRN are the dashboard's, shown read-only); the base version has no such screen",
+      "onlyOn": ["66 embedded: company details from the dashboard"]
+    },
+    {
+      "text": "text: : imported and checked.",
+      "why": "approved: Phase 2: the one-time \"Import to the dashboard\" (a backup first, a preview that writes nothing, the result of each item)",
+      "onlyOn": ["74 embedded: import, done"]
+    },
+    {
+      "text": "text: A new shared column setup will be made from this browser's 3 identity fields and 14 Global columns. The companies below are attached to it.",
+      "why": "approved: Phase 2: the one-time \"Import to the dashboard\" (a backup first, a preview that writes nothing, the result of each item)",
+      "onlyOn": ["73 embedded: import, what it will do"]
+    },
+    {
+      "text": "text: Address",
+      "why": "approved: Phase 2: the Company details dialog inside the dashboard (name, address and BRN are the dashboard's, shown read-only); the base version has no such screen",
+      "onlyOn": ["66 embedded: company details from the dashboard"]
+    },
+    {
+      "text": "text: BRN",
+      "why": "approved: Phase 2: the Company details dialog inside the dashboard (name, address and BRN are the dashboard's, shown read-only); the base version has no such screen",
+      "onlyOn": ["66 embedded: company details from the dashboard"]
+    },
+    {
+      "text": "text: Can't reach the database.",
+      "why": "approved: Phase 2: the column setup could not be loaded from the dashboard (Try again; the app on its own still works)",
+      "onlyOn": ["75 embedded: column setup could not be loaded"]
+    },
+    {
+      "text": "text: Close",
+      "why": "approved: Phase 2: the one-time \"Import to the dashboard\" (a backup first, a preview that writes nothing, the result of each item)",
+      "onlyOn": ["74 embedded: import, done"]
+    },
+    {
+      "text": "text: Column setup of , kept in the dashboard. Months are still kept in this browser.",
+      "why": "approved: Phase 2: inside a dashboard that keeps the column setup (first seen on screen 65)",
+      "onlyOn": ["65 embedded: column setup kept in the dashboard", "67 embedded: Global columns read-only, shared with a company you are not an admin of", "68 embedded: a company you are not an admin of", "69 embedded: saving", "70 embedded: NOT saved, someone else changed it"]
+    },
+    {
+      "text": "text: Companies",
+      "why": "approved: Phase 2: the one-time \"Import to the dashboard\" (a backup first, a preview that writes nothing, the result of each item)",
+      "onlyOn": ["73 embedded: import, what it will do"]
+    },
+    {
+      "text": "text: Company Name",
+      "why": "approved: Phase 2: the Company details dialog inside the dashboard (name, address and BRN are the dashboard's, shown read-only); the base version has no such screen",
+      "onlyOn": ["66 embedded: company details from the dashboard"]
+    },
+    {
+      "text": "text: Continue",
+      "why": "approved: Phase 2: the one-time \"Import to the dashboard\" (a backup first, a preview that writes nothing, the result of each item)",
+      "onlyOn": ["72 embedded: import, backup first"]
+    },
+    {
+      "text": "text: Copies this browser's column setup and companies into the dashboard, once. This browser's own copy is not changed.",
+      "why": "approved: Phase 2: the one-time \"Import to the dashboard\" (a backup first, a preview that writes nothing, the result of each item)",
+      "onlyOn": ["72 embedded: import, backup first", "73 embedded: import, what it will do", "74 embedded: import, done"]
+    },
+    {
+      "text": "text: Custom fields",
+      "why": "approved: Phase 2: the Company details dialog inside the dashboard (name, address and BRN are the dashboard's, shown read-only); the base version has no such screen",
+      "onlyOn": ["66 embedded: company details from the dashboard"]
+    },
+    {
+      "text": "text: Download a backup file",
+      "why": "approved: Phase 2: the one-time \"Import to the dashboard\" (a backup first, a preview that writes nothing, the result of each item)",
+      "onlyOn": ["72 embedded: import, backup first"]
+    },
+    {
+      "text": "text: Fake Co Ltd has no column setup in the dashboard yet",
+      "why": "approved: Phase 2: a dashboard company with no column setup yet (import, or start from shared or new Global columns)",
+      "onlyOn": ["71 embedded: no column setup in the dashboard yet"]
+    },
+    {
+      "text": "text: Fake Co Ltd — Details",
+      "why": "approved: Phase 2: the Company details dialog inside the dashboard (name, address and BRN are the dashboard's, shown read-only); the base version has no such screen",
+      "onlyOn": ["66 embedded: company details from the dashboard"]
+    },
+    {
+      "text": "text: First, save a backup file of everything Payroll keeps in this browser. The import does not start without it.",
+      "why": "approved: Phase 2: the one-time \"Import to the dashboard\" (a backup first, a preview that writes nothing, the result of each item)",
+      "onlyOn": ["72 embedded: import, backup first"]
+    },
+    {
+      "text": "text: Identity fields and Global columns",
+      "why": "approved: Phase 2: the one-time \"Import to the dashboard\" (a backup first, a preview that writes nothing, the result of each item)",
+      "onlyOn": ["73 embedded: import, what it will do"]
+    },
+    {
+      "text": "text: Import 1 company",
+      "why": "approved: Phase 2: the one-time \"Import to the dashboard\" (a backup first, a preview that writes nothing, the result of each item)",
+      "onlyOn": ["73 embedded: import, what it will do"]
+    },
+    {
+      "text": "text: Import it?",
+      "why": "approved: Phase 2: the one-time \"Import to the dashboard\" (a backup first, a preview that writes nothing, the result of each item)",
+      "onlyOn": ["73 embedded: import, what it will do"]
+    },
+    {
+      "text": "text: Import its columns and details",
+      "why": "approved: Phase 2: the one-time \"Import to the dashboard\" (a backup first, a preview that writes nothing, the result of each item)",
+      "onlyOn": ["73 embedded: import, what it will do"]
+    },
+    {
+      "text": "text: Import to the dashboard",
+      "why": "approved: Phase 2: the one-time \"Import to the dashboard\" (a backup first, a preview that writes nothing, the result of each item)",
+      "onlyOn": ["71 embedded: no column setup in the dashboard yet", "72 embedded: import, backup first", "73 embedded: import, what it will do", "74 embedded: import, done"]
+    },
+    {
+      "text": "text: In the dashboard",
+      "why": "approved: Phase 2: inside a dashboard that keeps the column setup (first seen on screen 65)",
+      "onlyOn": ["65 embedded: column setup kept in the dashboard", "67 embedded: Global columns read-only, shared with a company you are not an admin of", "68 embedded: a company you are not an admin of", "69 embedded: saving", "70 embedded: NOT saved, someone else changed it"]
+    },
+    {
+      "text": "text: Levy ref 42",
+      "why": "approved: Phase 2: the Company details dialog inside the dashboard (name, address and BRN are the dashboard's, shown read-only); the base version has no such screen",
+      "onlyOn": ["66 embedded: company details from the dashboard"]
+    },
+    {
+      "text": "text: Matches in the dashboard (BRN C00000001).",
+      "why": "approved: Phase 2: the one-time \"Import to the dashboard\" (a backup first, a preview that writes nothing, the result of each item)",
+      "onlyOn": ["73 embedded: import, what it will do"]
+    },
+    {
+      "text": "text: NOT saved",
+      "why": "approved: Phase 2: automatic saving to the dashboard, \"Saving / Saved / NOT saved\", as in the PDF form filler",
+      "onlyOn": ["70 embedded: NOT saved, someone else changed it"]
+    },
+    {
+      "text": "text: Name, address and BRN are the dashboard's. Change them in the dashboard, on the company's profile.",
+      "why": "approved: Phase 2: the Company details dialog inside the dashboard (name, address and BRN are the dashboard's, shown read-only); the base version has no such screen",
+      "onlyOn": ["66 embedded: company details from the dashboard"]
+    },
+    {
+      "text": "text: Nothing has been written to the dashboard yet.",
+      "why": "approved: Phase 2: the one-time \"Import to the dashboard\" (a backup first, a preview that writes nothing, the result of each item)",
+      "onlyOn": ["73 embedded: import, what it will do"]
+    },
+    {
+      "text": "text: Opened on its own, outside the dashboard, the payroll app works from this browser's own copy.",
+      "why": "approved: Phase 2: the column setup could not be loaded from the dashboard (Try again; the app on its own still works)",
+      "onlyOn": ["75 embedded: column setup could not be loaded"]
+    },
+    {
+      "text": "text: Remove",
+      "why": "approved: Phase 2: the Company details dialog inside the dashboard (name, address and BRN are the dashboard's, shown read-only); the base version has no such screen",
+      "onlyOn": ["66 embedded: company details from the dashboard"]
+    },
+    {
+      "text": "text: Save mine over it",
+      "why": "approved: Phase 2: automatic saving to the dashboard, \"Saving / Saved / NOT saved\", as in the PDF form filler",
+      "onlyOn": ["70 embedded: NOT saved, someone else changed it"]
+    },
+    {
+      "text": "text: Save",
+      "why": "approved: Phase 2: the Company details dialog inside the dashboard (name, address and BRN are the dashboard's, shown read-only); the base version has no such screen",
+      "onlyOn": ["66 embedded: company details from the dashboard"]
+    },
+    {
+      "text": "text: Saved",
+      "why": "approved: Phase 2: automatic saving to the dashboard, \"Saving / Saved / NOT saved\", as in the PDF form filler",
+      "onlyOn": ["65 embedded: column setup kept in the dashboard", "67 embedded: Global columns read-only, shared with a company you are not an admin of", "68 embedded: a company you are not an admin of"]
+    },
+    {
+      "text": "text: Saving…",
+      "why": "approved: Phase 2: automatic saving to the dashboard, \"Saving / Saved / NOT saved\", as in the PDF form filler",
+      "onlyOn": ["69 embedded: saving"]
+    },
+    {
+      "text": "text: Shared column setup",
+      "why": "approved: Phase 2: the one-time \"Import to the dashboard\" (a backup first, a preview that writes nothing, the result of each item)",
+      "onlyOn": ["74 embedded: import, done"]
+    },
+    {
+      "text": "text: Skip it",
+      "why": "approved: Phase 2: the one-time \"Import to the dashboard\" (a backup first, a preview that writes nothing, the result of each item)",
+      "onlyOn": ["73 embedded: import, what it will do"]
+    },
+    {
+      "text": "text: Start with new, empty Global columns",
+      "why": "approved: Phase 2: a dashboard company with no column setup yet (import, or start from shared or new Global columns)",
+      "onlyOn": ["71 embedded: no column setup in the dashboard yet"]
+    },
+    {
+      "text": "text: The column setup could not be loaded from the dashboard",
+      "why": "approved: Phase 2: the column setup could not be loaded from the dashboard (Try again; the app on its own still works)",
+      "onlyOn": ["75 embedded: column setup could not be loaded"]
+    },
+    {
+      "text": "text: The column setup was NOT saved in the dashboard. Someone else changed the column setup in the dashboard since it was opened here. What you see here is still on this screen, but it will be gone when this page is closed or reloaded.",
+      "why": "approved: Phase 2: automatic saving to the dashboard, \"Saving / Saved / NOT saved\", as in the PDF form filler",
+      "onlyOn": ["70 embedded: NOT saved, someone else changed it"]
+    },
+    {
+      "text": "text: The identity fields and Global columns are used by 1 company, and you are not an admin of it. You can see them here; only someone who is an admin of every company using them can change them.",
+      "why": "approved: Phase 2, D1: why the Global columns or the company columns are read-only for this user",
+      "onlyOn": ["68 embedded: a company you are not an admin of"]
+    },
+    {
+      "text": "text: The identity fields and Global columns are used by 2 companies, and you are an admin of 1 of them. You can see them here; only someone who is an admin of every company using them can change them.",
+      "why": "approved: Phase 2, D1: why the Global columns or the company columns are read-only for this user",
+      "onlyOn": ["67 embedded: Global columns read-only, shared with a company you are not an admin of"]
+    },
+    {
+      "text": "text: This browser holds companies and columns that are not in the dashboard yet.",
+      "why": "approved: Phase 2: a dashboard company with no column setup yet (import, or start from shared or new Global columns)",
+      "onlyOn": ["71 embedded: no column setup in the dashboard yet"]
+    },
+    {
+      "text": "text: This browser only. Not the dashboard's copy.",
+      "why": "approved: Phase 2, D4: opened on its own after an import, this browser's copy is labelled as not the dashboard's",
+      "onlyOn": ["65 opened on its own after an import to the dashboard"]
+    },
+    {
+      "text": "text: This browser's own copy was left as it was. Opened on its own, the app still shows it, marked \"This browser only. Not the dashboard's copy.\"",
+      "why": "approved: Phase 2: the one-time \"Import to the dashboard\" (a backup first, a preview that writes nothing, the result of each item)",
+      "onlyOn": ["74 embedded: import, done"]
+    },
+    {
+      "text": "text: This browser's own copy",
+      "why": "approved: Phase 2: inside a dashboard that keeps the column setup (first seen on screen 65)",
+      "onlyOn": ["65 embedded: column setup kept in the dashboard", "67 embedded: Global columns read-only, shared with a company you are not an admin of", "68 embedded: a company you are not an admin of", "69 embedded: saving", "70 embedded: NOT saved, someone else changed it"]
+    },
+    {
+      "text": "text: Use the dashboard's version",
+      "why": "approved: Phase 2: automatic saving to the dashboard, \"Saving / Saved / NOT saved\", as in the PDF form filler",
+      "onlyOn": ["70 embedded: NOT saved, someone else changed it"]
+    },
+    {
+      "text": "text: VAT-FAKE-1",
+      "why": "approved: Phase 2: the Company details dialog inside the dashboard (name, address and BRN are the dashboard's, shown read-only); the base version has no such screen",
+      "onlyOn": ["66 embedded: company details from the dashboard"]
+    },
+    {
+      "text": "text: You can see the columns and details of Fake Co Ltd. Only an admin of Fake Co Ltd can change them.",
+      "why": "approved: Phase 2, D1: why the Global columns or the company columns are read-only for this user",
+      "onlyOn": ["68 embedded: a company you are not an admin of"]
+    },
+    {
+      "text": "text: · BRN C00000001",
+      "why": "approved: Phase 2: the one-time \"Import to the dashboard\" (a backup first, a preview that writes nothing, the result of each item)",
+      "onlyOn": ["73 embedded: import, what it will do"]
     }
   ],
   "removed": [
@@ -541,6 +821,61 @@
       "text": "text: Enter a cap amount, or uncheck the cap option",
       "why": "not removed from the app: on this one screen the new \"Can't make this column Company-specific yet\" refusal is shown first. The message itself is still shown, and still checked, on screen 28d",
       "onlyOn": ["28c edit global column, save result"]
+    },
+    {
+      "text": "aria-label: Delete Fake Co Ltd",
+      "why": "approved: Phase 2: inside a dashboard that keeps the column setup, the company is the one selected there; companies are added, renamed, deleted and restored in the dashboard, not here",
+      "onlyOn": ["65 embedded: column setup kept in the dashboard", "67 embedded: Global columns read-only, shared with a company you are not an admin of", "68 embedded: a company you are not an admin of", "69 embedded: saving", "70 embedded: NOT saved, someone else changed it"]
+    },
+    {
+      "text": "text: + Add Column",
+      "why": "approved: Phase 2, D1: columns someone may not change are shown read-only inside the dashboard (no add, edit, delete, import or reorder)",
+      "onlyOn": ["67 embedded: Global columns read-only, shared with a company you are not an admin of", "68 embedded: a company you are not an admin of"]
+    },
+    {
+      "text": "text: + Add Identity Field",
+      "why": "approved: Phase 2, D1: columns someone may not change are shown read-only inside the dashboard (no add, edit, delete, import or reorder)",
+      "onlyOn": ["67 embedded: Global columns read-only, shared with a company you are not an admin of"]
+    },
+    {
+      "text": "text: + New Company",
+      "why": "approved: Phase 2: inside a dashboard that keeps the column setup, the company is the one selected there; companies are added, renamed, deleted and restored in the dashboard, not here",
+      "onlyOn": ["65 embedded: column setup kept in the dashboard", "67 embedded: Global columns read-only, shared with a company you are not an admin of", "68 embedded: a company you are not an admin of", "69 embedded: saving", "70 embedded: NOT saved, someone else changed it"]
+    },
+    {
+      "text": "text: Companies",
+      "why": "approved: Phase 2: inside a dashboard that keeps the column setup, the company is the one selected there; companies are added, renamed, deleted and restored in the dashboard, not here",
+      "onlyOn": ["65 embedded: column setup kept in the dashboard", "67 embedded: Global columns read-only, shared with a company you are not an admin of", "68 embedded: a company you are not an admin of", "69 embedded: saving", "70 embedded: NOT saved, someone else changed it"]
+    },
+    {
+      "text": "text: Delete",
+      "why": "approved: Phase 2, D1: columns someone may not change are shown read-only inside the dashboard (no add, edit, delete, import or reorder)",
+      "onlyOn": ["67 embedded: Global columns read-only, shared with a company you are not an admin of", "68 embedded: a company you are not an admin of"]
+    },
+    {
+      "text": "text: Edit",
+      "why": "approved: Phase 2, D1: columns someone may not change are shown read-only inside the dashboard (no add, edit, delete, import or reorder)",
+      "onlyOn": ["67 embedded: Global columns read-only, shared with a company you are not an admin of", "68 embedded: a company you are not an admin of"]
+    },
+    {
+      "text": "text: Import Column Setup",
+      "why": "approved: Phase 2, D1: columns someone may not change are shown read-only inside the dashboard (no add, edit, delete, import or reorder)",
+      "onlyOn": ["67 embedded: Global columns read-only, shared with a company you are not an admin of", "68 embedded: a company you are not an admin of"]
+    },
+    {
+      "text": "text: Set as ID field",
+      "why": "approved: Phase 2, D1: columns someone may not change are shown read-only inside the dashboard (no add, edit, delete, import or reorder)",
+      "onlyOn": ["67 embedded: Global columns read-only, shared with a company you are not an admin of"]
+    },
+    {
+      "text": "title: Drag to reorder",
+      "why": "approved: Phase 2, D1: columns someone may not change are shown read-only inside the dashboard (no add, edit, delete, import or reorder)",
+      "onlyOn": ["67 embedded: Global columns read-only, shared with a company you are not an admin of", "68 embedded: a company you are not an admin of"]
+    },
+    {
+      "text": "title: Used for duplicate detection when importing from Excel",
+      "why": "approved: Phase 2, D1: columns someone may not change are shown read-only inside the dashboard (no add, edit, delete, import or reorder)",
+      "onlyOn": ["67 embedded: Global columns read-only, shared with a company you are not an admin of"]
     }
   ]
 }

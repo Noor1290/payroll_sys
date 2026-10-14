@@ -23,7 +23,10 @@ export async function startServer(port = 5190) {
 
 export async function startApp() {
   const { server, url, origin } = await startServer()
-  const browser = await chromium.launch()
+  // A page served from the dashboard's address may frame the app on this machine
+  // (tests/browser/dashboard.e2e.js); Chrome otherwise refuses it as a public page
+  // reaching the local network.
+  const browser = await chromium.launch({ args: ['--disable-features=LocalNetworkAccessChecks'] })
 
   async function newContext() {
     const context = await browser.newContext({

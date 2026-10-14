@@ -7,7 +7,7 @@ import { SELECTABLE_CATEGORIES, DEFAULT_CATEGORY, labelColumnsForHelper } from '
 import { buildColumnSetupExport, buildColumnSetupFilename, downloadColumnSetup, parseColumnSetupFile } from '../lib/columnSetup'
 import { formatFormulaForDisplay } from '../lib/formulaEngine'
 
-function CategorySection({ category, ownColumns, otherColumns, onEdit, onDelete, onDragStart, onDrop, draggingId, formulaLabels }) {
+function CategorySection({ category, ownColumns, otherColumns, onEdit, onDelete, onDragStart, onDrop, draggingId, formulaLabels, readOnly }) {
   return (
     <section className="card mb-5 overflow-hidden">
       <div className="border-b border-line px-4 py-3">
@@ -41,7 +41,7 @@ function CategorySection({ category, ownColumns, otherColumns, onEdit, onDelete,
             {ownColumns.map((col) => (
               <tr
                 key={col.id}
-                draggable
+                draggable={!readOnly}
                 onDragStart={() => onDragStart(col.id)}
                 onDragOver={(e) => e.preventDefault()}
                 onDrop={(e) => {
@@ -50,9 +50,13 @@ function CategorySection({ category, ownColumns, otherColumns, onEdit, onDelete,
                 }}
                 className={`transition-colors hover:bg-surface-hover ${draggingId === col.id ? 'bg-accent/10 opacity-60' : ''}`}
               >
-                <td className="cursor-grab px-2 py-2.5 text-center text-subtle active:cursor-grabbing" title="Drag to reorder">
-                  <GripVertical className="mx-auto h-4 w-4" aria-hidden="true" />
-                </td>
+                {readOnly ? (
+                  <td className="px-2 py-2.5"></td>
+                ) : (
+                  <td className="cursor-grab px-2 py-2.5 text-center text-subtle active:cursor-grabbing" title="Drag to reorder">
+                    <GripVertical className="mx-auto h-4 w-4" aria-hidden="true" />
+                  </td>
+                )}
                 <td className="px-4 py-2.5 font-medium text-fg">{col.name}</td>
                 <td className="num px-4 py-2.5 text-xs text-muted">{col.key}</td>
                 <td className="whitespace-nowrap px-4 py-2.5 capitalize text-muted">
@@ -63,12 +67,16 @@ function CategorySection({ category, ownColumns, otherColumns, onEdit, onDelete,
                   {col.formula ? formatFormulaForDisplay(col.formula, formulaLabels) : '—'}
                 </td>
                 <td className="whitespace-nowrap px-4 py-2.5 text-right">
-                  <button onClick={() => onEdit(col)} className="btn btn-ghost btn-sm text-xs text-accent">
-                    Edit
-                  </button>
-                  <button onClick={() => onDelete(col)} className="btn btn-ghost btn-sm text-xs text-danger">
-                    Delete
-                  </button>
+                  {!readOnly && (
+                    <>
+                      <button onClick={() => onEdit(col)} className="btn btn-ghost btn-sm text-xs text-accent">
+                        Edit
+                      </button>
+                      <button onClick={() => onDelete(col)} className="btn btn-ghost btn-sm text-xs text-danger">
+                        Delete
+                      </button>
+                    </>
+                  )}
                 </td>
               </tr>
             ))}
@@ -124,6 +132,12 @@ export default function ColumnManager({
   getScopeBlockers,
   getKeyChangePreview,
   onRenameKey,
+  // Inside the dashboard, for someone who may not change these columns: they
+  // are shown, and can be exported, but nothing offers to change them.
+  readOnly = false,
+  // Off when the other scope cannot be changed here (moving a column between
+  // Global and this company changes both).
+  allowScopeChange = true,
 }) {
   const [editing, setEditing] = useState(null) // 'new' | column | null
   const [deleting, setDeleting] = useState(null)
@@ -227,17 +241,21 @@ export default function ColumnManager({
             className="hidden"
             onChange={handleImportFileSelected}
           />
-          <button onClick={handleImportClick} className="btn btn-secondary">
-            <Upload aria-hidden="true" />
-            Import Column Setup
-          </button>
+          {!readOnly && (
+            <button onClick={handleImportClick} className="btn btn-secondary">
+              <Upload aria-hidden="true" />
+              Import Column Setup
+            </button>
+          )}
           <button onClick={handleExportColumns} disabled={columns.length === 0} className="btn btn-secondary">
             <Download aria-hidden="true" />
             Export Column Setup
           </button>
-          <button onClick={() => setEditing('new')} className="btn btn-primary">
-            + Add Column
-          </button>
+          {!readOnly && (
+            <button onClick={() => setEditing('new')} className="btn btn-primary">
+              + Add Column
+            </button>
+          )}
         </div>
       </div>
 
@@ -266,6 +284,7 @@ export default function ColumnManager({
             setDraggingId(null)
           }}
           formulaLabels={formulaLabels}
+          readOnly={readOnly}
         />
       ))}
 
@@ -275,7 +294,7 @@ export default function ColumnManager({
           existingKeys={existingKeysExcluding(editing === 'new' ? null : editing)}
           availableColumns={referenceableColumns.filter((c) => c.key !== (editing === 'new' ? undefined : editing.key))}
           columnsByKeyForCycleCheck={allColumnsForCycleCheck}
-          currentScope={editing === 'new' ? undefined : scope}
+          currentScope={editing === 'new' || !allowScopeChange ? undefined : scope}
           crossScopeExistingKeys={crossScopeKeysExcluding(editing === 'new' ? null : editing)}
           crossScopeAvailableKeys={crossScopeAvailableKeys}
           totalCompanyCount={totalCompanyCount}

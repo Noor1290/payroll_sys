@@ -22,7 +22,11 @@ import {
 // After a restore has replaced the data, `onRestored` is called with
 // the message to show: the app then starts again from what is now stored,
 // which takes this component with it, so the message is the app's to show.
-export function useBackupControls(onRestored) {
+//
+// Inside the dashboard there is no Restore (`allowRestore` false): the setup
+// on screen is the dashboard's, and a restore would only replace this
+// browser's own copy behind it. "Back up" stays: the import needs it first.
+export function useBackupControls(onRestored, { allowRestore = true } = {}) {
   const fileInputRef = useRef(null)
   const [pending, setPending] = useState(null) // { fileName, backup, inFile, inBrowser } | null
   const [message, setMessage] = useState(null) // { title, description, tone } | null
@@ -78,21 +82,23 @@ export function useBackupControls(onRestored) {
 
   const controls = (
     <div className="border-t border-line px-3 pb-1 pt-3">
-      <p className="mb-2 text-xs text-muted">Saved in this browser only</p>
+      <p className="mb-2 text-xs text-muted">{allowRestore ? 'Saved in this browser only' : "This browser's own copy"}</p>
       <div className="flex gap-2">
         <input ref={fileInputRef} type="file" accept=".json,application/json" className="hidden" onChange={handleFileSelected} />
         <button onClick={handleBackUp} className="btn btn-secondary btn-sm flex-1" title="Save everything in this browser to one file">
           <Download aria-hidden="true" />
           Back up
         </button>
-        <button
-          onClick={() => fileInputRef.current?.click()}
-          className="btn btn-secondary btn-sm flex-1"
-          title="Put a backup file back into this browser"
-        >
-          <Upload aria-hidden="true" />
-          Restore
-        </button>
+        {allowRestore && (
+          <button
+            onClick={() => fileInputRef.current?.click()}
+            className="btn btn-secondary btn-sm flex-1"
+            title="Put a backup file back into this browser"
+          >
+            <Upload aria-hidden="true" />
+            Restore
+          </button>
+        )}
       </div>
     </div>
   )

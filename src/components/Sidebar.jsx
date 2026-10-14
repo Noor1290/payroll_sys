@@ -21,11 +21,16 @@ export default function Sidebar({
   onRestored,
   open = false,
   onClose,
+  // Inside the dashboard: the company selected there, and nothing that adds,
+  // renames or deletes one (the dashboard's companies are kept there).
+  inDashboard = false,
+  // Opened on its own after an import: what is here is not the dashboard's.
+  browserOnly = false,
 }) {
   const [renamingId, setRenamingId] = useState(null)
   const [renameValue, setRenameValue] = useState('')
   const [deletingCompany, setDeletingCompany] = useState(null)
-  const backup = useBackupControls(onRestored)
+  const backup = useBackupControls(onRestored, { allowRestore: !inDashboard })
 
   // Keyboard, only while it is open as a drawer at narrow widths: focus
   // moves in, Tab stays inside, Escape closes it, focus returns to the menu button.
@@ -60,12 +65,18 @@ export default function Sidebar({
           </span>
           <div className="min-w-0 flex-1">
             <h1 className="text-lg font-semibold leading-tight tracking-tight text-fg">Payroll</h1>
-            <p className="text-xs text-muted">Companies</p>
+            <p className="text-xs text-muted">{inDashboard ? 'In the dashboard' : 'Companies'}</p>
           </div>
           <button onClick={onClose} className="btn btn-ghost btn-icon btn-sm md:hidden" aria-label="Close company list">
             <X aria-hidden="true" />
           </button>
         </div>
+
+        {browserOnly && (
+          <p role="note" className="mx-3 mt-3 rounded-lg border border-warn/40 bg-warn/10 px-3 py-2 text-xs font-medium text-fg">
+            This browser only. Not the dashboard's copy.
+          </p>
+        )}
 
         <div className="flex-1 overflow-y-auto py-2">
           {companies.length === 0 && <p className="px-4 py-3 text-sm text-subtle">No companies yet.</p>}
@@ -100,7 +111,7 @@ export default function Sidebar({
                     <button
                       className="flex-1 truncate rounded text-left"
                       onClick={() => onSelect(company.id)}
-                      onDoubleClick={() => startRename(company)}
+                      onDoubleClick={() => !inDashboard && startRename(company)}
                       title={company.name}
                       aria-current={isActive ? 'true' : undefined}
                     >
@@ -117,16 +128,18 @@ export default function Sidebar({
                     >
                       <Info className="h-4 w-4" aria-hidden="true" />
                     </button>
-                    <button
-                      onClick={(e) => {
-                        e.stopPropagation()
-                        setDeletingCompany(company)
-                      }}
-                      className={`${ROW_ACTION} opacity-0 hover:text-danger`}
-                      aria-label={`Delete ${company.name}`}
-                    >
-                      <Trash2 className="h-4 w-4" aria-hidden="true" />
-                    </button>
+                    {!inDashboard && (
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation()
+                          setDeletingCompany(company)
+                        }}
+                        className={`${ROW_ACTION} opacity-0 hover:text-danger`}
+                        aria-label={`Delete ${company.name}`}
+                      >
+                        <Trash2 className="h-4 w-4" aria-hidden="true" />
+                      </button>
+                    )}
                   </>
                 )}
               </div>
@@ -137,9 +150,13 @@ export default function Sidebar({
         {backup.controls}
 
         <div className="flex items-center gap-2 p-3">
-          <button onClick={onAddCompany} className="btn btn-primary flex-1">
-            + New Company
-          </button>
+          {inDashboard ? (
+            <span className="flex-1" />
+          ) : (
+            <button onClick={onAddCompany} className="btn btn-primary flex-1">
+              + New Company
+            </button>
+          )}
           <ThemeToggle />
         </div>
       </aside>

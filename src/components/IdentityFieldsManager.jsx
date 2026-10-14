@@ -15,6 +15,8 @@ export default function IdentityFieldsManager({
   onSetIdField,
   getKeyChangePreview,
   onRenameKey,
+  // Inside the dashboard, for someone who may not change the shared setup.
+  readOnly = false,
 }) {
   const [editing, setEditing] = useState(null) // 'new' | field | null
   const [deleting, setDeleting] = useState(null)
@@ -45,9 +47,11 @@ export default function IdentityFieldsManager({
             Always leftmost in the Employee Table, plain text, shared by every company.
           </p>
         </div>
-        <button onClick={() => setEditing('new')} className="btn btn-secondary btn-sm">
-          + Add Identity Field
-        </button>
+        {!readOnly && (
+          <button onClick={() => setEditing('new')} className="btn btn-secondary btn-sm">
+            + Add Identity Field
+          </button>
+        )}
       </div>
 
       <div className="overflow-x-auto">
@@ -66,23 +70,31 @@ export default function IdentityFieldsManager({
                 <td className="px-4 py-2.5 font-medium text-fg">{field.name}</td>
                 <td className="num px-4 py-2.5 text-xs text-muted">{field.key}</td>
                 <td className="px-4 py-2.5">
-                  <button
-                    onClick={() => onSetIdField(idFieldKey === field.key ? null : field.key)}
-                    className={`badge normal-case transition-colors ${
-                      idFieldKey === field.key ? 'badge-warn' : 'hover:border-line-strong hover:text-fg'
-                    }`}
-                    title="Used for duplicate detection when importing from Excel"
-                  >
-                    {idFieldKey === field.key ? 'ID field ✓' : 'Set as ID field'}
-                  </button>
+                  {readOnly ? (
+                    idFieldKey === field.key && <span className="badge badge-warn normal-case">ID field ✓</span>
+                  ) : (
+                    <button
+                      onClick={() => onSetIdField(idFieldKey === field.key ? null : field.key)}
+                      className={`badge normal-case transition-colors ${
+                        idFieldKey === field.key ? 'badge-warn' : 'hover:border-line-strong hover:text-fg'
+                      }`}
+                      title="Used for duplicate detection when importing from Excel"
+                    >
+                      {idFieldKey === field.key ? 'ID field ✓' : 'Set as ID field'}
+                    </button>
+                  )}
                 </td>
                 <td className="whitespace-nowrap px-4 py-2.5 text-right">
-                  <button onClick={() => setEditing(field)} className="btn btn-ghost btn-sm text-xs text-accent">
-                    Edit
-                  </button>
-                  <button onClick={() => setDeleting(field)} className="btn btn-ghost btn-sm text-xs text-danger">
-                    Delete
-                  </button>
+                  {!readOnly && (
+                    <>
+                      <button onClick={() => setEditing(field)} className="btn btn-ghost btn-sm text-xs text-accent">
+                        Edit
+                      </button>
+                      <button onClick={() => setDeleting(field)} className="btn btn-ghost btn-sm text-xs text-danger">
+                        Delete
+                      </button>
+                    </>
+                  )}
                 </td>
               </tr>
             ))}

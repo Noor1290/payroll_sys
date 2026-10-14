@@ -280,5 +280,29 @@ export function replaceBrowserData(entries) {
   }
 }
 
+// ---- Notes kept next to this browser's copy -----------------------------
+// Small JSON objects the dashboard store keeps in this browser (its display
+// preferences, and what was imported where). No payroll value, and not part
+// of the backup: they are about this browser, not about the payroll.
+
+export function readNote(key) {
+  try {
+    const parsed = JSON.parse(localStorage.getItem(key) ?? '{}')
+    return parsed && typeof parsed === 'object' && !Array.isArray(parsed) ? parsed : {}
+  } catch {
+    return {}
+  }
+}
+
+// Returns false when the browser refused it (storage full).
+export function writeNote(key, value) {
+  try {
+    localStorage.setItem(key, JSON.stringify(value))
+    return true
+  } catch {
+    return false
+  }
+}
+
 export const BROWSER_STATE_KEY = STORAGE_KEY
 export const BROWSER_PERIOD_KEY_PREFIX = PERIOD_KEY_PREFIX

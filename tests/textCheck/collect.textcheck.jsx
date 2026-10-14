@@ -501,6 +501,14 @@ test('collect every visible string', async () => {
   }
   snapTopDialog('63 this change was NOT saved (storage full)')
 
+  // ---------- Opened on its own after an import to the dashboard ----------
+  // The note of what was imported, as the import leaves it (names and BRNs only).
+  seed()
+  localStorage.setItem('payroll_dashboard_imported_v1', JSON.stringify({ companies: { [company.id]: { brn: company.details.brn, company: company.name } } }))
+  await start()
+  await vi.waitFor(() => expect(document.body.textContent).toContain('October 2026'))
+  snap('65 opened on its own after an import to the dashboard')
+
   expect(OUT, 'TEXT_CHECK_OUT').toBeTruthy()
   fs.writeFileSync(OUT, JSON.stringify(collected, null, 2))
   fs.writeFileSync(OUT.replace(/\.json$/, '.unlabelled.json'), JSON.stringify([...unlabelled].sort(), null, 2))

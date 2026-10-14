@@ -91,7 +91,10 @@ describe('one way in', () => {
 
   test('no screen reaches past the interface to the browser store', () => {
     // backup.js is the browser's own copy by definition: it reads and replaces exactly that.
-    const allowed = ['lib/backup.js', 'lib/dataStore.js']
+    // dashboardSetup.js is the second store: it keeps the months in the browser store
+    // until Phase 3. dashboardImport.js reads the browser's own copy to import it, and
+    // never writes it.
+    const allowed = ['lib/backup.js', 'lib/dashboardImport.js', 'lib/dashboardSetup.js', 'lib/dataStore.js']
     const importing = sourceFiles()
       .filter((file) => /from\s+['"][./]+(lib\/)?storage['"]/.test(fs.readFileSync(file, 'utf8')))
       .map(relative)

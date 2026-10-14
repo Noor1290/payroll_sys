@@ -121,6 +121,29 @@ drawer closes; reopening it shows the rename box.
 clicked again, or whether renaming at narrow widths should only be offered from
 Company Details.
 
+## 7. Between Phase 2 and Phase 3: a key changed inside the dashboard is not changed in this browser's own copy
+
+Found while building Phase 2 of the migration (14 October 2026). Not fixed: it comes
+from keeping the column setup in the dashboard while the months are still in the
+browser, and goes away when the months move too (Phase 3).
+
+**What happens.** Inside the dashboard, changing a column's key (or an identity
+field's) moves that column's values in every saved month, as it always has; the months
+are still the browser's, so they are moved there. The setup itself is saved to the
+dashboard. This browser's own copy of the setup, kept untouched as the fallback (D4),
+still has the old key. Opened on its own, the app then looks for the column's values
+under the old key and does not find them.
+
+**Example (fake data), worked out from the code, not run as a test.** "TEST Co A",
+imported; inside the dashboard the Global column "Basic Salary" is given the key
+`basicPay`. The months now hold `basicPay`. Opened on its own, TEST Co A's setup still
+names `basicSalary`, so its September 2026 shows Basic Salary empty for TST001 to
+TST003, and the figures worked out from it change.
+
+**What would avoid it.** Either do key changes only once the months are in the
+dashboard (Phase 3), or, until then, warn in the "Change this field's key?" question
+that the browser's own copy will not follow.
+
 ## Possible later feature: on-screen grand total
 
 The Totals screen shows one row per employee and no grand-total row; only the Excel

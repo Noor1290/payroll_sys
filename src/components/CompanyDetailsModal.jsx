@@ -9,7 +9,13 @@ import { newCustomField } from '../lib/model'
 // the user defines themselves, scoped to this one company. "Company Name"
 // isn't separate storage - it IS `company.name`, so saving it here renames
 // the company everywhere else in the app.
-export default function CompanyDetailsModal({ company, otherCompanies, onSave, onClose }) {
+//
+// Inside the dashboard (`fromDashboard`), Name, Address and BRN are the
+// dashboard's own company record: shown here, changed only there. `readOnly`
+// is for someone who is not an admin of the company: everything is shown,
+// nothing can be changed.
+export default function CompanyDetailsModal({ company, otherCompanies, onSave, onClose, fromDashboard = false, readOnly = false }) {
+  const fixed = fromDashboard || readOnly
   const [name, setName] = useState(company.name ?? '')
   const [address, setAddress] = useState(company.details?.address ?? '')
   const [brn, setBrn] = useState(company.details?.brn ?? '')
@@ -92,12 +98,13 @@ export default function CompanyDetailsModal({ company, otherCompanies, onSave, o
             <input
               className="field"
               aria-label="Company Name"
+              readOnly={fixed}
               value={name}
               onChange={(e) => {
                 setName(e.target.value)
                 markDirty()
               }}
-              autoFocus
+              autoFocus={!fixed}
             />
           </div>
 
@@ -107,6 +114,7 @@ export default function CompanyDetailsModal({ company, otherCompanies, onSave, o
               rows={3}
               className="field"
               aria-label="Address"
+              readOnly={fixed}
               value={address}
               onChange={(e) => {
                 setAddress(e.target.value)
@@ -121,6 +129,7 @@ export default function CompanyDetailsModal({ company, otherCompanies, onSave, o
             <input
               className="field"
               aria-label="BRN"
+              readOnly={fixed}
               value={brn}
               onChange={(e) => {
                 setBrn(e.target.value)
@@ -129,10 +138,16 @@ export default function CompanyDetailsModal({ company, otherCompanies, onSave, o
             />
           </div>
 
+          {fromDashboard && (
+            <p className="text-xs text-muted">
+              Name, address and BRN are the dashboard's. Change them in the dashboard, on the company's profile.
+            </p>
+          )}
+
           <div className="border-t border-line pt-4">
             <div className="mb-2 flex flex-wrap items-center justify-between gap-2">
               <label className="label mb-0">Custom fields</label>
-              {otherCompanies.length > 0 && (
+              {otherCompanies.length > 0 && !readOnly && (
                 <select
                   value={copyFromId}
                   aria-label="Copy fields from…"
@@ -152,7 +167,7 @@ export default function CompanyDetailsModal({ company, otherCompanies, onSave, o
             <div className="space-y-2">
               {customFields.map((field, i) => (
                 <div key={field.id} className="flex items-start gap-2 rounded-lg border border-line bg-surface p-3">
-                  <div className="flex shrink-0 flex-col gap-1">
+                  {!readOnly && <div className="flex shrink-0 flex-col gap-1">
                     <button
                       type="button"
                       onClick={() => moveCustomField(i, -1)}
@@ -171,12 +186,13 @@ export default function CompanyDetailsModal({ company, otherCompanies, onSave, o
                     >
                       <ChevronDown aria-hidden="true" />
                     </button>
-                  </div>
+                  </div>}
                   <div className="min-w-0 flex-1 space-y-2">
                     <input
                       value={field.label}
                       onChange={(e) => updateCustomField(field.id, { label: e.target.value })}
                       aria-label="Label, e.g. VAT No"
+                      readOnly={readOnly}
                       placeholder="Label, e.g. VAT No"
                       className="field font-medium"
                     />
@@ -184,26 +200,29 @@ export default function CompanyDetailsModal({ company, otherCompanies, onSave, o
                       value={field.value}
                       onChange={(e) => updateCustomField(field.id, { value: e.target.value })}
                       aria-label="Value"
+                      readOnly={readOnly}
                       placeholder="Value"
                       rows={1}
                       className="field"
                     />
                   </div>
-                  <button type="button" onClick={() => removeCustomField(field.id)} className="btn btn-ghost btn-sm shrink-0 text-xs text-danger">
-                    Remove
-                  </button>
+                  {!readOnly && (
+                    <button type="button" onClick={() => removeCustomField(field.id)} className="btn btn-ghost btn-sm shrink-0 text-xs text-danger">
+                      Remove
+                    </button>
+                  )}
                 </div>
               ))}
               {customFields.length === 0 && <p className="text-xs text-muted">No custom fields yet.</p>}
             </div>
 
-            <button
+            {!readOnly && <button
               type="button"
               onClick={addCustomField}
               className="btn btn-ghost btn-sm mt-2 border-dashed border-line-strong text-xs hover:border-accent hover:text-accent"
             >
               + Add Field
-            </button>
+            </button>}
           </div>
 
           {error && (
@@ -215,11 +234,13 @@ export default function CompanyDetailsModal({ company, otherCompanies, onSave, o
 
           <div className="flex justify-end gap-2 border-t border-line pt-4">
             <button onClick={requestClose} className="btn btn-secondary">
-              Cancel
+              {readOnly ? 'Close' : 'Cancel'}
             </button>
-            <button onClick={handleSave} className="btn btn-primary">
-              Save
-            </button>
+            {!readOnly && (
+              <button onClick={handleSave} className="btn btn-primary">
+                Save
+              </button>
+            )}
           </div>
         </div>
       </Modal>
