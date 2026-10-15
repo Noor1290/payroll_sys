@@ -135,13 +135,17 @@ export async function planMonthImport() {
     const list = await listMonths(note.brn)
     if (!list.ok) return list
     const existing = new Map(list.rows.map((row) => [row.period, row]))
+    // What the dashboard holds of those months, to tell a month already there exactly as it is
+    // here (an earlier import whose answer was lost) from one that differs.
+    const theirs = await readMonths(note.brn, [...existing.keys()])
+    if (!theirs.ok) return theirs
     for (const { period, employees } of browserMonths(company.id)) {
       const month = { period, label: label(period), employees, count: employees.length, existing: existing.get(period) ?? null, differences: [] }
       if (done[company.id]?.[period]) month.state = 'imported'
       else if (employees.length === 0) month.state = 'empty'
       else {
         month.differences = figureDifferences(employees, browserColumns, dashboardColumns)
-        month.state = month.differences.length > 0 ? 'differs' : month.existing ? 'conflict' : 'new'
+        month.state = month.differences.length > 0 ? 'differs' : !month.existing ? 'new' : sameJson(theirs.months.get(period), employees) ? 'same' : 'conflict'
       }
       item.months.push(month)
     }
@@ -158,6 +162,7 @@ export function defaultMonthChoices(plan) {
     choices[company.browserId] = {}
     for (const month of company.months) {
       if (month.state === 'new') choices[company.browserId][month.period] = 'import'
+      if (month.state === 'same') choices[company.browserId][month.period] = 'check'
       if (month.state === 'conflict') choices[company.browserId][month.period] = 'skip'
     }
   }
@@ -165,15 +170,34 @@ export function defaultMonthChoices(plan) {
 }
 
 export const chosenCount = (choices) =>
-  Object.values(choices).reduce((n, months) => n + Object.values(months).filter((c) => c === 'import' || c === 'replace').length, 0)
+  Object.values(choices).reduce((n, months) => n + Object.values(months).filter((c) => c === 'import' || c === 'replace' || c === 'check').length, 0)
 
 const selectedBrn = () => dashboardCompany()?.brn
 const companyParam = (brn) => (normaliseBrn(brn) === normaliseBrn(selectedBrn()) ? {} : { company_brn: brn })
 
+// The employees of these months as the dashboard holds them: { ok, months: Map(period -> employees) }.
+async function readMonths(brn, periods) {
+  const months = new Map()
+  for (let i = 0; i < periods.length; i += 12) {
+    const answer = await askHub({ action: 'load', brn: selectedBrn(), ...companyParam(brn), periods: periods.slice(i, i + 12) }, { dataType: MONTH })
+    if (!answer.ok) return answer
+    for (const row of answer.rows) months.set(row.period, row.employees)
+  }
+  return { ok: true, months }
+}
+
+// How long to wait before asking again when the dashboard did not answer, and how often.
+export const READ_BACK = { attempts: 3, waitMs: 4000 }
+
+// The month as the dashboard holds it now. A dashboard that did not answer is asked again a
+// little later: a save it was slow to answer may well have been stored.
 async function readBack(brn, period) {
-  const answer = await askHub({ action: 'load', brn: selectedBrn(), ...companyParam(brn), periods: [period] }, { dataType: MONTH })
-  if (!answer.ok) return answer
-  return { ok: true, row: answer.rows.find((r) => r.period === period) ?? null }
+  for (let attempt = 1; ; attempt++) {
+    const answer = await askHub({ action: 'load', brn: selectedBrn(), ...companyParam(brn), periods: [period] }, { dataType: MONTH })
+    if (answer.ok) return { ok: true, row: answer.rows.find((r) => r.period === period) ?? null }
+    if (!uncertain(answer) || answer.code === 'stale' || attempt >= READ_BACK.attempts) return answer
+    await new Promise((resolve) => setTimeout(resolve, READ_BACK.waitMs))
+  }
 }
 
 // Imports what was chosen, one month at a time, and checks each.
@@ -189,7 +213,7 @@ export async function runMonthImport(plan, choices, onProgress = () => {}) {
     const browserCompany = browser?.companies.find((c) => c.id === company.browserId)
     for (const month of company.months) {
       const choice = choices[company.browserId]?.[month.period]
-      if (choice !== 'import' && choice !== 'replace') continue
+      if (choice !== 'import' && choice !== 'replace' && choice !== 'check') continue
       const name = `${company.dashboardName ?? company.name}, ${month.label}`
       const revisions = revisionsOf(company.brn)
       const dashboardColumns = dashboardColumnsOf(company.brn)
@@ -198,7 +222,8 @@ export async function runMonthImport(plan, choices, onProgress = () => {}) {
         continue
       }
       const employees = asJson(month.employees)
-      const sent = await sendHub(
+      // Already in the dashboard exactly as here: nothing is written, only checked.
+      const sent = choice === 'check' ? { ok: true } : await sendHub(
         {
           action: 'save',
           brn: selectedBrn(),

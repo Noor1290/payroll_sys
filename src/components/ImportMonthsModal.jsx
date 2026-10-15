@@ -234,6 +234,12 @@ function MonthRow({ company, month, choice, onChoose }) {
           {month.differences[0].column}). Make the columns the same first.
         </span>
       )}
+      {month.state === 'same' && (
+        <label className="flex items-center gap-2 text-muted">
+          <input type="checkbox" checked={choice === 'check'} onChange={(e) => onChoose(e.target.checked ? 'check' : 'skip')} />
+          Already in the dashboard, exactly as here ({people}): check it and note it as imported
+        </label>
+      )}
       {month.state === 'imported' && <span className="text-muted">Already imported from this browser.</span>}
       {month.state === 'empty' && <span className="text-muted">No employees: nothing to import.</span>}
     </li>

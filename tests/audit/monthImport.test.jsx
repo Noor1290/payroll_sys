@@ -9,7 +9,7 @@ import { beforeEach, describe, expect, test, vi } from 'vitest'
 import { createFakeSetupHub, installFakeBridge } from '../helpers/fakeSetupHub'
 import { IMPORTED_KEY, connectDashboard, dashboardStore, forgetDashboardSetup } from '../../src/lib/dashboardSetup'
 import { forgetDashboardMonths } from '../../src/lib/dashboardMonths'
-import { defaultMonthChoices, hasMonthsToImport, planMonthImport, runMonthImport } from '../../src/lib/monthImport'
+import { defaultMonthChoices, hasMonthsToImport, planMonthImport, READ_BACK, runMonthImport } from '../../src/lib/monthImport'
 import { computeGridForEmployees } from '../../src/lib/formulaEngine'
 import { getColumnsByKey, getEffectiveColumns } from '../../src/lib/model'
 import { computeTotals } from '../../src/lib/totals'
@@ -230,6 +230,39 @@ describe('importing', () => {
     const outcomes = await runMonthImport(plan, defaultMonthChoices(plan))
     expect(outcomes.every((o) => o.ok)).toBe(true)
     expect(hub.state.months.get('C00000001|2026-09').revision).toBe(1)
+  })
+})
+
+describe('when an earlier answer was lost (seen against the real database: a slow first save)', () => {
+  test('a month the dashboard already holds exactly as here is checked and noted, without being written again', async () => {
+    await open(seed({ months: { 'C00000001|2026-09': { employees: septemberEmployees } } }))
+    const plan = await planMonthImport()
+    expect(plan.companies[0].months[0]).toMatchObject({ period: '2026-09', state: 'same' })
+    const choices = defaultMonthChoices(plan)
+    expect(choices['company-fake']).toEqual({ '2026-09': 'check', '2026-10': 'import' })
+    const outcomes = await runMonthImport(plan, choices)
+    expect(outcomes).toEqual([
+      { ok: true, name: 'Fake Co Ltd, September 2026' },
+      { ok: true, name: 'Fake Co Ltd, October 2026' },
+    ])
+    expect(writes().map((w) => w.period)).toEqual(['2026-10'])
+    expect(hub.state.months.get('C00000001|2026-09').revision).toBe(1)
+    expect(Object.keys(JSON.parse(localStorage.getItem(IMPORTED_KEY)).months['company-fake'])).toEqual(['2026-09', '2026-10'])
+  })
+
+  test('a read-back the dashboard does not answer is asked again before giving up', async () => {
+    const waitMs = READ_BACK.waitMs
+    READ_BACK.waitMs = 10
+    try {
+      await open()
+      const plan = await planMonthImport()
+      hub.state.failNext = { action: 'load', code: 'unavailable', error: 'The dashboard did not answer in time.' }
+      const outcomes = await runMonthImport(plan, defaultMonthChoices(plan))
+      expect(outcomes.every((o) => o.ok)).toBe(true)
+      expect(hub.state.log.filter((m) => m.action === 'load' && m.period === undefined).length).toBeGreaterThan(0)
+    } finally {
+      READ_BACK.waitMs = waitMs
+    }
   })
 })
 
