@@ -61,6 +61,32 @@ const STALE = fail('stale', 'Someone else changed the column setup in the dashbo
 
 // ---------- this browser's notes ----------
 
+// The last column setup loaded from the dashboard, per dashboard company (by
+// BRN), for when the dashboard cannot be reached: offered read-only
+// (offlineCopy.js). The shared setup and the company's own columns only; NEVER
+// a month, a salary or a national ID.
+export const OFFLINE_KEY = 'payroll_dashboard_offline_v1'
+export const readOfflineNote = () => browserStore.readNote(OFFLINE_KEY)
+export const writeOfflineNote = (copies) => browserStore.writeNote(OFFLINE_KEY, copies)
+
+// Keeps what was just loaded as this company's offline copy. If the browser
+// has no room for it, this company's older copy is dropped rather than left to
+// pass for the latest.
+function keepOfflineCopy(meta, sharedRow, companyRow) {
+  const brn = normaliseBrn(meta.brn)
+  const copies = readOfflineNote()
+  copies[brn] = {
+    brn: meta.brn,
+    label: meta.label || companyRow.name,
+    loadedAt: new Date().toISOString(),
+    shared: { name: sharedRow.name, revision: sharedRow.revision, body: asJson(sharedRow.body) },
+    company: { name: companyRow.name, address: companyRow.address ?? '', revision: companyRow.revision, body: asJson(companyRow.body) },
+  }
+  if (writeOfflineNote(copies)) return
+  delete copies[brn]
+  writeOfflineNote(copies)
+}
+
 export const readImported = () => {
   const notes = browserStore.readNote(IMPORTED_KEY)
   return { ...notes, companies: notes.companies && typeof notes.companies === 'object' ? notes.companies : {} }
@@ -259,6 +285,7 @@ export async function connectDashboard() {
       saved: companyBodyOf(current.companies[i]),
     })
   })
+  keepOfflineCopy(company, sharedRow, companyRows.find((row) => row.selected))
   publish()
   await connectMonths()
   return { ok: true, company, empty: false }
@@ -515,6 +542,87 @@ export async function takeTheirs() {
   }
   replaced(result)
   return result
+}
+
+// ---------- history and restore ----------
+
+const selectedItem = () => [...held.values()].find((h) => h.selected) ?? null
+const selectedApp = () => current?.companies.find((c) => held.get(c.id)?.selected) ?? null
+
+// What is in use now, as the dashboard last confirmed it: what a revision from
+// the history is compared with. Null when nothing is held.
+//   target  'shared' | 'company' (the company selected in the dashboard)
+export function setupInUse(target) {
+  if (!shared) return null
+  if (target === 'shared') return { revision: shared.revision, body: structuredClone(shared.saved) }
+  const item = selectedItem()
+  return item ? { revision: item.revision, body: structuredClone(item.saved) } : null
+}
+
+// The two parts of a company's columns as held on screen: the Global columns
+// and its own. What a month is worked out with once a revision is restored.
+export function columnPartsOf(brn) {
+  if (!current) return null
+  const app = current.companies.find((c) => normaliseBrn(held.get(c.id)?.brn) === normaliseBrn(brn))
+  return app ? { globalColumns: current.globalColumns, columns: app.columns ?? [] } : null
+}
+
+// Whether this user may restore that setup: the same rule as changing it.
+export function canRestoreSetup(target) {
+  if (!shared) return false
+  return target === 'shared' ? shared.canChange : selectedItem()?.role === 'admin'
+}
+
+// "Restore this version": an earlier revision's body is saved as a NEW
+// revision of that setup, over the one in use now. Nothing earlier is
+// rewritten or deleted. The screen then shows it (read it with loadState).
+//   { ok: true, revision }   saved as that revision
+//   { ok: false, code, error }
+export async function restoreSetupRevision(target, body) {
+  if (!company || !shared || !current) return fail('unavailable', 'The dashboard is not connected.')
+  if (status.state !== 'saved' || pendingKeyMoves().length > 0) {
+    return fail('busy', 'Changes on this screen are not saved yet. Wait until the bar says Saved, then restore.')
+  }
+  const unreadable = fail('invalid', 'This version could not be read. Nothing was changed.')
+
+  if (target === 'shared') {
+    if (!body || !isList(body.identityFields) || !isList(body.globalColumns)) return unreadable
+    if (!shared.canChange) {
+      return fail('forbidden', 'Only someone who is an admin of every company using these Global columns can restore them.')
+    }
+    // Saved exactly as the app would save that setup, so nothing is sent again after it.
+    const next = { ...current, identityFields: body.identityFields, idFieldKey: body.idFieldKey ?? null, globalColumns: body.globalColumns }
+    const sharedBody = sharedBodyOf(next)
+    const sent = await sendHub({
+      action: 'save-shared',
+      brn: company.brn,
+      shared_setup_id: shared.id,
+      name: shared.name,
+      body: sharedBody,
+      expected_revision: shared.revision,
+    })
+    const changes = { sharedChanged: true, sharedBody, companies: [] }
+    const outcome = sent.ok ? (confirmShared(sharedBody, sent.result.revision), { ok: true }) : uncertain(sent) ? await settle(sent, changes) : sent
+    if (!outcome.ok) return outcome
+    current = structuredClone(next)
+    publish()
+    return { ok: true, revision: shared.revision }
+  }
+
+  const item = selectedItem()
+  const app = selectedApp()
+  if (!item || !app) return fail('unavailable', 'The dashboard is not connected.')
+  if (!body || !isList(body.columns) || (body.customFields !== undefined && !isList(body.customFields))) return unreadable
+  if (item.role !== 'admin') return fail('forbidden', `Only an admin of ${item.name} can restore its columns.`)
+  const restoredApp = { ...app, columns: body.columns, details: { ...app.details, customFields: body.customFields ?? [] } }
+  const companyBody = companyBodyOf(restoredApp)
+  const sent = await sendHub({ action: 'save-company', brn: company.brn, company_brn: item.brn, body: companyBody, expected_revision: item.revision })
+  const changes = { sharedChanged: false, companies: [{ item, body: companyBody }] }
+  const outcome = sent.ok ? (confirmCompany(item, companyBody, sent.result.revision), { ok: true }) : uncertain(sent) ? await settle(sent, changes) : sent
+  if (!outcome.ok) return outcome
+  current = structuredClone({ ...current, companies: current.companies.map((c) => (c.id === app.id ? restoredApp : c)) })
+  publish()
+  return { ok: true, revision: item.revision }
 }
 
 // ---------- starting a company's setup in the dashboard ----------

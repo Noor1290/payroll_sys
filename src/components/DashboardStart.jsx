@@ -1,7 +1,8 @@
 import { useEffect, useState } from 'react'
-import { CircleAlert, Cloud, CloudUpload, LoaderCircle, RotateCw } from 'lucide-react'
+import { CircleAlert, Cloud, CloudOff, CloudUpload, LoaderCircle, RotateCw } from 'lucide-react'
 import { defaultIdentityFields } from '../lib/model'
 import { dashboardCompany, startOptions, startSetup } from '../lib/dashboardSetup'
+import { formatLoadedAt } from '../lib/offlineCopy'
 
 // Inside the dashboard, before the app can be used: while the column setup is
 // loading, when it could not be loaded, or when the selected company has no
@@ -9,9 +10,11 @@ import { dashboardCompany, startOptions, startSetup } from '../lib/dashboardSetu
 //   mode         'starting' | 'failed' | 'empty'
 //   problem      why it failed (mode 'failed')
 //   canImport    this browser holds companies that are not imported yet
+//   offlineCopies  the column setups last loaded from the dashboard, kept in this
+//                browser: [{ brn, label, loadedAt }], offered read-only (mode 'failed')
 // Once a setup has been started here, the app is started again from it (see
 // onSetupReplaced in lib/dashboardSetup.js).
-export default function DashboardStart({ mode, problem, canImport, onRetry, onImport }) {
+export default function DashboardStart({ mode, problem, canImport, onRetry, onImport, offlineCopies = [], onOpenOffline }) {
   const company = dashboardCompany()
 
   return (
@@ -34,6 +37,20 @@ export default function DashboardStart({ mode, problem, canImport, onRetry, onIm
             <RotateCw aria-hidden="true" />
             Try again
           </button>
+          {offlineCopies.length > 0 && (
+            <div className="mt-2 flex flex-col items-center gap-2">
+              <p className="text-sm text-muted">
+                This browser kept the column setup it last loaded from the dashboard. It can be looked at, read-only: changes can't be saved,
+                and the months are not in it.
+              </p>
+              {offlineCopies.map((copy) => (
+                <button key={copy.brn} onClick={() => onOpenOffline(copy.brn)} className="btn btn-secondary">
+                  <CloudOff aria-hidden="true" />
+                  Open the read-only copy of {copy.label} from {formatLoadedAt(copy.loadedAt)}
+                </button>
+              ))}
+            </div>
+          )}
           <p className="text-xs text-muted">Opened on its own, outside the dashboard, the payroll app works from this browser's own copy.</p>
         </div>
       )}

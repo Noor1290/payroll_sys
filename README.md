@@ -33,7 +33,12 @@ A backup file holds real payroll figures: keep it where the payroll itself is ke
 
 ## Where the data is read and saved
 
-Screens never touch the browser's storage themselves. They call the operations in `src/lib/dataStore.js`, and a store carries them out. Today the only store is the browser (`src/lib/storage.js`), so the app behaves as it always has. Saving through the Payroll Hub dashboard (see `docs/MIGRATION_PLAN.md` in the payroll_hub repository) will be a second store with the same operations. `tests/audit/dataStore.test.jsx` fails if a screen reaches past the interface.
+Screens never touch the browser's storage themselves. They call the operations in `src/lib/dataStore.js`, and a store carries them out. Opened on its own, the store is the browser (`src/lib/storage.js`), so the app behaves as it always has. Inside the Payroll Hub dashboard it is the dashboard (`src/lib/dashboardSetup.js` for the column setup, `src/lib/dashboardMonths.js` for the months, behind the dashboard's password gate); see `docs/MIGRATION_PLAN.md` in the payroll_hub repository. `tests/audit/dataStore.test.jsx` fails if a screen reaches past the interface.
+
+Inside the dashboard:
+
+- **History.** "History of the Global columns", "History of the columns of [company]" and, on the Employee Table, "History of this month" list every saved revision, newest first, with the date, the time and who saved it. Looking at one changes nothing. "Restore this version" asks first and saves it as a NEW revision; nothing earlier is rewritten or deleted. Before a column setup is restored, the dialog names the keys and formulas that change, and works out again the months saved with a later revision, naming any whose figures would not be the same (this needs the dashboard unlocked). Only someone who may change it is offered Restore; a month's History needs the dashboard unlocked and hides everything when it locks.
+- **Offline copy.** Each time the column setup is loaded from the dashboard, this browser keeps that copy, one per company (`payroll_dashboard_offline_v1`: the shared and the company's columns, formulas and custom details, never a month, salary or national ID). When the dashboard cannot be reached, it is offered as "Offline: read-only copy from [date and time]. Changes can't be saved." Nothing in it can be changed, and the Employee Table and Totals say the months are not in it.
 
 ## Checks
 

@@ -74,6 +74,23 @@ function snapDialog(name) {
   collected[name] = textOf(dialog)
 }
 
+// The wording only, for the History and the offline copy: the tables there show the fake
+// payroll itself (columns, formulas, figures), which is data, not wording; and a date and
+// time that depend on when and where the check runs are written as [date] and [time].
+function wordingOf(within) {
+  const copy = within.cloneNode(true)
+  for (const table of copy.querySelectorAll('table')) table.remove()
+  return textOf(copy).map((line) =>
+    line
+      .replace(/\b\d{1,2} [A-Z][a-z]+ \d{4} at \d{2}:\d{2}\b/g, '[date] at [time]')
+      .replace(/\b\d{1,2} [A-Z][a-z]{2} \d{4}, \d{2}:\d{2}\b/g, '[date], [time]')
+  )
+}
+function snapWording(name, within = topDialog()) {
+  expect(within, `what to collect for ${name}`).toBeTruthy()
+  collected[name] = wordingOf(within)
+}
+
 function reply(type, id, payload) {
   const event = new MessageEvent('message', { data: { type, from: 'dashboard', to: 'payroll', version: 1, id, payload }, origin: HUB_ORIGIN })
   Object.defineProperty(event, 'source', { value: fakeDashboard })
@@ -311,6 +328,121 @@ test('collect every visible string (inside the dashboard)', async () => {
     snap('83 embedded: opened while the dashboard is locked')
   }
 
+  // ---------- Phase 3 follow-ups: History and restore, the offline copy ----------
+  // The History dialogs exist only in a version that has them, and are not collected for
+  // the base. The pages are collected for both: the base shows its own page there.
+  const KNOWS_HISTORY = fs.existsSync(path.join(SRC, 'lib/dashboardHistory.js'))
+  const KNOWS_OFFLINE = fs.existsSync(path.join(SRC, 'lib/offlineCopy.js'))
+  const revised = () => {
+    const hub = attachedHub({ monthsSupported: true, months: { 'C00000001|2026-10': { employees: octoberEmployees, shared_revision: 2 } } })
+    const body = structuredClone({ identityFields, idFieldKey, globalColumns })
+    body.globalColumns = body.globalColumns.map((c) => (c.key === 'netPay' ? { ...c, formula: 'grossPay - totalDeductions - 100' } : c))
+    hub.changeSharedElsewhere(SHARED_ID, body)
+    return hub
+  }
+  const selectRevision = async (n) => {
+    const item = [...topDialog().querySelectorAll('[aria-label="Saved versions"] button')].find((b) => squash(b.textContent).startsWith(`Revision ${n}`))
+    expect(item, `revision ${n}`).toBeTruthy()
+    await act(async () => item.click())
+  }
+  const gateTo = (unlocked) =>
+    reply('send-data', `gate-history-${String(Date.now()).padStart(13, '0')}`, { dataType: 'payroll-month', rows: [{ action: 'gate', unlocked }] })
+  const typeSalary = async (value) => {
+    const input = document.querySelector('tbody [aria-label="Basic Salary"]')
+    const setter = Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, 'value').set
+    await act(async () => {
+      setter.call(input, value)
+      input.dispatchEvent(new Event('input', { bubbles: true }))
+    })
+  }
+
+  if (KNOWS_HISTORY) {
+    let hub = revised()
+    await start({ hub, waitFor: 'months of Fake Co Ltd, kept in the dashboard' })
+    await click('Global Columns')
+    await click('History of the Global columns')
+    await vi.waitFor(() => expect(topDialog().textContent).toContain('Revision 1'))
+    await selectRevision(1)
+    await vi.waitFor(() => expect(topDialog().textContent).toContain('What restoring it would change'))
+    snapWording('84 embedded: History of the Global columns, an earlier version')
+    await click('Restore this version', topDialog())
+    await vi.waitFor(() => expect(topDialog().textContent).toContain('would be worked out differently'))
+    snapWording('85 embedded: History of the Global columns, restore asked')
+    await click('Restore', topDialog())
+    await vi.waitFor(() => expect(topDialog().textContent).toContain('Restored.'))
+    snapWording('86 embedded: History of the Global columns, restored')
+
+    hub = revised()
+    hub.state.unlocked = false
+    await start({ hub, waitFor: 'Unlock the dashboard to continue' })
+    await click('Global Columns')
+    await click('History of the Global columns')
+    await vi.waitFor(() => expect(topDialog().textContent).toContain('Revision 1'))
+    await selectRevision(1)
+    await vi.waitFor(() => expect(button('Restore this version', topDialog())).toBeTruthy())
+    await click('Restore this version', topDialog())
+    await vi.waitFor(() => expect(topDialog().textContent).toContain('could not be checked'))
+    snapWording('87 embedded: History of the Global columns, the months could not be checked (locked)')
+
+    await start({ hub: attachedHub({ companies: [{ ...FAKE, role: 'member' }, OTHER] }), waitFor: 'kept in the dashboard' })
+    await click('Company Columns')
+    await click('History of the columns of Fake Co Ltd')
+    await vi.waitFor(() => expect(topDialog().textContent).toContain('Revision 1'))
+    snapWording('88 embedded: History of a company\'s columns, the version in use, not an admin')
+
+    hub = attachedHub({ monthsSupported: true, months: { 'C00000001|2026-10': { employees: octoberEmployees } } })
+    await start({ hub, waitFor: 'months of Fake Co Ltd, kept in the dashboard' })
+    await vi.waitFor(() => expect(document.querySelector('tbody input')).toBeTruthy())
+    await typeSalary('19115')
+    await vi.waitFor(() => expect(hub.state.months.get('C00000001|2026-10').revision).toBe(2), { timeout: 4000 })
+    await typeSalary('20115')
+    await vi.waitFor(() => expect(hub.state.months.get('C00000001|2026-10').revision).toBe(3), { timeout: 4000 })
+    await vi.waitFor(() => expect(button('History of this month').disabled).toBe(false))
+    await click('History of this month')
+    await vi.waitFor(() => expect(topDialog().textContent).toContain('Revision 1'))
+    await selectRevision(1)
+    await vi.waitFor(() => expect(topDialog().textContent).toContain('Testeur'))
+    snapWording('89 embedded: History of a month, an earlier version')
+    await click('Restore this version', topDialog())
+    snapWording('90 embedded: History of a month, restore asked')
+    await selectRevision(2)
+    snapWording('91 embedded: History of a month, only the record of a save kept')
+    hub.state.unlocked = false
+    await gateTo(false)
+    await vi.waitFor(() => expect(topDialog().textContent).toContain('Unlock it to see'))
+    snapWording('92 embedded: History of a month, the dashboard locked')
+  }
+
+  if (KNOWS_OFFLINE) {
+    // A setup loaded once, then the dashboard cannot be reached.
+    const hub = attachedHub({ monthsSupported: true, months: { 'C00000001|2026-10': { employees: octoberEmployees } } })
+    await start({ hub, waitFor: 'kept in the dashboard' })
+    const kept = localStorage.getItem('payroll_dashboard_offline_v1')
+    hub.state.down = true
+    await start({ hub, waitFor: 'could not be loaded' })
+    // start() clears this browser's storage, as a new profile would: the copy is put back,
+    // and the dashboard is asked again.
+    localStorage.setItem('payroll_dashboard_offline_v1', kept)
+    await click('Try again')
+    await vi.waitFor(() => expect(document.body.textContent).toContain('Open the read-only copy'))
+    snapWording('93 embedded: column setup could not be loaded, a read-only copy offered', document.body)
+    const offer = [...document.querySelectorAll('button')].find((b) => squash(b.textContent).startsWith('Open the read-only copy'))
+    await act(async () => offer.click())
+    await vi.waitFor(() => expect(document.body.textContent).toContain('Offline: read-only copy from'))
+    await click('Global Columns')
+  } else {
+    // The base: the Global columns as it shows them, to compare the read-only copy with.
+    await startDashboard(attachedHub(), 'kept in the dashboard')
+    await click('Global Columns')
+  }
+  snapWording('94 embedded: the read-only copy, Global columns', document.body)
+  if (KNOWS_OFFLINE) {
+    await click('Employee Table')
+    const cover = document.querySelector('[aria-label="Not in the offline copy"]')
+    expect(cover, 'the months cover').toBeTruthy()
+    snapWording('95 embedded: the read-only copy, Employee Table (the cover)', cover)
+  }
+
   expect(OUT, 'TEXT_CHECK_OUT_EMBEDDED').toBeTruthy()
   fs.writeFileSync(OUT, JSON.stringify(collected, null, 2))
-}, 60000)
+}, 120000)

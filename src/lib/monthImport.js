@@ -81,7 +81,7 @@ const sameFigure = (a, b) => Boolean(a) && Boolean(b) && Object.is(a.value, b.va
 
 // The figures that differ between the browser's columns and the dashboard's,
 // for the same employees: [{ employee, column }] (names only, never a figure).
-function figureDifferences(employees, browserColumns, dashboardColumns) {
+export function figureDifferences(employees, browserColumns, dashboardColumns) {
   const before = figures(employees, browserColumns)
   const after = figures(employees, dashboardColumns)
   const differences = []

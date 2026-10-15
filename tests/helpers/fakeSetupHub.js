@@ -46,7 +46,7 @@ export function createFakeSetupHub(seed = {}) {
     unlockAnswer: 'unlock',
     // `${BRN}|${YYYY-MM}` -> { revision, employees, shared_revision, company_revision, by }
     months: new Map(),
-    // { key, revision, employees: kept content or null, by }
+    // { key, revision, shared_revision, company_revision, employee_count, employees: kept content or null, by, saved_at }
     monthHistory: [],
     // Told when the gate opens or locks, as the dashboard tells the app.
     onPush: null,
@@ -59,8 +59,9 @@ export function createFakeSetupHub(seed = {}) {
     state.history.push({ target: `shared:${s.id}`, revision: s.revision, body: structuredClone(s.body), saved_at: '2026-10-01T09:00:00.000Z' })
   }
   for (const [key, m] of Object.entries(seed.months || {})) {
-    state.months.set(key, { revision: 1, shared_revision: 1, company_revision: 1, by: 'other', ...m, employees: JSON.parse(JSON.stringify(m.employees)) })
-    state.monthHistory.push({ key, revision: m.revision || 1, employees: null, by: 'other' })
+    const month = { revision: 1, shared_revision: 1, company_revision: 1, by: 'other', ...m, employees: JSON.parse(JSON.stringify(m.employees)) }
+    state.months.set(key, month)
+    state.monthHistory.push({ ...recordOf(key, month), saved_at: '2026-10-01T09:00:00.000Z' })
   }
   for (const [brn, s] of Object.entries(seed.setups || {})) {
     state.setups.set(brn, { ...s, body: structuredClone(s.body) })
@@ -74,6 +75,19 @@ export function createFakeSetupHub(seed = {}) {
   }
 
   const norm = (brn) => String(brn || '').trim().toUpperCase()
+  // What a month's history records of one save; its content only when kept later.
+  function recordOf(key, month) {
+    return {
+      key,
+      revision: month.revision,
+      shared_revision: month.shared_revision,
+      company_revision: month.company_revision,
+      employee_count: month.employees.length,
+      employees: null,
+      by: month.by,
+      saved_at: null,
+    }
+  }
   const refuse = (code, error) => ({ ok: false, code, error })
   const member = (brn) => state.companies.find((c) => norm(c.brn) === norm(brn)) || null
   const selected = () => member(state.selectedBrn)
@@ -335,8 +349,36 @@ export function createFakeSetupHub(seed = {}) {
           state.monthHistory
             .filter((h) => h.key === monthKey(brn, params.period))
             .sort((a, b) => b.revision - a.revision)
-            .map((h) => ({ revision: h.revision, kept: h.employees !== null, saved_by_you: h.by === 'me' }))
+            .map((h) => ({
+              revision: h.revision,
+              shared_revision: h.shared_revision,
+              company_revision: h.company_revision,
+              employee_count: h.employee_count,
+              kept: h.employees !== null,
+              saved_at: h.saved_at,
+              saved_by_you: h.by === 'me',
+            }))
         )
+      case 'revision': {
+        if (!Number.isInteger(params.revision) || params.revision < 1) return refuse('invalid', '"revision" is missing or not valid.')
+        const key = monthKey(brn, params.period)
+        const record = state.monthHistory.find((h) => h.key === key && h.revision === params.revision)
+        const month = state.months.get(key)
+        const employees = record && (record.employees ?? (month && month.revision === params.revision ? month.employees : null))
+        if (!employees) return refuse('not-found', "This revision's content was not kept: the dashboard has only the record of that save.")
+        return answer([
+          {
+            period: params.period,
+            revision: record.revision,
+            shared_revision: record.shared_revision,
+            company_revision: record.company_revision,
+            employee_count: record.employee_count,
+            employees,
+            saved_at: record.saved_at,
+            saved_by_you: record.by === 'me',
+          },
+        ])
+      }
       default:
         return refuse('invalid', '"action" is missing or not valid.')
     }
@@ -366,6 +408,9 @@ export function createFakeSetupHub(seed = {}) {
       if (month && month.revision !== row.expected_revision) {
         return refuse('stale', 'Someone else saved this month in the dashboard since it was opened here. Nothing was saved.')
       }
+      if (row.restored_from !== undefined && (!Number.isInteger(row.restored_from) || row.restored_from < 1)) {
+        return refuse('invalid', '"restored_from" is missing or not valid.')
+      }
       if (month) keepPrevious(key, month, row.keep_previous === true)
       const saved = {
         revision: month ? month.revision + 1 : 1,
@@ -375,10 +420,18 @@ export function createFakeSetupHub(seed = {}) {
         by: 'me',
       }
       state.months.set(key, saved)
-      state.monthHistory.push({ key, revision: saved.revision, employees: null, by: 'me' })
+      state.monthHistory.push({ ...recordOf(key, saved), saved_at: stamp() })
       return {
         ok: true,
-        result: { action: 'save', brn: company.brn, company: company.name, period: row.period, revision: saved.revision, employee_count: saved.employees.length },
+        result: {
+          action: 'save',
+          brn: company.brn,
+          company: company.name,
+          period: row.period,
+          revision: saved.revision,
+          employee_count: saved.employees.length,
+          ...(row.restored_from !== undefined ? { restored_from: row.restored_from } : {}),
+        },
       }
     }
 
@@ -423,7 +476,7 @@ export function createFakeSetupHub(seed = {}) {
               by: 'me',
             }
             state.months.set(key, moved)
-            state.monthHistory.push({ key, revision: moved.revision, employees: null, by: 'me' })
+            state.monthHistory.push({ ...recordOf(key, moved), saved_at: stamp() })
             months.push({ brn: member(brn)?.brn ?? brn, period: key.split('|')[1], revision: moved.revision })
           }
         }
@@ -461,7 +514,7 @@ export function createFakeSetupHub(seed = {}) {
       by: 'other',
     }
     state.months.set(key, saved)
-    state.monthHistory.push({ key, revision: saved.revision, employees: null, by: 'other' })
+    state.monthHistory.push({ ...recordOf(key, saved), saved_at: stamp() })
   }
 
   // As the dashboard would answer one message from the app. Undefined = no answer at all.

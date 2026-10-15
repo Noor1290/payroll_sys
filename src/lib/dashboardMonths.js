@@ -494,6 +494,91 @@ export async function takeTheirMonth() {
   changed({ reason: 'replaced', brn: entry.brn, period: entry.period })
 }
 
+// ---------- history and restore ----------
+
+// The revision of a month this screen holds, and whether it has changes that
+// are not saved yet. Null when the month is not held (not opened here).
+export function monthInUse(brn, period) {
+  const entry = months.get(keyOf(brn, period))
+  if (!entry) return null
+  return { revision: entry.revision, unsaved: pending(entry) || entry.saving || Boolean(entry.timer) || Boolean(entry.problem) }
+}
+
+// Every save of a month, newest first, without its content:
+//   { ok: true, revisions: [{ revision, shared_revision, company_revision, employee_count, kept, saved_at, saved_by_you }] }
+export async function monthHistory(brn, period) {
+  const answer = await askHub({ action: 'history', brn: selectedBrn(), ...companyParam(brn), period }, { dataType: MONTH })
+  if (!answer.ok && answer.code === 'locked') noteGate(false)
+  return answer.ok ? { ok: true, revisions: answer.rows } : answer
+}
+
+// One revision of a month with its employees, as it was saved. Only for a
+// revision whose content the dashboard kept, or the one in use now.
+//   { ok: true, month: { revision, shared_revision, company_revision, employee_count, employees, saved_at, saved_by_you } }
+export async function loadMonthRevision(brn, period, revision) {
+  const answer = await askHub({ action: 'revision', brn: selectedBrn(), ...companyParam(brn), period, revision }, { dataType: MONTH })
+  if (!answer.ok && answer.code === 'locked') noteGate(false)
+  if (!answer.ok) return answer
+  const row = answer.rows[0]
+  if (!row || row.revision !== revision || !Array.isArray(row.employees)) {
+    return fail('unavailable', "The dashboard's answer could not be read.")
+  }
+  return { ok: true, month: { ...row, employees: asJson(row.employees) } }
+}
+
+// "Restore this version": an earlier revision's employees are saved as a NEW
+// revision of the month, over the one in use now, which the dashboard keeps.
+// Nothing earlier is rewritten or deleted. The month must be open here, with
+// nothing typed that is not saved yet. It is saved with the column setup in use
+// now, as every save of the month is.
+//   { ok: true, revision }   saved as that revision; the screen reads it again
+export async function restoreMonth(brn, period, revision, employees) {
+  const entry = months.get(keyOf(brn, period))
+  if (!entry) return fail('not-found', 'Open this month first, then restore.')
+  if (pending(entry) || entry.saving || entry.timer || entry.problem || pendingMoves.length > 0) {
+    return fail('busy', 'What you typed in this month is not saved yet. Wait until the bar says Saved, then restore.')
+  }
+  if (gate === 'locked') return { ...LOCKED }
+  const revisions = revisionsOf(brn)
+  if (!revisions) return fail('unavailable', 'The column setup of this company is not loaded.')
+
+  const restored = asJson(employees)
+  entry.saving = true
+  publish()
+  const sent = await sendHub(
+    {
+      action: 'save',
+      brn: selectedBrn(),
+      ...companyParam(brn),
+      period,
+      employees: restored,
+      expected_revision: entry.revision,
+      shared_revision: revisions.shared,
+      company_revision: revisions.company,
+      keep_previous: true,
+      restored_from: revision,
+    },
+    { dataType: MONTH }
+  )
+  let outcome
+  if (sent.ok) {
+    confirm(entry, restored, sent.result.revision)
+    outcome = { ok: true }
+  } else {
+    outcome = uncertain(sent) ? await settle(entry, sent, restored) : sent
+  }
+  entry.saving = false
+  if (!outcome.ok) {
+    if (outcome.code === 'locked') noteGate(false)
+    publish()
+    return outcome
+  }
+  entry.current = structuredClone(restored)
+  publish()
+  changed({ reason: 'replaced', brn, period })
+  return { ok: true, revision: entry.revision }
+}
+
 // ---------- a change of key ----------
 
 // A column's (or an identity field's) key changed: its values move in every

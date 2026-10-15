@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState, useSyncExternalStore } from 'react'
-import { Building2, CircleAlert, Copy, LoaderCircle, LockKeyhole, Menu, RotateCw, Trash2, Upload, X } from 'lucide-react'
+import { Building2, CircleAlert, CloudOff, Copy, History, LoaderCircle, LockKeyhole, Menu, RotateCw, Trash2, Upload, X } from 'lucide-react'
 import Sidebar from './components/Sidebar'
 import ColumnManager from './components/ColumnManager'
 import IdentityFieldsManager from './components/IdentityFieldsManager'
@@ -22,8 +22,10 @@ import DashboardBar from './components/DashboardBar'
 import DashboardStart from './components/DashboardStart'
 import ImportToDashboardModal from './components/ImportToDashboardModal'
 import ImportMonthsModal from './components/ImportMonthsModal'
+import { MonthHistoryModal, SetupHistoryModal } from './components/HistoryModal'
 import { dataStore, renameValueKey, resetDataStore, setDataStore } from './lib/dataStore'
-import { connectDashboard, dashboardCompany, dashboardStore, onSetupReplaced, readImported, sharedAccess } from './lib/dashboardSetup'
+import { brnOf, connectDashboard, dashboardCompany, dashboardStore, onSetupReplaced, readImported, sharedAccess } from './lib/dashboardSetup'
+import { formatLoadedAt, listOfflineCopies, offlineStore } from './lib/offlineCopy'
 import { hasSomethingToImport } from './lib/dashboardImport'
 import { askToUnlock, gateChanged, monthStatus, onMonthsChanged } from './lib/dashboardMonths'
 import { hasMonthsToImport } from './lib/monthImport'
@@ -42,7 +44,7 @@ import {
   makeId,
 } from './lib/model'
 import { reorderWithinCategory, labelColumnsForHelper } from './lib/categories'
-import { formatPeriodLabel, shiftPeriod } from './lib/periods'
+import { formatPeriodLabel, periodKey, shiftPeriod } from './lib/periods'
 import { useComputedGrid } from './hooks/useComputedGrid'
 import { buildExportPlan } from './lib/excelExport'
 import {
@@ -100,7 +102,9 @@ const isPending = (result) => typeof result?.then === 'function'
 // that does not keep months yet leaves them in this browser. Opened on its own,
 // or inside a dashboard that does not keep payroll setups yet, everything is
 // in this browser exactly as before.
-//   mode: 'browser' | 'starting' | 'dashboard' | 'empty' | 'failed'
+// When the dashboard cannot be reached, the last column setup loaded from it
+// can be opened read-only (lib/offlineCopy.js): mode 'offline'. No month is in it.
+//   mode: 'browser' | 'starting' | 'dashboard' | 'empty' | 'failed' | 'offline'
 export default function App() {
   const [startedFrom, setStartedFrom] = useState(0)
   const [restoreMessage, setRestoreMessage] = useState(null) // { title, description, tone } | null
@@ -108,6 +112,8 @@ export default function App() {
   const [startProblem, setStartProblem] = useState('')
   const [importOpen, setImportOpen] = useState(false)
   const [importMonthsOpen, setImportMonthsOpen] = useState(false)
+  // The offline copy on screen: { brn, label, loadedAt } | null.
+  const [offline, setOffline] = useState(null)
 
   // No-op unless this app is running inside the Payroll Hub dashboard's iframe.
   useEffect(() => {
@@ -116,6 +122,7 @@ export default function App() {
 
   // What a load from the dashboard answered decides what is shown.
   const applyResult = useCallback((result) => {
+    setOffline(null)
     if (result.ok && !result.empty) {
       setDataStore(dashboardStore)
       setMode('dashboard')
@@ -147,6 +154,16 @@ export default function App() {
 
   useEffect(() => onSetupReplaced(applyResult), [applyResult])
 
+  // "Open the read-only copy": the last column setup loaded from the dashboard, saving nothing.
+  function openOffline(brn) {
+    const opened = offlineStore(brn)
+    if (!opened) return
+    setDataStore(opened.store)
+    setOffline(opened.copy)
+    setMode('offline')
+    setStartedFrom((n) => n + 1)
+  }
+
   function handleRestored(message) {
     setRestoreMessage(message)
     setStartedFrom((n) => n + 1)
@@ -162,7 +179,7 @@ export default function App() {
     />
   )
 
-  if (mode !== 'browser' && mode !== 'dashboard') {
+  if (mode !== 'browser' && mode !== 'dashboard' && mode !== 'offline') {
     return (
       <div className="relative isolate flex h-dvh overflow-hidden bg-canvas text-fg">
         <DashboardStart
@@ -171,6 +188,8 @@ export default function App() {
           canImport={mode === 'empty' && hasSomethingToImport()}
           onRetry={() => void loadFromDashboard()}
           onImport={() => setImportOpen(true)}
+          offlineCopies={mode === 'failed' ? listOfflineCopies() : []}
+          onOpenOffline={openOffline}
         />
         {importDialog}
       </div>
@@ -183,6 +202,7 @@ export default function App() {
         key={startedFrom}
         onRestored={handleRestored}
         inDashboard={mode === 'dashboard'}
+        offline={mode === 'offline' ? offline : null}
         onReloadDashboard={() => void loadFromDashboard()}
         onOpenImport={() => setImportOpen(true)}
         onOpenImportMonths={() => setImportMonthsOpen(true)}
@@ -202,13 +222,17 @@ export default function App() {
   )
 }
 
-function PayrollApp({ onRestored, inDashboard = false, onReloadDashboard, onOpenImport, onOpenImportMonths }) {
+// `offline`: the read-only copy of the dashboard's column setup, { brn, label, loadedAt }, or null.
+function PayrollApp({ onRestored, inDashboard = false, offline = null, onReloadDashboard, onOpenImport, onOpenImportMonths }) {
   const [identityFields, setIdentityFields] = useState([])
   const [idFieldKey, setIdFieldKey] = useState(null)
   const [globalColumns, setGlobalColumns] = useState([])
   const [companies, setCompanies] = useState([])
   const [activeCompanyId, setActiveCompanyId] = useState(null)
-  const [activeTab, setActiveTab] = useState('employees')
+  // The offline copy has no months: it opens on the columns.
+  const [activeTab, setActiveTab] = useState(offline ? 'global' : 'employees')
+  // The History open now: 'shared' | 'company' | 'month' | null (inside the dashboard).
+  const [historyOf, setHistoryOf] = useState(null)
   const [breakdownTrace, setBreakdownTrace] = useState(null)
   const [importData, setImportData] = useState(null) // { headers, rows } | null
   const [exportPlan, setExportPlan] = useState(null)
@@ -244,6 +268,16 @@ function PayrollApp({ onRestored, inDashboard = false, onReloadDashboard, onOpen
   const [pendingExport, setPendingExport] = useState(null) // { errors, proceed } | null
   // What the last import could not read as numbers.
   const [importSummary, setImportSummary] = useState(null) // { count, unreadable } | null
+
+  // A column setup restored from its History: the screen shows what the store now holds.
+  function showRestoredSetup() {
+    const saved = loadState()
+    if (!saved) return
+    setIdentityFields(saved.identityFields)
+    setIdFieldKey(saved.idFieldKey)
+    setGlobalColumns(saved.globalColumns)
+    setCompanies(saved.companies)
+  }
 
   useEffect(() => {
     const saved = loadState()
@@ -285,18 +319,21 @@ function PayrollApp({ onRestored, inDashboard = false, onReloadDashboard, onOpen
   // shows read-only from the start instead of letting a save be refused.
   const access = inDashboard ? sharedAccess() : null
   const companyRole = inDashboard ? dashboardCompany()?.role : 'admin'
-  const globalReadOnly = inDashboard && !access?.canChange
-  const companyReadOnly = inDashboard && companyRole !== 'admin'
+  // The offline copy is read-only throughout: nothing in it can be saved.
+  const globalReadOnly = Boolean(offline) || (inDashboard && !access?.canChange)
+  const companyReadOnly = Boolean(offline) || (inDashboard && companyRole !== 'admin')
   // Opened on its own after an import: this browser's copy is not the dashboard's.
-  const [browserOnly] = useState(() => !inDashboard && Object.keys(readImported().companies).length > 0)
+  const [browserOnly] = useState(() => !inDashboard && !offline && Object.keys(readImported().companies).length > 0)
   const [canImport] = useState(() => inDashboard && companyRole === 'admin' && hasSomethingToImport())
 
   // Inside a dashboard that keeps the months: they are behind its password gate.
   const months = useSyncExternalStore(monthStatus.subscribe, monthStatus.get)
-  const monthsInDashboard = inDashboard && months.supported
-  const [canImportMonths] = useState(() => monthsInDashboard && companyRole === 'admin' && hasMonthsToImport())
+  const monthsKept = inDashboard && months.supported
+  // The offline copy holds no month: in place of the table, it says so.
+  const monthsInDashboard = monthsKept || Boolean(offline)
+  const [canImportMonths] = useState(() => monthsKept && companyRole === 'admin' && hasMonthsToImport())
   // While the gate is locked the month's figures are covered; what was typed stays in memory.
-  const covered = monthsInDashboard && months.gate === 'locked'
+  const covered = monthsKept && months.gate === 'locked'
   // Bumped when the month on screen must be read again (the gate opened, the dashboard's version was taken).
   const [monthReload, setMonthReload] = useState(0)
   // The month on screen could not be read: { key, code, error } | null.
@@ -727,7 +764,7 @@ function PayrollApp({ onRestored, inDashboard = false, onReloadDashboard, onOpen
         // Inside the dashboard, the company selected there. The others attached to the
         // same Global columns are held only for the checks that look across companies.
         companies={inDashboard ? companies.filter((c) => c.id === activeCompanyId) : companies}
-        inDashboard={inDashboard}
+        inDashboard={inDashboard || Boolean(offline)}
         browserOnly={browserOnly}
         activeCompanyId={activeCompanyId}
         onSelect={(id) => {
@@ -753,6 +790,8 @@ function PayrollApp({ onRestored, inDashboard = false, onReloadDashboard, onOpen
         >
           <Menu aria-hidden="true" />
         </button>
+
+        {offline && <OfflineBar copy={offline} onRetry={onReloadDashboard} />}
 
         {inDashboard && dashboardCompany() && (
           <DashboardBar
@@ -821,6 +860,12 @@ function PayrollApp({ onRestored, inDashboard = false, onReloadDashboard, onOpen
                       month={selectedMonth}
                     />
                   )}
+                  {monthsKept && companyRole === 'admin' && (
+                    <button onClick={() => setHistoryOf('month')} disabled={!monthReady} className="btn btn-secondary">
+                      <History aria-hidden="true" />
+                      History of this month
+                    </button>
+                  )}
                   <button
                     onClick={handleOpenCopyPreviousMonth}
                     disabled={!previousPeriodHasData || !monthReady}
@@ -887,6 +932,9 @@ function PayrollApp({ onRestored, inDashboard = false, onReloadDashboard, onOpen
             <div key={activeTab} className="rise-in min-h-0 flex-1 overflow-auto">
               {activeTab === 'global' && (
                 <>
+                  {inDashboard && (
+                    <HistoryButton label="History of the Global columns" onClick={() => setHistoryOf('shared')} />
+                  )}
                   <IdentityFieldsManager
                     identityFields={identityFields}
                     idFieldKey={idFieldKey}
@@ -928,6 +976,10 @@ function PayrollApp({ onRestored, inDashboard = false, onReloadDashboard, onOpen
                 </>
               )}
 
+              {activeTab === 'company' && inDashboard && (
+                <HistoryButton label={`History of the columns of ${activeCompany.name}`} onClick={() => setHistoryOf('company')} />
+              )}
+
               {activeTab === 'company' && (
                 <ColumnManager
                   title={`Company Columns — ${activeCompany.name}`}
@@ -956,7 +1008,12 @@ function PayrollApp({ onRestored, inDashboard = false, onReloadDashboard, onOpen
               )}
 
               {(activeTab === 'employees' || activeTab === 'totals') && (covered || blocked || !monthReady) && monthsInDashboard ? (
-                <MonthCover covered={covered} blocked={blocked} unsaved={months.state === 'not-saved'} onRetry={() => setMonthReload((n) => n + 1)} />
+                <MonthCover
+                  covered={covered}
+                  blocked={blocked}
+                  unsaved={months.state === 'not-saved'}
+                  onRetry={() => setMonthReload((n) => n + 1)}
+                />
               ) : null}
 
               {activeTab === 'employees' && (!monthsInDashboard || monthReady) && (
@@ -1025,6 +1082,26 @@ function PayrollApp({ onRestored, inDashboard = false, onReloadDashboard, onOpen
       )}
 
       {saveFailed && <SaveFailedDialog onClose={() => setSaveFailed(false)} />}
+
+      {(historyOf === 'shared' || historyOf === 'company') && activeCompany && (
+        <SetupHistoryModal
+          target={historyOf}
+          companyName={activeCompany.name}
+          onRestored={showRestoredSetup}
+          onClose={() => setHistoryOf(null)}
+        />
+      )}
+
+      {historyOf === 'month' && activeCompany && selectedYear && selectedMonth && brnOf(activeCompany.id) && (
+        <MonthHistoryModal
+          brn={brnOf(activeCompany.id)}
+          period={periodKey(selectedYear, selectedMonth)}
+          companyName={activeCompany.name}
+          identityFields={identityFields}
+          columns={effectiveColumns}
+          onClose={() => setHistoryOf(null)}
+        />
+      )}
 
       {pdfFillFormat && activeCompany && selectedYear && selectedMonth && (
         <PdfFillExportModal
@@ -1116,6 +1193,17 @@ function MonthCover({ covered, blocked, unsaved, onRetry }) {
       </div>
     )
   }
+  if (blocked?.code === 'offline') {
+    return (
+      <div role="region" aria-label="Not in the offline copy" className="flex min-h-64 flex-col items-center justify-center gap-3 text-center">
+        <span className="icon-tile icon-tile-neutral" aria-hidden="true">
+          <CloudOff />
+        </span>
+        <p className="text-base font-semibold text-fg">The months are not in this offline copy</p>
+        <p className="max-w-md text-sm text-muted">{blocked.error} Only the column setup is kept in this browser for when the dashboard cannot be reached.</p>
+      </div>
+    )
+  }
   if (blocked) {
     return (
       <div role="alert" className="flex min-h-64 flex-col items-center justify-center gap-3 text-center">
@@ -1140,5 +1228,36 @@ function MonthCover({ covered, blocked, unsaved, onRetry }) {
       <LoaderCircle className="h-4 w-4 motion-safe:animate-spin" aria-hidden="true" />
       Loading the month from the dashboard…
     </p>
+  )
+}
+
+// Inside the dashboard: opens the History of the column setup shown on this tab.
+function HistoryButton({ label, onClick }) {
+  return (
+    <div className="mb-3 flex justify-end">
+      <button onClick={onClick} className="btn btn-secondary btn-sm">
+        <History aria-hidden="true" />
+        {label}
+      </button>
+    </div>
+  )
+}
+
+// The offline copy: what it is, from when, and that nothing in it can be saved.
+function OfflineBar({ copy, onRetry }) {
+  return (
+    <div role="status" className="panel mb-4 shrink-0 flex-wrap items-center text-sm [--panel:var(--warn)]">
+      <CloudOff aria-hidden="true" />
+      <span className="min-w-48 flex-1 text-fg">
+        Offline: read-only copy from {formatLoadedAt(copy.loadedAt)}. Changes can't be saved.
+        <span className="block text-muted">
+          The column setup of {copy.label}, as last loaded from the dashboard. No month is kept in it.
+        </span>
+      </span>
+      <button className="btn btn-secondary btn-sm" onClick={onRetry}>
+        <RotateCw aria-hidden="true" />
+        Try the dashboard again
+      </button>
+    </div>
   )
 }

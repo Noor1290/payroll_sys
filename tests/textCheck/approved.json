@@ -286,13 +286,13 @@
     },
     {
       "text": "text: Cancel",
-      "why": "existing wording, not new: the Cancel button of the new \"Change this field's key?\" question, which the base version does not have; and the same button in the new backup dialogs (migration plan step 0a), which the base version does not have; also on the Phase 2 dashboard screens, where it is the same control or the company's name; also on the Phase 3 screens (months kept in the dashboard), where it is the same control or wording",
-      "onlyOn": ["57 change identity field key confirm (the ID field, values in saved months)", "58 change identity field key confirm (no saved values)", "59 restore a backup, what is in the file and in the browser", "59b restore a backup, a file that does not say when it was saved", "66 embedded: company details from the dashboard", "72 embedded: import, backup first", "73 embedded: import, what it will do", "80 embedded: import months, backup first", "81 embedded: import months, what it will do"]
+      "why": "existing wording, not new: the Cancel button of the new \"Change this field's key?\" question, which the base version does not have; and the same button in the new backup dialogs (migration plan step 0a), which the base version does not have; also on the Phase 2 dashboard screens, where it is the same control or the company's name; also on the Phase 3 screens (months kept in the dashboard), where it is the same control or wording; also on the Phase 3 follow-up screens (History, the read-only offline copy), where it is the same control or wording",
+      "onlyOn": ["57 change identity field key confirm (the ID field, values in saved months)", "58 change identity field key confirm (no saved values)", "59 restore a backup, what is in the file and in the browser", "59b restore a backup, a file that does not say when it was saved", "66 embedded: company details from the dashboard", "72 embedded: import, backup first", "73 embedded: import, what it will do", "80 embedded: import months, backup first", "81 embedded: import months, what it will do", "85 embedded: History of the Global columns, restore asked", "90 embedded: History of a month, restore asked"]
     },
     {
       "text": "aria-label: Close",
-      "why": "existing wording, not new: the close button of the new \"Change this field's key?\" question, which the base version does not have; and the same button in the new backup dialogs (migration plan step 0a), which the base version does not have; also on the Phase 2 dashboard screens, where it is the same control or the company's name; also on the Phase 3 screens (months kept in the dashboard), where it is the same control or wording",
-      "onlyOn": ["57 change identity field key confirm (the ID field, values in saved months)", "58 change identity field key confirm (no saved values)", "59 restore a backup, what is in the file and in the browser", "59b restore a backup, a file that does not say when it was saved", "60 backup restored", "61 restore, not a backup file", "61b restore, a backup of another version", "61c restore, a damaged backup", "61d restore, an empty backup", "62 backup not restored, storage full", "62b backup not restored, earlier data could not be put back", "63 this change was NOT saved (storage full)", "66 embedded: company details from the dashboard", "72 embedded: import, backup first", "73 embedded: import, what it will do", "74 embedded: import, done", "80 embedded: import months, backup first", "81 embedded: import months, what it will do", "82 embedded: import months, done"]
+      "why": "existing wording, not new: the close button of the new \"Change this field's key?\" question, which the base version does not have; and the same button in the new backup dialogs (migration plan step 0a), which the base version does not have; also on the Phase 2 dashboard screens, where it is the same control or the company's name; also on the Phase 3 screens (months kept in the dashboard), where it is the same control or wording; also on the Phase 3 follow-up screens (History, the read-only offline copy), where it is the same control or wording",
+      "onlyOn": ["57 change identity field key confirm (the ID field, values in saved months)", "58 change identity field key confirm (no saved values)", "59 restore a backup, what is in the file and in the browser", "59b restore a backup, a file that does not say when it was saved", "60 backup restored", "61 restore, not a backup file", "61b restore, a backup of another version", "61c restore, a damaged backup", "61d restore, an empty backup", "62 backup not restored, storage full", "62b backup not restored, earlier data could not be put back", "63 this change was NOT saved (storage full)", "66 embedded: company details from the dashboard", "72 embedded: import, backup first", "73 embedded: import, what it will do", "74 embedded: import, done", "80 embedded: import months, backup first", "81 embedded: import months, what it will do", "82 embedded: import months, done", "84 embedded: History of the Global columns, an earlier version", "85 embedded: History of the Global columns, restore asked", "86 embedded: History of the Global columns, restored", "87 embedded: History of the Global columns, the months could not be checked (locked)", "88 embedded: History of a company's columns, the version in use, not an admin", "89 embedded: History of a month, an earlier version", "90 embedded: History of a month, restore asked", "91 embedded: History of a month, only the record of a save kept", "92 embedded: History of a month, the dashboard locked"]
     },
     {
       "text": "text: 1 item that could not be read, kept as it is",
@@ -531,8 +531,8 @@
     },
     {
       "text": "text: Can't reach the database.",
-      "why": "approved: Phase 2: the column setup could not be loaded from the dashboard (Try again; the app on its own still works)",
-      "onlyOn": ["75 embedded: column setup could not be loaded"]
+      "why": "approved: Phase 2: the column setup could not be loaded from the dashboard (Try again; the app on its own still works); also on the Phase 3 follow-up screens (History, the read-only offline copy), where it is the same control or wording",
+      "onlyOn": ["75 embedded: column setup could not be loaded", "93 embedded: column setup could not be loaded, a read-only copy offered"]
     },
     {
       "text": "text: Close",
@@ -616,8 +616,8 @@
     },
     {
       "text": "text: In the dashboard",
-      "why": "approved: Phase 2: inside a dashboard that keeps the column setup (first seen on screen 65); also on the Phase 3 screens (months kept in the dashboard), where it is the same control or wording",
-      "onlyOn": ["65 embedded: column setup kept in the dashboard", "67 embedded: Global columns read-only, shared with a company you are not an admin of", "68 embedded: a company you are not an admin of", "69 embedded: saving", "70 embedded: NOT saved, someone else changed it", "76 embedded: months kept in the dashboard", "77 embedded: locked, the month covered, what was typed NOT saved", "78 embedded: a month NOT saved, someone else saved it", "79 embedded: months of a company you are not an admin of", "83 embedded: opened while the dashboard is locked"]
+      "why": "approved: Phase 2: inside a dashboard that keeps the column setup (first seen on screen 65); also on the Phase 3 screens (months kept in the dashboard), where it is the same control or wording; also on the Phase 3 follow-up screens (History, the read-only offline copy), where it is the same control or wording",
+      "onlyOn": ["65 embedded: column setup kept in the dashboard", "67 embedded: Global columns read-only, shared with a company you are not an admin of", "68 embedded: a company you are not an admin of", "69 embedded: saving", "70 embedded: NOT saved, someone else changed it", "76 embedded: months kept in the dashboard", "77 embedded: locked, the month covered, what was typed NOT saved", "78 embedded: a month NOT saved, someone else saved it", "79 embedded: months of a company you are not an admin of", "83 embedded: opened while the dashboard is locked", "94 embedded: the read-only copy, Global columns"]
     },
     {
       "text": "text: Levy ref 42",
@@ -646,8 +646,8 @@
     },
     {
       "text": "text: Opened on its own, outside the dashboard, the payroll app works from this browser's own copy.",
-      "why": "approved: Phase 2: the column setup could not be loaded from the dashboard (Try again; the app on its own still works)",
-      "onlyOn": ["75 embedded: column setup could not be loaded"]
+      "why": "approved: Phase 2: the column setup could not be loaded from the dashboard (Try again; the app on its own still works); also on the Phase 3 follow-up screens (History, the read-only offline copy), where it is the same control or wording",
+      "onlyOn": ["75 embedded: column setup could not be loaded", "93 embedded: column setup could not be loaded, a read-only copy offered"]
     },
     {
       "text": "text: Remove",
@@ -691,8 +691,8 @@
     },
     {
       "text": "text: The column setup could not be loaded from the dashboard",
-      "why": "approved: Phase 2: the column setup could not be loaded from the dashboard (Try again; the app on its own still works)",
-      "onlyOn": ["75 embedded: column setup could not be loaded"]
+      "why": "approved: Phase 2: the column setup could not be loaded from the dashboard (Try again; the app on its own still works); also on the Phase 3 follow-up screens (History, the read-only offline copy), where it is the same control or wording",
+      "onlyOn": ["75 embedded: column setup could not be loaded", "93 embedded: column setup could not be loaded, a read-only copy offered"]
     },
     {
       "text": "text: The column setup was NOT saved in the dashboard. Someone else changed the column setup in the dashboard since it was opened here. What you see here is still on this screen, but it will be gone when this page is closed or reloaded.",
@@ -726,8 +726,8 @@
     },
     {
       "text": "text: This browser's own copy",
-      "why": "approved: Phase 2: inside a dashboard that keeps the column setup (first seen on screen 65); also on the Phase 3 screens (months kept in the dashboard), where it is the same control or wording",
-      "onlyOn": ["65 embedded: column setup kept in the dashboard", "67 embedded: Global columns read-only, shared with a company you are not an admin of", "68 embedded: a company you are not an admin of", "69 embedded: saving", "70 embedded: NOT saved, someone else changed it", "76 embedded: months kept in the dashboard", "77 embedded: locked, the month covered, what was typed NOT saved", "78 embedded: a month NOT saved, someone else saved it", "79 embedded: months of a company you are not an admin of", "83 embedded: opened while the dashboard is locked"]
+      "why": "approved: Phase 2: inside a dashboard that keeps the column setup (first seen on screen 65); also on the Phase 3 screens (months kept in the dashboard), where it is the same control or wording; also on the Phase 3 follow-up screens (History, the read-only offline copy), where it is the same control or wording",
+      "onlyOn": ["65 embedded: column setup kept in the dashboard", "67 embedded: Global columns read-only, shared with a company you are not an admin of", "68 embedded: a company you are not an admin of", "69 embedded: saving", "70 embedded: NOT saved, someone else changed it", "76 embedded: months kept in the dashboard", "77 embedded: locked, the month covered, what was typed NOT saved", "78 embedded: a month NOT saved, someone else saved it", "79 embedded: months of a company you are not an admin of", "83 embedded: opened while the dashboard is locked", "94 embedded: the read-only copy, Global columns"]
     },
     {
       "text": "text: Use the dashboard's version",
@@ -776,8 +776,8 @@
     },
     {
       "text": "text: Unlock the dashboard",
-      "why": "approved: Phase 3, D5: asks the dashboard to show its password prompt",
-      "onlyOn": ["77 embedded: locked, the month covered, what was typed NOT saved", "83 embedded: opened while the dashboard is locked"]
+      "why": "approved: Phase 3, D5: asks the dashboard to show its password prompt; also on the Phase 3 follow-up screens (History, the read-only offline copy), where it is the same control or wording",
+      "onlyOn": ["77 embedded: locked, the month covered, what was typed NOT saved", "83 embedded: opened while the dashboard is locked", "87 embedded: History of the Global columns, the months could not be checked (locked)", "92 embedded: History of a month, the dashboard locked"]
     },
     {
       "text": "aria-label: Locked",
@@ -918,6 +918,211 @@
       "text": "text: This browser's own months were left as they were. Opened on its own, the app still shows them, marked \"This browser only. Not the dashboard's copy.\"",
       "why": "approved: Phase 3, D4: the import leaves this browser's copy as it was",
       "onlyOn": ["82 embedded: import months, done"]
+    },
+    {
+      "text": "aria-label: Not in the offline copy",
+      "why": "approved: the read-only offline copy of the column setup when the dashboard cannot be reached (Phase 3 follow-ups, 15 October 2026)",
+      "onlyOn": ["95 embedded: the read-only copy, Employee Table (the cover)"]
+    },
+    {
+      "text": "aria-label: Saved versions",
+      "why": "approved: History and restore of the column setup and of a month (Phase 3 follow-ups, 15 October 2026)",
+      "onlyOn": ["84 embedded: History of the Global columns, an earlier version", "85 embedded: History of the Global columns, restore asked", "86 embedded: History of the Global columns, restored", "87 embedded: History of the Global columns, the months could not be checked (locked)", "88 embedded: History of a company's columns, the version in use, not an admin", "89 embedded: History of a month, an earlier version", "90 embedded: History of a month, restore asked", "91 embedded: History of a month, only the record of a save kept"]
+    },
+    {
+      "text": "text: 1 month saved with a later revision would be worked out differently:",
+      "why": "approved: History and restore of the column setup and of a month (Phase 3 follow-ups, 15 October 2026)",
+      "onlyOn": ["85 embedded: History of the Global columns, restore asked"]
+    },
+    {
+      "text": "text: 6 employees, only the record kept",
+      "why": "approved: History and restore of the column setup and of a month (Phase 3 follow-ups, 15 October 2026)",
+      "onlyOn": ["89 embedded: History of a month, an earlier version", "90 embedded: History of a month, restore asked", "91 embedded: History of a month, only the record of a save kept"]
+    },
+    {
+      "text": "text: 6 employees",
+      "why": "approved: History and restore of the column setup and of a month (Phase 3 follow-ups, 15 October 2026)",
+      "onlyOn": ["89 embedded: History of a month, an earlier version", "90 embedded: History of a month, restore asked", "91 embedded: History of a month, only the record of a save kept"]
+    },
+    {
+      "text": "text: Before restoring, the months saved with a later revision are worked out again with this version. The dashboard is locked, so they could not be checked.",
+      "why": "approved: History and restore of the column setup and of a month (Phase 3 follow-ups, 15 October 2026)",
+      "onlyOn": ["87 embedded: History of the Global columns, the months could not be checked (locked)"]
+    },
+    {
+      "text": "text: Choose a version to see its columns.",
+      "why": "approved: History and restore of the column setup and of a month (Phase 3 follow-ups, 15 October 2026)",
+      "onlyOn": ["88 embedded: History of a company's columns, the version in use, not an admin"]
+    },
+    {
+      "text": "text: Choose a version to see its identity fields and Global columns.",
+      "why": "approved: History and restore of the column setup and of a month (Phase 3 follow-ups, 15 October 2026)",
+      "onlyOn": ["86 embedded: History of the Global columns, restored"]
+    },
+    {
+      "text": "text: Every save of this month, newest first. Looking at one changes nothing.",
+      "why": "approved: History and restore of the column setup and of a month (Phase 3 follow-ups, 15 October 2026)",
+      "onlyOn": ["89 embedded: History of a month, an earlier version", "90 embedded: History of a month, restore asked", "91 embedded: History of a month, only the record of a save kept", "92 embedded: History of a month, the dashboard locked"]
+    },
+    {
+      "text": "text: Every saved version, newest first. Looking at one changes nothing.",
+      "why": "approved: History and restore of the column setup and of a month (Phase 3 follow-ups, 15 October 2026)",
+      "onlyOn": ["84 embedded: History of the Global columns, an earlier version", "85 embedded: History of the Global columns, restore asked", "86 embedded: History of the Global columns, restored", "87 embedded: History of the Global columns, the months could not be checked (locked)", "88 embedded: History of a company's columns, the version in use, not an admin"]
+    },
+    {
+      "text": "text: Formulas that change:",
+      "why": "approved: History and restore of the column setup and of a month (Phase 3 follow-ups, 15 October 2026)",
+      "onlyOn": ["84 embedded: History of the Global columns, an earlier version", "85 embedded: History of the Global columns, restore asked", "87 embedded: History of the Global columns, the months could not be checked (locked)"]
+    },
+    {
+      "text": "text: Global columns",
+      "why": "approved: History and restore of the column setup and of a month (Phase 3 follow-ups, 15 October 2026)",
+      "onlyOn": ["84 embedded: History of the Global columns, an earlier version", "85 embedded: History of the Global columns, restore asked", "87 embedded: History of the Global columns, the months could not be checked (locked)"]
+    },
+    {
+      "text": "text: History of October 2026, Fake Co Ltd",
+      "why": "approved: History and restore of the column setup and of a month (Phase 3 follow-ups, 15 October 2026)",
+      "onlyOn": ["89 embedded: History of a month, an earlier version", "90 embedded: History of a month, restore asked", "91 embedded: History of a month, only the record of a save kept", "92 embedded: History of a month, the dashboard locked"]
+    },
+    {
+      "text": "text: History of the Global columns",
+      "why": "approved: History buttons, History dialogs and the offline copy (Phase 3 follow-ups, 15 October 2026)",
+      "onlyOn": ["67 embedded: Global columns read-only, shared with a company you are not an admin of", "84 embedded: History of the Global columns, an earlier version", "85 embedded: History of the Global columns, restore asked", "86 embedded: History of the Global columns, restored", "87 embedded: History of the Global columns, the months could not be checked (locked)"]
+    },
+    {
+      "text": "text: History of the columns of Fake Co Ltd",
+      "why": "approved: History buttons, History dialogs and the offline copy (Phase 3 follow-ups, 15 October 2026)",
+      "onlyOn": ["68 embedded: a company you are not an admin of", "88 embedded: History of a company's columns, the version in use, not an admin"]
+    },
+    {
+      "text": "text: History of this month",
+      "why": "approved: History buttons, History dialogs and the offline copy (Phase 3 follow-ups, 15 October 2026)",
+      "onlyOn": ["76 embedded: months kept in the dashboard", "77 embedded: locked, the month covered, what was typed NOT saved", "78 embedded: a month NOT saved, someone else saved it", "83 embedded: opened while the dashboard is locked"]
+    },
+    {
+      "text": "text: Identity fields",
+      "why": "approved: History and restore of the column setup and of a month (Phase 3 follow-ups, 15 October 2026)",
+      "onlyOn": ["84 embedded: History of the Global columns, an earlier version", "85 embedded: History of the Global columns, restore asked", "87 embedded: History of the Global columns, the months could not be checked (locked)"]
+    },
+    {
+      "text": "text: Net Pay: grossPay - totalDeductions - 100 becomes grossPay - totalDeductions",
+      "why": "approved: History and restore of the column setup and of a month (Phase 3 follow-ups, 15 October 2026)",
+      "onlyOn": ["84 embedded: History of the Global columns, an earlier version", "85 embedded: History of the Global columns, restore asked", "87 embedded: History of the Global columns, the months could not be checked (locked)"]
+    },
+    {
+      "text": "text: October 2026, Fake Co Ltd: 6 figures in Net Pay",
+      "why": "approved: History and restore of the column setup and of a month (Phase 3 follow-ups, 15 October 2026)",
+      "onlyOn": ["85 embedded: History of the Global columns, restore asked"]
+    },
+    {
+      "text": "text: Offline: read-only copy from [date] at [time]. Changes can't be saved.",
+      "why": "approved: the read-only offline copy of the column setup when the dashboard cannot be reached (Phase 3 follow-ups, 15 October 2026)",
+      "onlyOn": ["94 embedded: the read-only copy, Global columns"]
+    },
+    {
+      "text": "text: Only the record of this save was kept, not its content, so it cannot be shown or restored. The dashboard keeps the content of the last save of each day, and of a version someone else saved over.",
+      "why": "approved: History and restore of the column setup and of a month (Phase 3 follow-ups, 15 October 2026)",
+      "onlyOn": ["91 embedded: History of a month, only the record of a save kept"]
+    },
+    {
+      "text": "text: Open the read-only copy of Fake Co Ltd from [date] at [time]",
+      "why": "approved: the read-only offline copy of the column setup when the dashboard cannot be reached (Phase 3 follow-ups, 15 October 2026)",
+      "onlyOn": ["93 embedded: column setup could not be loaded, a read-only copy offered"]
+    },
+    {
+      "text": "text: Restore revision 1 of October 2026? It is saved as a new revision, worked out with the columns in use now. The version it replaces is kept, and every earlier version stays in the history.",
+      "why": "approved: History and restore of the column setup and of a month (Phase 3 follow-ups, 15 October 2026)",
+      "onlyOn": ["90 embedded: History of a month, restore asked"]
+    },
+    {
+      "text": "text: Restore revision 1? It is saved as a new revision, and every earlier version is kept.",
+      "why": "approved: History and restore of the column setup and of a month (Phase 3 follow-ups, 15 October 2026)",
+      "onlyOn": ["85 embedded: History of the Global columns, restore asked"]
+    },
+    {
+      "text": "text: Restore this version",
+      "why": "approved: History and restore of the column setup and of a month (Phase 3 follow-ups, 15 October 2026)",
+      "onlyOn": ["84 embedded: History of the Global columns, an earlier version", "89 embedded: History of a month, an earlier version"]
+    },
+    {
+      "text": "text: Restored. It was saved as revision 3; the earlier versions are all still here.",
+      "why": "approved: History and restore of the column setup and of a month (Phase 3 follow-ups, 15 October 2026)",
+      "onlyOn": ["86 embedded: History of the Global columns, restored"]
+    },
+    {
+      "text": "text: Revision 1 (current)",
+      "why": "approved: History and restore of the column setup and of a month (Phase 3 follow-ups, 15 October 2026)",
+      "onlyOn": ["88 embedded: History of a company's columns, the version in use, not an admin"]
+    },
+    {
+      "text": "text: Revision 1",
+      "why": "approved: History and restore of the column setup and of a month (Phase 3 follow-ups, 15 October 2026)",
+      "onlyOn": ["84 embedded: History of the Global columns, an earlier version", "85 embedded: History of the Global columns, restore asked", "86 embedded: History of the Global columns, restored", "87 embedded: History of the Global columns, the months could not be checked (locked)", "89 embedded: History of a month, an earlier version", "90 embedded: History of a month, restore asked", "91 embedded: History of a month, only the record of a save kept"]
+    },
+    {
+      "text": "text: Revision 1: 6 employees. The figures are worked out with the columns in use now.",
+      "why": "approved: History and restore of the column setup and of a month (Phase 3 follow-ups, 15 October 2026)",
+      "onlyOn": ["89 embedded: History of a month, an earlier version", "90 embedded: History of a month, restore asked"]
+    },
+    {
+      "text": "text: Revision 2 (current)",
+      "why": "approved: History and restore of the column setup and of a month (Phase 3 follow-ups, 15 October 2026)",
+      "onlyOn": ["84 embedded: History of the Global columns, an earlier version", "85 embedded: History of the Global columns, restore asked", "87 embedded: History of the Global columns, the months could not be checked (locked)"]
+    },
+    {
+      "text": "text: Revision 2",
+      "why": "approved: History and restore of the column setup and of a month (Phase 3 follow-ups, 15 October 2026)",
+      "onlyOn": ["86 embedded: History of the Global columns, restored", "89 embedded: History of a month, an earlier version", "90 embedded: History of a month, restore asked", "91 embedded: History of a month, only the record of a save kept"]
+    },
+    {
+      "text": "text: Revision 3 (current)",
+      "why": "approved: History and restore of the column setup and of a month (Phase 3 follow-ups, 15 October 2026)",
+      "onlyOn": ["86 embedded: History of the Global columns, restored", "89 embedded: History of a month, an earlier version", "90 embedded: History of a month, restore asked", "91 embedded: History of a month, only the record of a save kept"]
+    },
+    {
+      "text": "text: The column setup of Fake Co Ltd, as last loaded from the dashboard. No month is kept in it.",
+      "why": "approved: the read-only offline copy of the column setup when the dashboard cannot be reached (Phase 3 follow-ups, 15 October 2026)",
+      "onlyOn": ["94 embedded: the read-only copy, Global columns"]
+    },
+    {
+      "text": "text: The dashboard is locked, so the employees' figures are hidden. Unlock it to see this month's history.",
+      "why": "approved: History and restore of the column setup and of a month (Phase 3 follow-ups, 15 October 2026)",
+      "onlyOn": ["92 embedded: History of a month, the dashboard locked"]
+    },
+    {
+      "text": "text: The employees' figures are kept in the dashboard only. They are not in this offline copy. Only the column setup is kept in this browser for when the dashboard cannot be reached.",
+      "why": "approved: the read-only offline copy of the column setup when the dashboard cannot be reached (Phase 3 follow-ups, 15 October 2026)",
+      "onlyOn": ["95 embedded: the read-only copy, Employee Table (the cover)"]
+    },
+    {
+      "text": "text: The months are not in this offline copy",
+      "why": "approved: the read-only offline copy of the column setup when the dashboard cannot be reached (Phase 3 follow-ups, 15 October 2026)",
+      "onlyOn": ["95 embedded: the read-only copy, Employee Table (the cover)"]
+    },
+    {
+      "text": "text: This browser kept the column setup it last loaded from the dashboard. It can be looked at, read-only: changes can't be saved, and the months are not in it.",
+      "why": "approved: the read-only offline copy of the column setup when the dashboard cannot be reached (Phase 3 follow-ups, 15 October 2026)",
+      "onlyOn": ["93 embedded: column setup could not be loaded, a read-only copy offered"]
+    },
+    {
+      "text": "text: Try the dashboard again",
+      "why": "approved: the read-only offline copy of the column setup when the dashboard cannot be reached (Phase 3 follow-ups, 15 October 2026)",
+      "onlyOn": ["94 embedded: the read-only copy, Global columns"]
+    },
+    {
+      "text": "text: What restoring it would change",
+      "why": "approved: History and restore of the column setup and of a month (Phase 3 follow-ups, 15 October 2026)",
+      "onlyOn": ["84 embedded: History of the Global columns, an earlier version", "85 embedded: History of the Global columns, restore asked", "87 embedded: History of the Global columns, the months could not be checked (locked)"]
+    },
+    {
+      "text": "text: [date], [time], saved by someone else",
+      "why": "approved: History and restore of the column setup and of a month (Phase 3 follow-ups, 15 October 2026)",
+      "onlyOn": ["89 embedded: History of a month, an earlier version", "90 embedded: History of a month, restore asked", "91 embedded: History of a month, only the record of a save kept"]
+    },
+    {
+      "text": "text: [date], [time], saved by you",
+      "why": "approved: History and restore of the column setup and of a month (Phase 3 follow-ups, 15 October 2026)",
+      "onlyOn": ["84 embedded: History of the Global columns, an earlier version", "85 embedded: History of the Global columns, restore asked", "86 embedded: History of the Global columns, restored", "87 embedded: History of the Global columns, the months could not be checked (locked)", "88 embedded: History of a company's columns, the version in use, not an admin", "89 embedded: History of a month, an earlier version", "90 embedded: History of a month, restore asked", "91 embedded: History of a month, only the record of a save kept"]
     }
   ],
   "removed": [
@@ -994,28 +1199,28 @@
     },
     {
       "text": "aria-label: Delete Fake Co Ltd",
-      "why": "approved: Phase 2: inside a dashboard that keeps the column setup, the company is the one selected there; companies are added, renamed, deleted and restored in the dashboard, not here; also on the Phase 3 screens (months kept in the dashboard), where it is the same control or wording",
-      "onlyOn": ["65 embedded: column setup kept in the dashboard", "67 embedded: Global columns read-only, shared with a company you are not an admin of", "68 embedded: a company you are not an admin of", "69 embedded: saving", "70 embedded: NOT saved, someone else changed it", "76 embedded: months kept in the dashboard", "77 embedded: locked, the month covered, what was typed NOT saved", "78 embedded: a month NOT saved, someone else saved it", "79 embedded: months of a company you are not an admin of", "83 embedded: opened while the dashboard is locked"]
+      "why": "approved: Phase 2: inside a dashboard that keeps the column setup, the company is the one selected there; companies are added, renamed, deleted and restored in the dashboard, not here; also on the Phase 3 screens (months kept in the dashboard), where it is the same control or wording; also on the Phase 3 follow-up screens (History, the read-only offline copy), where it is the same control or wording",
+      "onlyOn": ["65 embedded: column setup kept in the dashboard", "67 embedded: Global columns read-only, shared with a company you are not an admin of", "68 embedded: a company you are not an admin of", "69 embedded: saving", "70 embedded: NOT saved, someone else changed it", "76 embedded: months kept in the dashboard", "77 embedded: locked, the month covered, what was typed NOT saved", "78 embedded: a month NOT saved, someone else saved it", "79 embedded: months of a company you are not an admin of", "83 embedded: opened while the dashboard is locked", "94 embedded: the read-only copy, Global columns"]
     },
     {
       "text": "text: + Add Column",
-      "why": "approved: Phase 2, D1: columns someone may not change are shown read-only inside the dashboard (no add, edit, delete, import or reorder)",
-      "onlyOn": ["67 embedded: Global columns read-only, shared with a company you are not an admin of", "68 embedded: a company you are not an admin of"]
+      "why": "approved: Phase 2, D1: columns someone may not change are shown read-only inside the dashboard (no add, edit, delete, import or reorder); also on the Phase 3 follow-up screens (History, the read-only offline copy), where it is the same control or wording",
+      "onlyOn": ["67 embedded: Global columns read-only, shared with a company you are not an admin of", "68 embedded: a company you are not an admin of", "94 embedded: the read-only copy, Global columns"]
     },
     {
       "text": "text: + Add Identity Field",
-      "why": "approved: Phase 2, D1: columns someone may not change are shown read-only inside the dashboard (no add, edit, delete, import or reorder)",
-      "onlyOn": ["67 embedded: Global columns read-only, shared with a company you are not an admin of"]
+      "why": "approved: Phase 2, D1: columns someone may not change are shown read-only inside the dashboard (no add, edit, delete, import or reorder); also on the Phase 3 follow-up screens (History, the read-only offline copy), where it is the same control or wording",
+      "onlyOn": ["67 embedded: Global columns read-only, shared with a company you are not an admin of", "94 embedded: the read-only copy, Global columns"]
     },
     {
       "text": "text: + New Company",
-      "why": "approved: Phase 2: inside a dashboard that keeps the column setup, the company is the one selected there; companies are added, renamed, deleted and restored in the dashboard, not here; also on the Phase 3 screens (months kept in the dashboard), where it is the same control or wording",
-      "onlyOn": ["65 embedded: column setup kept in the dashboard", "67 embedded: Global columns read-only, shared with a company you are not an admin of", "68 embedded: a company you are not an admin of", "69 embedded: saving", "70 embedded: NOT saved, someone else changed it", "76 embedded: months kept in the dashboard", "77 embedded: locked, the month covered, what was typed NOT saved", "78 embedded: a month NOT saved, someone else saved it", "79 embedded: months of a company you are not an admin of", "83 embedded: opened while the dashboard is locked"]
+      "why": "approved: Phase 2: inside a dashboard that keeps the column setup, the company is the one selected there; companies are added, renamed, deleted and restored in the dashboard, not here; also on the Phase 3 screens (months kept in the dashboard), where it is the same control or wording; also on the Phase 3 follow-up screens (History, the read-only offline copy), where it is the same control or wording",
+      "onlyOn": ["65 embedded: column setup kept in the dashboard", "67 embedded: Global columns read-only, shared with a company you are not an admin of", "68 embedded: a company you are not an admin of", "69 embedded: saving", "70 embedded: NOT saved, someone else changed it", "76 embedded: months kept in the dashboard", "77 embedded: locked, the month covered, what was typed NOT saved", "78 embedded: a month NOT saved, someone else saved it", "79 embedded: months of a company you are not an admin of", "83 embedded: opened while the dashboard is locked", "94 embedded: the read-only copy, Global columns"]
     },
     {
       "text": "text: Companies",
-      "why": "approved: Phase 2: inside a dashboard that keeps the column setup, the company is the one selected there; companies are added, renamed, deleted and restored in the dashboard, not here; also on the Phase 3 screens (months kept in the dashboard), where it is the same control or wording",
-      "onlyOn": ["65 embedded: column setup kept in the dashboard", "67 embedded: Global columns read-only, shared with a company you are not an admin of", "68 embedded: a company you are not an admin of", "69 embedded: saving", "70 embedded: NOT saved, someone else changed it", "76 embedded: months kept in the dashboard", "77 embedded: locked, the month covered, what was typed NOT saved", "78 embedded: a month NOT saved, someone else saved it", "79 embedded: months of a company you are not an admin of", "83 embedded: opened while the dashboard is locked"]
+      "why": "approved: Phase 2: inside a dashboard that keeps the column setup, the company is the one selected there; companies are added, renamed, deleted and restored in the dashboard, not here; also on the Phase 3 screens (months kept in the dashboard), where it is the same control or wording; also on the Phase 3 follow-up screens (History, the read-only offline copy), where it is the same control or wording",
+      "onlyOn": ["65 embedded: column setup kept in the dashboard", "67 embedded: Global columns read-only, shared with a company you are not an admin of", "68 embedded: a company you are not an admin of", "69 embedded: saving", "70 embedded: NOT saved, someone else changed it", "76 embedded: months kept in the dashboard", "77 embedded: locked, the month covered, what was typed NOT saved", "78 embedded: a month NOT saved, someone else saved it", "79 embedded: months of a company you are not an admin of", "83 embedded: opened while the dashboard is locked", "94 embedded: the read-only copy, Global columns"]
     },
     {
       "text": "text: Delete",
@@ -1029,8 +1234,8 @@
     },
     {
       "text": "text: Import Column Setup",
-      "why": "approved: Phase 2, D1: columns someone may not change are shown read-only inside the dashboard (no add, edit, delete, import or reorder)",
-      "onlyOn": ["67 embedded: Global columns read-only, shared with a company you are not an admin of", "68 embedded: a company you are not an admin of"]
+      "why": "approved: Phase 2, D1: columns someone may not change are shown read-only inside the dashboard (no add, edit, delete, import or reorder); also on the Phase 3 follow-up screens (History, the read-only offline copy), where it is the same control or wording",
+      "onlyOn": ["67 embedded: Global columns read-only, shared with a company you are not an admin of", "68 embedded: a company you are not an admin of", "94 embedded: the read-only copy, Global columns"]
     },
     {
       "text": "text: Set as ID field",
