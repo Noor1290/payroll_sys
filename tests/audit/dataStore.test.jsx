@@ -50,6 +50,7 @@ function memoryStore() {
       periods.set(`${id}:${year}-${month}`, data)
       return true
     }),
+    periodHasEmployees: record('periodHasEmployees', (id, year, month) => (periods.get(`${id}:${year}-${month}`)?.employees.length ?? 0) > 0),
     deletePeriodsForCompany: record('deletePeriodsForCompany', () => {}),
     countPeriodsHoldingKey: record('countPeriodsHoldingKey', () => ({ periods: 0, companies: 0 })),
     renameValueKeyInPeriods: record('renameValueKeyInPeriods', () => true),
@@ -92,21 +93,22 @@ describe('one way in', () => {
   test('no screen reaches past the interface to the browser store', () => {
     // backup.js is the browser's own copy by definition: it reads and replaces exactly that.
     // dashboardSetup.js is the second store: it keeps the months in the browser store
-    // until Phase 3. dashboardImport.js reads the browser's own copy to import it, and
-    // never writes it.
-    const allowed = ['lib/backup.js', 'lib/dashboardImport.js', 'lib/dashboardSetup.js', 'lib/dataStore.js']
+    // when the dashboard does not keep them yet (Phase 2). dashboardImport.js and
+    // monthImport.js read the browser's own copy to import it, and never write it.
+    const allowed = ['lib/backup.js', 'lib/dashboardImport.js', 'lib/dashboardSetup.js', 'lib/dataStore.js', 'lib/monthImport.js']
     const importing = sourceFiles()
       .filter((file) => /from\s+['"][./]+(lib\/)?storage['"]/.test(fs.readFileSync(file, 'utf8')))
       .map(relative)
     expect(importing.sort()).toEqual(allowed)
   })
 
-  test('the interface is exactly the operations the browser store has always had', () => {
+  test('the interface is exactly the operations the browser store has always had, and whether a month has anyone in it', () => {
     expect(STORE_OPERATIONS).toEqual([
       'loadState',
       'saveState',
       'loadPeriod',
       'savePeriod',
+      'periodHasEmployees',
       'deletePeriodsForCompany',
       'countPeriodsHoldingKey',
       'renameValueKeyInPeriods',

@@ -168,6 +168,20 @@ function periodKeysForCompany(companyId) {
   return keys
 }
 
+// The months saved for a company in this browser, as "YYYY-MM", oldest first.
+// Reads only: what the import of months to the dashboard looks at.
+export function listPeriods(companyId) {
+  const prefix = `${PERIOD_KEY_PREFIX}${companyId}_`
+  return periodKeysForCompany(companyId)
+    .map((key) => key.slice(prefix.length))
+    .sort()
+}
+
+// Whether a saved month has anyone in it.
+export function periodHasEmployees(companyId, year, month) {
+  return loadPeriod(companyId, year, month).employees.length > 0
+}
+
 // Removes every month of employee data saved for a company - used when the
 // company itself is deleted, so nothing of it is left behind in the browser.
 export function deletePeriodsForCompany(companyId) {

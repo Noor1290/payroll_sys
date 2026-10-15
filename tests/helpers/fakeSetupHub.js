@@ -4,6 +4,12 @@
 // the same refusals (revision last seen, a company attached once, the shared
 // setup changed only by an admin of every attached company).
 //
+// With `monthsSupported: true` it keeps the months too ("Payroll app: months",
+// migration 0014): admins only, behind a password gate (`unlocked`), every save
+// naming the revision last seen, and a change of key that saves the setup and
+// moves the values in every month it reaches, all or nothing. Without it, it is
+// a dashboard from before that: it turns the months' data type away.
+//
 // `createFakeSetupHub` must not use anything from outside itself: the browser
 // tests turn it into text and run it in a page.
 //
@@ -32,6 +38,18 @@ export function createFakeSetupHub(seed = {}) {
     corruptNextSave: false,
     down: false,
     delayMs: 0,
+    // ---------- months ----------
+    monthsSupported: seed.monthsSupported === true,
+    // The dashboard's password gate.
+    unlocked: seed.unlocked !== false,
+    // What the user does when the app asks to unlock: 'unlock' | 'deny'.
+    unlockAnswer: 'unlock',
+    // `${BRN}|${YYYY-MM}` -> { revision, employees, shared_revision, company_revision, by }
+    months: new Map(),
+    // { key, revision, employees: kept content or null, by }
+    monthHistory: [],
+    // Told when the gate opens or locks, as the dashboard tells the app.
+    onPush: null,
     savesRunning: 0,
     mostSavesAtOnce: 0,
     now: 0,
@@ -39,6 +57,10 @@ export function createFakeSetupHub(seed = {}) {
   for (const s of seed.shared || []) {
     state.shared.set(s.id, { mine: true, ...s, body: structuredClone(s.body) })
     state.history.push({ target: `shared:${s.id}`, revision: s.revision, body: structuredClone(s.body), saved_at: '2026-10-01T09:00:00.000Z' })
+  }
+  for (const [key, m] of Object.entries(seed.months || {})) {
+    state.months.set(key, { revision: 1, shared_revision: 1, company_revision: 1, by: 'other', ...m, employees: JSON.parse(JSON.stringify(m.employees)) })
+    state.monthHistory.push({ key, revision: m.revision || 1, employees: null, by: 'other' })
   }
   for (const [brn, s] of Object.entries(seed.setups || {})) {
     state.setups.set(brn, { ...s, body: structuredClone(s.body) })
@@ -70,7 +92,9 @@ export function createFakeSetupHub(seed = {}) {
     const copy = asStored(JSON.parse(JSON.stringify(body)))
     if (state.corruptNextSave) {
       state.corruptNextSave = false
-      copy.corrupted = true
+      // A month (a list) gets a value changed; a setup (an object) a property added.
+      if (Array.isArray(copy) && copy.length > 0) copy[0] = { ...copy[0], values: { ...copy[0].values, corrupted: true } }
+      else copy.corrupted = true
     }
     return copy
   }
@@ -231,13 +255,231 @@ export function createFakeSetupHub(seed = {}) {
     return refuse('invalid', '"action" is missing or not valid.')
   }
 
+  // ---------- months ----------
+
+  const monthKey = (brn, period) => `${norm(brn)}|${period}`
+  const LOCKED = () => refuse('locked', 'The dashboard is locked. Unlock it there to see the employees\' figures.')
+  const valueKeys = (employees) => [...new Set(employees.flatMap((e) => Object.keys(e.values || {})))].sort()
+  const hasRevision = (target, revision) => state.history.some((h) => h.target === target && h.revision === revision)
+  // The month as it is about to be replaced, kept when someone else saved it or when asked.
+  const keepPrevious = (key, month, asked) => {
+    const record = state.monthHistory.find((h) => h.key === key && h.revision === month.revision)
+    if (record && record.employees === null && (asked || month.by !== 'me')) record.employees = JSON.parse(JSON.stringify(month.employees))
+  }
+  // Which company a month message is about: the selected one, or another of the user's, admin only.
+  const monthCompany = (companyBrn) => {
+    const company = companyBrn === undefined ? selected() : member(companyBrn)
+    if (!company) return refuse('not-found', 'You have no company with that BRN in the dashboard.')
+    if (company.role !== 'admin') return refuse('forbidden', `Only an admin of ${company.name} can see or change its employees' figures.`)
+    return company
+  }
+
+  function monthRequest(params) {
+    if (params.brn !== undefined && norm(params.brn) !== norm(state.selectedBrn)) {
+      return refuse('wrong-company', 'The dashboard has a different company selected.')
+    }
+    const answer = (rows) => ({ ok: true, dataType: 'payroll-month', rows, meta: meta() })
+    if (params.action === 'gate') return answer([{ unlocked: state.unlocked }])
+    if (selected().role !== 'admin') return refuse('forbidden', `Only an admin of ${selected().name} can see or change its employees' figures.`)
+    if (params.action === 'unlock') {
+      if (state.unlocked) return answer([{ unlocked: true }])
+      if (state.unlockAnswer === 'deny') return refuse('denied', 'The dashboard user declined the request.')
+      setGate(true)
+      return answer([{ unlocked: true }])
+    }
+    if (!state.unlocked) return LOCKED()
+    const company = monthCompany(params.company_brn)
+    if (company.ok === false) return company
+    const brn = norm(company.brn)
+    const mine = [...state.months].filter(([key]) => key.startsWith(`${brn}|`))
+    switch (params.action) {
+      case 'list':
+        return answer(
+          mine
+            .map(([key, m]) => ({
+              period: key.split('|')[1],
+              revision: m.revision,
+              shared_revision: m.shared_revision,
+              company_revision: m.company_revision,
+              employee_count: m.employees.length,
+              value_keys: valueKeys(m.employees),
+              updated_at: stamp(),
+              updated_by_you: m.by === 'me',
+            }))
+            .sort((a, b) => (a.period < b.period ? -1 : 1))
+        )
+      case 'load': {
+        if (!Array.isArray(params.periods) || params.periods.length < 1 || params.periods.length > 12) {
+          return refuse('invalid', '"periods" is missing or not valid.')
+        }
+        return answer(
+          params.periods
+            .filter((period) => state.months.has(monthKey(brn, period)))
+            .map((period) => {
+              const m = state.months.get(monthKey(brn, period))
+              return {
+                period,
+                revision: m.revision,
+                shared_revision: m.shared_revision,
+                company_revision: m.company_revision,
+                employee_count: m.employees.length,
+                employees: m.employees,
+                updated_at: stamp(),
+                updated_by_you: m.by === 'me',
+              }
+            })
+        )
+      }
+      case 'history':
+        return answer(
+          state.monthHistory
+            .filter((h) => h.key === monthKey(brn, params.period))
+            .sort((a, b) => b.revision - a.revision)
+            .map((h) => ({ revision: h.revision, kept: h.employees !== null, saved_by_you: h.by === 'me' }))
+        )
+      default:
+        return refuse('invalid', '"action" is missing or not valid.')
+    }
+  }
+
+  function monthSave(row) {
+    if (norm(row.brn) !== norm(state.selectedBrn)) return refuse('wrong-company', 'The dashboard has a different company selected.')
+    if (selected().role !== 'admin') return refuse('forbidden', `Only an admin of ${selected().name} can see or change its employees' figures.`)
+    if (!state.unlocked) return refuse('locked', 'The dashboard is locked, so this was NOT saved. Unlock it there, and it is saved then.')
+
+    if (row.action === 'save') {
+      const company = monthCompany(row.company_brn)
+      if (company.ok === false) return company
+      const brn = norm(company.brn)
+      const own = state.setups.get(brn)
+      if (!own) return refuse('not-found', 'The dashboard has no such item.')
+      if (!/^\d{4}-(0[1-9]|1[0-2])$/.test(row.period) || !Array.isArray(row.employees)) return refuse('invalid', '"period" is missing or not valid.')
+      if (row.employees.some((e) => !e || typeof e.id !== 'string' || !e.values || typeof e.values !== 'object' || Object.keys(e).length !== 2)) {
+        return refuse('invalid', '"employees" is missing or not valid.')
+      }
+      if (!hasRevision(`shared:${own.shared_setup_id}`, row.shared_revision) || !hasRevision(`company:${brn}`, row.company_revision)) {
+        return refuse('invalid', "Not valid: those column setup revisions are not this company's.")
+      }
+      const key = monthKey(brn, row.period)
+      const month = state.months.get(key)
+      if (!month && row.expected_revision !== 0) return refuse('not-found', 'The dashboard has no such item.')
+      if (month && month.revision !== row.expected_revision) {
+        return refuse('stale', 'Someone else saved this month in the dashboard since it was opened here. Nothing was saved.')
+      }
+      if (month) keepPrevious(key, month, row.keep_previous === true)
+      const saved = {
+        revision: month ? month.revision + 1 : 1,
+        shared_revision: row.shared_revision,
+        company_revision: row.company_revision,
+        employees: stored(row.employees),
+        by: 'me',
+      }
+      state.months.set(key, saved)
+      state.monthHistory.push({ key, revision: saved.revision, employees: null, by: 'me' })
+      return {
+        ok: true,
+        result: { action: 'save', brn: company.brn, company: company.name, period: row.period, revision: saved.revision, employee_count: saved.employees.length },
+      }
+    }
+
+    if (row.action === 'key-change') {
+      if ((row.shared === undefined) === (row.company === undefined)) return refuse('invalid', 'Not valid: give either the shared setup or the company setup.')
+      const setupId = row.shared ? row.shared.shared_setup_id : state.setups.get(norm(row.company.company_brn || state.selectedBrn))?.shared_setup_id
+      if (!setupId) return refuse('not-found', 'The dashboard has no such item.')
+      const attached = [...state.setups].filter(([, s]) => s.shared_setup_id === setupId).map(([brn]) => brn)
+      // Everything that can be refused is checked before anything changes: all or nothing.
+      const plan = []
+      for (const move of row.moves || []) {
+        const targets = move.company_brn === null ? attached : [norm(move.company_brn)]
+        if (move.company_brn !== null && !attached.includes(norm(move.company_brn))) return refuse('not-found', 'The dashboard has no such item.')
+        if (row.company && norm(move.company_brn) !== norm(row.company.company_brn || state.selectedBrn)) {
+          return refuse('invalid', 'Not valid: a company setup can only move keys in its own months.')
+        }
+        if (targets.some((brn) => member(brn)?.role !== 'admin')) return refuse('forbidden', 'Only an admin of this company can do this.')
+        plan.push({ move, targets })
+      }
+      const setupRow = row.shared
+        ? { action: 'save-shared', brn: row.brn, shared_setup_id: row.shared.shared_setup_id, name: row.shared.name, body: row.shared.body, expected_revision: row.shared.expected_revision, companies: row.shared.companies }
+        : { action: 'save-company', brn: row.brn, company_brn: row.company.company_brn, body: row.company.body, expected_revision: row.company.expected_revision }
+      const setup = save(setupRow)
+      if (!setup.ok) return setup
+      const months = []
+      for (const { move, targets } of plan) {
+        for (const brn of targets) {
+          for (const [key, month] of state.months) {
+            if (!key.startsWith(`${brn}|`) || !valueKeys(month.employees).includes(move.old_key)) continue
+            keepPrevious(key, month, false)
+            const employees = month.employees.map((e) => {
+              if (!(move.old_key in e.values)) return e
+              const { [move.old_key]: value, ...rest } = e.values
+              return { ...e, values: { ...rest, [move.new_key]: value } }
+            })
+            const moved = {
+              ...month,
+              revision: month.revision + 1,
+              shared_revision: state.shared.get(setupId).revision,
+              company_revision: state.setups.get(brn).revision,
+              employees: asStored(employees),
+              by: 'me',
+            }
+            state.months.set(key, moved)
+            state.monthHistory.push({ key, revision: moved.revision, employees: null, by: 'me' })
+            months.push({ brn: member(brn)?.brn ?? brn, period: key.split('|')[1], revision: moved.revision })
+          }
+        }
+      }
+      const result = setup.result
+      return {
+        ok: true,
+        result: {
+          action: 'key-change',
+          setup: { shared_setup_id: setupId, revision: result.revision, ...(row.company ? { brn: result.brn } : {}), companies: result.companies || [] },
+          months,
+        },
+      }
+    }
+    return refuse('invalid', '"action" is missing or not valid.')
+  }
+
+  // The dashboard's gate opens or locks; the app is told, as the dashboard tells it.
+  function setGate(unlocked) {
+    if (state.unlocked === unlocked) return
+    state.unlocked = unlocked
+    if (state.onPush) state.onPush({ dataType: 'payroll-month', rows: [{ action: 'gate', unlocked }] })
+  }
+
+  // What another admin does in their own browser: save a month there.
+  function changeMonthElsewhere(brn, period, employees) {
+    const key = monthKey(brn, period)
+    const month = state.months.get(key)
+    const own = state.setups.get(norm(brn))
+    const saved = {
+      revision: month ? month.revision + 1 : 1,
+      shared_revision: month?.shared_revision ?? state.shared.get(own.shared_setup_id).revision,
+      company_revision: month?.company_revision ?? own.revision,
+      employees: stored(employees),
+      by: 'other',
+    }
+    state.months.set(key, saved)
+    state.monthHistory.push({ key, revision: saved.revision, employees: null, by: 'other' })
+  }
+
   // As the dashboard would answer one message from the app. Undefined = no answer at all.
   async function handle(type, payload) {
     const isRequest = type === 'request-data'
     const command = isRequest ? payload.params || {} : payload.rows[0]
-    state.log.push({ type, action: command.action, ...(command.company_brn ? { company_brn: command.company_brn } : {}) })
-    if (payload.dataType !== 'payroll-setup') return undefined
-    if (!state.supported) return { ok: false, error: `This app is not registered to ${isRequest ? 'receive' : 'send'} this kind of data.` }
+    state.log.push({
+      type,
+      ...(payload.dataType === 'payroll-month' ? { dataType: payload.dataType } : {}),
+      action: command.action,
+      ...(command.company_brn ? { company_brn: command.company_brn } : {}),
+      ...(command.period ? { period: command.period } : {}),
+    })
+    const isMonth = payload.dataType === 'payroll-month'
+    if (payload.dataType !== 'payroll-setup' && !isMonth) return undefined
+    if (!state.supported || (isMonth && !state.monthsSupported)) {
+      return { ok: false, error: `This app is not registered to ${isRequest ? 'receive' : 'send'} this kind of data.` }
+    }
     if (state.down) return { ok: false, code: 'unavailable', error: "Can't reach the database." }
 
     const failing = state.failNext
@@ -250,7 +492,7 @@ export function createFakeSetupHub(seed = {}) {
     }
     if (state.delayMs > 0) await new Promise((resolve) => setTimeout(resolve, state.delayMs))
     let answer
-    if (!matches || failing.store) answer = isRequest ? request(command) : save(command)
+    if (!matches || failing.store) answer = isMonth ? (isRequest ? monthRequest(command) : monthSave(command)) : isRequest ? request(command) : save(command)
     if (!isRequest) state.savesRunning -= 1
     if (matches) return failing.silent ? undefined : { ok: false, code: failing.code, error: failing.error || 'The dashboard could not confirm it.' }
     return answer === undefined ? undefined : JSON.parse(JSON.stringify(answer))
@@ -264,7 +506,7 @@ export function createFakeSetupHub(seed = {}) {
     keep(`shared:${id}`, setup.revision, setup.body)
   }
 
-  return { state, handle, changeSharedElsewhere }
+  return { state, handle, changeSharedElsewhere, changeMonthElsewhere, setGate }
 }
 
 // Puts the stand-in in place of the dashboard for the app's copy of the bridge,
@@ -275,7 +517,11 @@ export function installFakeBridge(hub) {
   window.PayrollHubBridge = {
     isEmbedded: () => true,
     isConnected: () => true,
-    init: () => true,
+    // What the dashboard sends by itself (the gate opening or locking) reaches the app's onData.
+    init: (options) => {
+      hub.state.onPush = options && typeof options.onData === 'function' ? options.onData : null
+      return true
+    },
     onStatus: () => () => {},
     requestData: () => Promise.resolve({ ok: false, error: 'Not in this test.' }),
     sendToDashboard: (type, payload) => {

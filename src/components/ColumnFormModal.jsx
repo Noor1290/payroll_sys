@@ -25,8 +25,9 @@ function describeKeyChange({ keyChange, preview }) {
       : `${preview.formulas.length} formula${preview.formulas.length === 1 ? '' : 's'} that use${
           preview.formulas.length === 1 ? 's' : ''
         } it will be updated: ${preview.formulas.join(', ')}.`
-  const figures =
-    preview.periods === 0
+  const figures = preview.unknown
+    ? 'Its saved figures will be moved in every month that holds them.'
+    : preview.periods === 0
       ? 'No saved figures need to move.'
       : `Its saved figures will be moved in ${preview.periods} month${preview.periods === 1 ? '' : 's'} across ${preview.companies} compan${
           preview.companies === 1 ? 'y' : 'ies'

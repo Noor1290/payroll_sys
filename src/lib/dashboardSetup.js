@@ -17,10 +17,15 @@
 // saved is never written to the browser's storage instead: it stays on
 // screen until it is saved.
 //
-// NOT kept in the dashboard yet (Phase 3): the months of employee data. They
-// stay in this browser, under the same storage keys as before, so a company
-// imported from this browser keeps its months. Nor are the column widths and
-// the month being viewed: they are this browser's display preferences.
+// The months of employee data are kept in the dashboard too (Phase 3,
+// dashboardMonths.js), when the dashboard keeps them. A dashboard that does not
+// yet keep months leaves them in this browser, under the same storage keys as
+// before (Phase 2). Not kept in the dashboard: the column widths and the month
+// being viewed, which are this browser's display preferences.
+//
+// A change of a column's key moves that column's values in every month it
+// reaches. In the dashboard that is one step with the column setup carrying
+// the new key, all or nothing (`key-change`, saved below).
 //
 // This browser's own copy of the setup (payroll_app_state_v1) is never
 // written here: it stays as it was, the fallback used when the app is opened
@@ -28,7 +33,17 @@
 
 import * as browserStore from './storage'
 import { getCurrentPeriod } from './periods'
-import { askHub, asJson, normaliseBrn, sameJson, sendHub } from './hubWire'
+import { askHub, asJson, MONTH, normaliseBrn, sameJson, sendHub } from './hubWire'
+import {
+  connectMonths,
+  dropKeyChanges,
+  gateChanged,
+  keyChangeSaved,
+  monthOperations,
+  monthsSupported,
+  onGateOpen,
+  pendingKeyMoves,
+} from './dashboardMonths'
 
 // This browser's display preferences per dashboard company, by BRN:
 // { [BRN]: { columnWidths, viewYear, viewMonth } }. No payroll value.
@@ -112,6 +127,31 @@ export const setupStatus = {
     return () => listeners.delete(listener)
   },
   get: () => status,
+}
+
+// Which dashboard company an app company is (its BRN), and what is known of
+// each company held: for the months (dashboardMonths.js).
+export const brnOf = (appCompanyId) => held.get(appCompanyId)?.brn ?? null
+export const heldCompanies = () => [...held.values()].map(({ brn, name, role, selected }) => ({ brn, name, role, selected }))
+// The setup revisions a company's months are saved with, as last confirmed by the dashboard.
+export function revisionsOf(brn) {
+  const item = [...held.values()].find((h) => normaliseBrn(h.brn) === normaliseBrn(brn))
+  return shared && item ? { shared: shared.revision, company: item.revision } : null
+}
+// The columns a company's figures are worked out with in the dashboard: the
+// Global columns and its own, as held on screen. Null when it is not held.
+export function dashboardColumnsOf(brn) {
+  if (!current) return null
+  const app = current.companies.find((c) => normaliseBrn(held.get(c.id)?.brn) === normaliseBrn(brn))
+  return app ? [...current.globalColumns, ...(app.columns ?? [])] : null
+}
+
+// Whether a key belongs to the shared setup (an identity field or a Global
+// column) as the dashboard last confirmed it: then a change of it reaches
+// every company using the shared setup.
+export function sharedHasKey(key) {
+  const body = shared?.saved
+  return Boolean(body) && [...(body.identityFields ?? []), ...(body.globalColumns ?? [])].some((item) => item?.key === key)
 }
 
 // Called, with what connectDashboard answered, after the setup on screen has
@@ -220,6 +260,7 @@ export async function connectDashboard() {
     })
   })
   publish()
+  await connectMonths()
   return { ok: true, company, empty: false }
 }
 
@@ -272,6 +313,9 @@ async function saveNow() {
   }
   const changes = pendingChanges()
   if (!changes) {
+    // A change of key and its undoing before either was saved: nothing to move.
+    const moves = pendingKeyMoves()
+    if (moves.length > 0) await keyChangeSaved([], moves)
     problem = null
     publish()
     return
@@ -299,6 +343,8 @@ const confirmCompany = (item, body, revision) => {
 
 async function saveOnce(changes) {
   if (!company || !shared) return fail('unavailable', 'The dashboard is not connected.')
+  const moves = pendingKeyMoves()
+  if (moves.length > 0) return saveKeyChange(changes, moves)
   if (changes.sharedChanged) {
     if (!shared.canChange) {
       return fail('forbidden', 'Only someone who is an admin of every company using these Global columns can change them.')
@@ -340,6 +386,56 @@ async function saveOnce(changes) {
     if (!settled.ok) return settled
   }
   return { ok: true }
+}
+
+// A change of key: the setup that carries it, and the values moved in every
+// month it reaches, in one step (the dashboard's `key-change`), all or nothing.
+// Through the shared setup when a Global column or an identity field changed,
+// or when more than one company's columns change with it.
+async function saveKeyChange(changes, moves) {
+  const viaShared = changes.sharedChanged || changes.companies.length !== 1 || moves.some((m) => m.company_brn === null)
+  const row = { action: 'key-change', brn: company.brn, moves }
+  if (viaShared) {
+    if (!shared.canChange) {
+      return fail('forbidden', 'Only someone who is an admin of every company using these Global columns can change them.')
+    }
+    row.shared = {
+      shared_setup_id: shared.id,
+      name: shared.name,
+      body: changes.sharedBody,
+      expected_revision: shared.revision,
+      ...(changes.companies.length > 0
+        ? { companies: changes.companies.map(({ item, body }) => ({ company_brn: item.brn, body, expected_revision: item.revision })) }
+        : {}),
+    }
+  } else {
+    const [{ item, body }] = changes.companies
+    if (item.role !== 'admin') return fail('forbidden', `Only an admin of ${item.name} can change its columns.`)
+    row.company = { company_brn: item.brn, body, expected_revision: item.revision }
+  }
+
+  const sent = await sendHub(row, { dataType: MONTH })
+  if (sent.ok) {
+    const setup = sent.result.setup ?? {}
+    if (viaShared) {
+      confirmShared(changes.sharedBody, setup.revision)
+      for (const saved of setup.companies ?? []) {
+        const change = changes.companies.find(({ item }) => normaliseBrn(item.brn) === normaliseBrn(saved.brn))
+        if (change) confirmCompany(change.item, change.body, saved.revision)
+      }
+    } else {
+      confirmCompany(changes.companies[0].item, changes.companies[0].body, setup.revision)
+    }
+    await keyChangeSaved(sent.result.months ?? [], moves)
+    return { ok: true }
+  }
+  // Refused because the dashboard is locked: it goes again once it is unlocked (onGateOpen).
+  if (sent.code === 'locked') gateChanged(false)
+  if (!uncertain(sent)) return sent
+  // It may have been stored: the setup says so. Then the months were moved too (one step).
+  const settled = await settle(sent, viaShared ? changes : { sharedChanged: false, companies: changes.companies })
+  if (settled.ok) await keyChangeSaved(null, moves)
+  return settled
 }
 
 // No clear answer, or "someone saved since": it may be this very save that was
@@ -409,6 +505,8 @@ export async function keepMine() {
 // Drop what is on this screen and take what the dashboard holds now, for the
 // company selected there now.
 export async function takeTheirs() {
+  // A change of key that was waiting goes with the rest of what is on this screen.
+  dropKeyChanges()
   const result = await connectDashboard()
   if (!result.ok) {
     problem = result
@@ -477,6 +575,9 @@ function keepPrefs(state) {
   if (JSON.stringify(prefs) !== JSON.stringify(before)) writePrefs(prefs)
 }
 
+// The months: in the dashboard when it keeps them (dashboardMonths.js), in this browser otherwise.
+const months = (name) => (...args) => (monthsSupported() ? monthOperations : browserStore)[name](...args)
+
 export const dashboardStore = {
   loadState: () => (current ? structuredClone(current) : null),
   saveState(state) {
@@ -487,13 +588,18 @@ export const dashboardStore = {
     // Held in memory and on its way: the bar says whether it reached the dashboard.
     return true
   },
-  // The months stay in this browser until Phase 3.
-  loadPeriod: browserStore.loadPeriod,
-  savePeriod: browserStore.savePeriod,
-  deletePeriodsForCompany: browserStore.deletePeriodsForCompany,
-  countPeriodsHoldingKey: browserStore.countPeriodsHoldingKey,
-  renameValueKeyInPeriods: browserStore.renameValueKeyInPeriods,
+  loadPeriod: months('loadPeriod'),
+  savePeriod: months('savePeriod'),
+  periodHasEmployees: months('periodHasEmployees'),
+  deletePeriodsForCompany: months('deletePeriodsForCompany'),
+  countPeriodsHoldingKey: months('countPeriodsHoldingKey'),
+  renameValueKeyInPeriods: months('renameValueKeyInPeriods'),
 }
+
+// A save refused because the dashboard was locked goes again once it is open.
+onGateOpen(() => {
+  if (problem?.code === 'locked') void retrySaving()
+})
 
 // For tests: forget everything held, as a page reload does.
 export function forgetDashboardSetup() {

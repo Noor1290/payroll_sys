@@ -286,13 +286,13 @@
     },
     {
       "text": "text: Cancel",
-      "why": "existing wording, not new: the Cancel button of the new \"Change this field's key?\" question, which the base version does not have; and the same button in the new backup dialogs (migration plan step 0a), which the base version does not have; also on the Phase 2 dashboard screens, where it is the same control or the company's name",
-      "onlyOn": ["57 change identity field key confirm (the ID field, values in saved months)", "58 change identity field key confirm (no saved values)", "59 restore a backup, what is in the file and in the browser", "59b restore a backup, a file that does not say when it was saved", "66 embedded: company details from the dashboard", "72 embedded: import, backup first", "73 embedded: import, what it will do"]
+      "why": "existing wording, not new: the Cancel button of the new \"Change this field's key?\" question, which the base version does not have; and the same button in the new backup dialogs (migration plan step 0a), which the base version does not have; also on the Phase 2 dashboard screens, where it is the same control or the company's name; also on the Phase 3 screens (months kept in the dashboard), where it is the same control or wording",
+      "onlyOn": ["57 change identity field key confirm (the ID field, values in saved months)", "58 change identity field key confirm (no saved values)", "59 restore a backup, what is in the file and in the browser", "59b restore a backup, a file that does not say when it was saved", "66 embedded: company details from the dashboard", "72 embedded: import, backup first", "73 embedded: import, what it will do", "80 embedded: import months, backup first", "81 embedded: import months, what it will do"]
     },
     {
       "text": "aria-label: Close",
-      "why": "existing wording, not new: the close button of the new \"Change this field's key?\" question, which the base version does not have; and the same button in the new backup dialogs (migration plan step 0a), which the base version does not have; also on the Phase 2 dashboard screens, where it is the same control or the company's name",
-      "onlyOn": ["57 change identity field key confirm (the ID field, values in saved months)", "58 change identity field key confirm (no saved values)", "59 restore a backup, what is in the file and in the browser", "59b restore a backup, a file that does not say when it was saved", "60 backup restored", "61 restore, not a backup file", "61b restore, a backup of another version", "61c restore, a damaged backup", "61d restore, an empty backup", "62 backup not restored, storage full", "62b backup not restored, earlier data could not be put back", "63 this change was NOT saved (storage full)", "66 embedded: company details from the dashboard", "72 embedded: import, backup first", "73 embedded: import, what it will do", "74 embedded: import, done"]
+      "why": "existing wording, not new: the close button of the new \"Change this field's key?\" question, which the base version does not have; and the same button in the new backup dialogs (migration plan step 0a), which the base version does not have; also on the Phase 2 dashboard screens, where it is the same control or the company's name; also on the Phase 3 screens (months kept in the dashboard), where it is the same control or wording",
+      "onlyOn": ["57 change identity field key confirm (the ID field, values in saved months)", "58 change identity field key confirm (no saved values)", "59 restore a backup, what is in the file and in the browser", "59b restore a backup, a file that does not say when it was saved", "60 backup restored", "61 restore, not a backup file", "61b restore, a backup of another version", "61c restore, a damaged backup", "61d restore, an empty backup", "62 backup not restored, storage full", "62b backup not restored, earlier data could not be put back", "63 this change was NOT saved (storage full)", "66 embedded: company details from the dashboard", "72 embedded: import, backup first", "73 embedded: import, what it will do", "74 embedded: import, done", "80 embedded: import months, backup first", "81 embedded: import months, what it will do", "82 embedded: import months, done"]
     },
     {
       "text": "text: 1 item that could not be read, kept as it is",
@@ -345,8 +345,8 @@
     },
     {
       "text": "text: Fake Co Ltd",
-      "why": "not wording: the fake company's name, listed in the new Restore dialog (migration plan step 0a); also on the Phase 2 dashboard screens, where it is the same control or the company's name",
-      "onlyOn": ["59 restore a backup, what is in the file and in the browser", "59b restore a backup, a file that does not say when it was saved", "65 embedded: column setup kept in the dashboard", "67 embedded: Global columns read-only, shared with a company you are not an admin of", "68 embedded: a company you are not an admin of", "69 embedded: saving", "70 embedded: NOT saved, someone else changed it", "73 embedded: import, what it will do", "74 embedded: import, done"]
+      "why": "not wording: the fake company's name, listed in the new Restore dialog (migration plan step 0a); also on the Phase 2 dashboard screens, where it is the same control or the company's name; also on the Phase 3 screens (months kept in the dashboard), where it is the same control or wording",
+      "onlyOn": ["59 restore a backup, what is in the file and in the browser", "59b restore a backup, a file that does not say when it was saved", "65 embedded: column setup kept in the dashboard", "67 embedded: Global columns read-only, shared with a company you are not an admin of", "68 embedded: a company you are not an admin of", "69 embedded: saving", "70 embedded: NOT saved, someone else changed it", "73 embedded: import, what it will do", "74 embedded: import, done", "76 embedded: months kept in the dashboard", "77 embedded: locked, the month covered, what was typed NOT saved", "78 embedded: a month NOT saved, someone else saved it", "79 embedded: months of a company you are not an admin of", "83 embedded: opened while the dashboard is locked", "81 embedded: import months, what it will do"]
     },
     {
       "text": "text: In the backup file",
@@ -536,8 +536,8 @@
     },
     {
       "text": "text: Close",
-      "why": "approved: Phase 2: the one-time \"Import to the dashboard\" (a backup first, a preview that writes nothing, the result of each item)",
-      "onlyOn": ["74 embedded: import, done"]
+      "why": "approved: Phase 2: the one-time \"Import to the dashboard\" (a backup first, a preview that writes nothing, the result of each item); also on the Phase 3 screens (months kept in the dashboard), where it is the same control or wording",
+      "onlyOn": ["74 embedded: import, done", "82 embedded: import months, done"]
     },
     {
       "text": "text: Column setup of , kept in the dashboard. Months are still kept in this browser.",
@@ -556,8 +556,8 @@
     },
     {
       "text": "text: Continue",
-      "why": "approved: Phase 2: the one-time \"Import to the dashboard\" (a backup first, a preview that writes nothing, the result of each item)",
-      "onlyOn": ["72 embedded: import, backup first"]
+      "why": "approved: Phase 2: the one-time \"Import to the dashboard\" (a backup first, a preview that writes nothing, the result of each item); also on the Phase 3 screens (months kept in the dashboard), where it is the same control or wording",
+      "onlyOn": ["72 embedded: import, backup first", "80 embedded: import months, backup first"]
     },
     {
       "text": "text: Copies this browser's column setup and companies into the dashboard, once. This browser's own copy is not changed.",
@@ -571,8 +571,8 @@
     },
     {
       "text": "text: Download a backup file",
-      "why": "approved: Phase 2: the one-time \"Import to the dashboard\" (a backup first, a preview that writes nothing, the result of each item)",
-      "onlyOn": ["72 embedded: import, backup first"]
+      "why": "approved: Phase 2: the one-time \"Import to the dashboard\" (a backup first, a preview that writes nothing, the result of each item); also on the Phase 3 screens (months kept in the dashboard), where it is the same control or wording",
+      "onlyOn": ["72 embedded: import, backup first", "80 embedded: import months, backup first"]
     },
     {
       "text": "text: Fake Co Ltd has no column setup in the dashboard yet",
@@ -586,8 +586,8 @@
     },
     {
       "text": "text: First, save a backup file of everything Payroll keeps in this browser. The import does not start without it.",
-      "why": "approved: Phase 2: the one-time \"Import to the dashboard\" (a backup first, a preview that writes nothing, the result of each item)",
-      "onlyOn": ["72 embedded: import, backup first"]
+      "why": "approved: Phase 2: the one-time \"Import to the dashboard\" (a backup first, a preview that writes nothing, the result of each item); also on the Phase 3 screens (months kept in the dashboard), where it is the same control or wording",
+      "onlyOn": ["72 embedded: import, backup first", "80 embedded: import months, backup first"]
     },
     {
       "text": "text: Identity fields and Global columns",
@@ -616,8 +616,8 @@
     },
     {
       "text": "text: In the dashboard",
-      "why": "approved: Phase 2: inside a dashboard that keeps the column setup (first seen on screen 65)",
-      "onlyOn": ["65 embedded: column setup kept in the dashboard", "67 embedded: Global columns read-only, shared with a company you are not an admin of", "68 embedded: a company you are not an admin of", "69 embedded: saving", "70 embedded: NOT saved, someone else changed it"]
+      "why": "approved: Phase 2: inside a dashboard that keeps the column setup (first seen on screen 65); also on the Phase 3 screens (months kept in the dashboard), where it is the same control or wording",
+      "onlyOn": ["65 embedded: column setup kept in the dashboard", "67 embedded: Global columns read-only, shared with a company you are not an admin of", "68 embedded: a company you are not an admin of", "69 embedded: saving", "70 embedded: NOT saved, someone else changed it", "76 embedded: months kept in the dashboard", "77 embedded: locked, the month covered, what was typed NOT saved", "78 embedded: a month NOT saved, someone else saved it", "79 embedded: months of a company you are not an admin of", "83 embedded: opened while the dashboard is locked"]
     },
     {
       "text": "text: Levy ref 42",
@@ -631,8 +631,8 @@
     },
     {
       "text": "text: NOT saved",
-      "why": "approved: Phase 2: automatic saving to the dashboard, \"Saving / Saved / NOT saved\", as in the PDF form filler",
-      "onlyOn": ["70 embedded: NOT saved, someone else changed it"]
+      "why": "approved: Phase 2: automatic saving to the dashboard, \"Saving / Saved / NOT saved\", as in the PDF form filler; also on the Phase 3 screens (months kept in the dashboard), where it is the same control or wording",
+      "onlyOn": ["70 embedded: NOT saved, someone else changed it", "77 embedded: locked, the month covered, what was typed NOT saved", "78 embedded: a month NOT saved, someone else saved it"]
     },
     {
       "text": "text: Name, address and BRN are the dashboard's. Change them in the dashboard, on the company's profile.",
@@ -641,8 +641,8 @@
     },
     {
       "text": "text: Nothing has been written to the dashboard yet.",
-      "why": "approved: Phase 2: the one-time \"Import to the dashboard\" (a backup first, a preview that writes nothing, the result of each item)",
-      "onlyOn": ["73 embedded: import, what it will do"]
+      "why": "approved: Phase 2: the one-time \"Import to the dashboard\" (a backup first, a preview that writes nothing, the result of each item); also on the Phase 3 screens (months kept in the dashboard), where it is the same control or wording",
+      "onlyOn": ["73 embedded: import, what it will do", "81 embedded: import months, what it will do"]
     },
     {
       "text": "text: Opened on its own, outside the dashboard, the payroll app works from this browser's own copy.",
@@ -656,8 +656,8 @@
     },
     {
       "text": "text: Save mine over it",
-      "why": "approved: Phase 2: automatic saving to the dashboard, \"Saving / Saved / NOT saved\", as in the PDF form filler",
-      "onlyOn": ["70 embedded: NOT saved, someone else changed it"]
+      "why": "approved: Phase 2: automatic saving to the dashboard, \"Saving / Saved / NOT saved\", as in the PDF form filler; also on the Phase 3 screens (months kept in the dashboard), where it is the same control or wording",
+      "onlyOn": ["70 embedded: NOT saved, someone else changed it", "78 embedded: a month NOT saved, someone else saved it"]
     },
     {
       "text": "text: Save",
@@ -666,8 +666,8 @@
     },
     {
       "text": "text: Saved",
-      "why": "approved: Phase 2: automatic saving to the dashboard, \"Saving / Saved / NOT saved\", as in the PDF form filler",
-      "onlyOn": ["65 embedded: column setup kept in the dashboard", "67 embedded: Global columns read-only, shared with a company you are not an admin of", "68 embedded: a company you are not an admin of"]
+      "why": "approved: Phase 2: automatic saving to the dashboard, \"Saving / Saved / NOT saved\", as in the PDF form filler; also on the Phase 3 screens (months kept in the dashboard), where it is the same control or wording",
+      "onlyOn": ["65 embedded: column setup kept in the dashboard", "67 embedded: Global columns read-only, shared with a company you are not an admin of", "68 embedded: a company you are not an admin of", "76 embedded: months kept in the dashboard", "79 embedded: months of a company you are not an admin of", "83 embedded: opened while the dashboard is locked"]
     },
     {
       "text": "text: Saving…",
@@ -701,8 +701,8 @@
     },
     {
       "text": "text: The identity fields and Global columns are used by 1 company, and you are not an admin of it. You can see them here; only someone who is an admin of every company using them can change them.",
-      "why": "approved: Phase 2, D1: why the Global columns or the company columns are read-only for this user",
-      "onlyOn": ["68 embedded: a company you are not an admin of"]
+      "why": "approved: Phase 2, D1: why the Global columns or the company columns are read-only for this user; also on the Phase 3 screens (months kept in the dashboard), where it is the same control or wording",
+      "onlyOn": ["68 embedded: a company you are not an admin of", "79 embedded: months of a company you are not an admin of"]
     },
     {
       "text": "text: The identity fields and Global columns are used by 2 companies, and you are an admin of 1 of them. You can see them here; only someone who is an admin of every company using them can change them.",
@@ -726,13 +726,13 @@
     },
     {
       "text": "text: This browser's own copy",
-      "why": "approved: Phase 2: inside a dashboard that keeps the column setup (first seen on screen 65)",
-      "onlyOn": ["65 embedded: column setup kept in the dashboard", "67 embedded: Global columns read-only, shared with a company you are not an admin of", "68 embedded: a company you are not an admin of", "69 embedded: saving", "70 embedded: NOT saved, someone else changed it"]
+      "why": "approved: Phase 2: inside a dashboard that keeps the column setup (first seen on screen 65); also on the Phase 3 screens (months kept in the dashboard), where it is the same control or wording",
+      "onlyOn": ["65 embedded: column setup kept in the dashboard", "67 embedded: Global columns read-only, shared with a company you are not an admin of", "68 embedded: a company you are not an admin of", "69 embedded: saving", "70 embedded: NOT saved, someone else changed it", "76 embedded: months kept in the dashboard", "77 embedded: locked, the month covered, what was typed NOT saved", "78 embedded: a month NOT saved, someone else saved it", "79 embedded: months of a company you are not an admin of", "83 embedded: opened while the dashboard is locked"]
     },
     {
       "text": "text: Use the dashboard's version",
-      "why": "approved: Phase 2: automatic saving to the dashboard, \"Saving / Saved / NOT saved\", as in the PDF form filler",
-      "onlyOn": ["70 embedded: NOT saved, someone else changed it"]
+      "why": "approved: Phase 2: automatic saving to the dashboard, \"Saving / Saved / NOT saved\", as in the PDF form filler; also on the Phase 3 screens (months kept in the dashboard), where it is the same control or wording",
+      "onlyOn": ["70 embedded: NOT saved, someone else changed it", "78 embedded: a month NOT saved, someone else saved it"]
     },
     {
       "text": "text: VAT-FAKE-1",
@@ -752,16 +752,172 @@
     {
       "text": "text: If \"Emoluments\" is greater than 200,000 or \"Basic Salary\" is less than \"Allowances\", this amount is the value of \"Travelling\". Otherwise: emoluments * 0.045",
       "why": "approved: known issue 4 fixed: the Edit column form opens on the formula inside the exemption, so its formula box and rule summary no longer repeat the exemption",
-      "onlyOn": [
-        "41 edit company column: PRGF"
-      ]
+      "onlyOn": ["41 edit company column: PRGF"]
     },
     {
       "text": "text: emoluments * 0.045",
       "why": "approved: known issue 4 fixed: the Edit column form opens on the formula inside the exemption, so its formula box and rule summary no longer repeat the exemption",
-      "onlyOn": [
-        "41 edit company column: PRGF"
-      ]
+      "onlyOn": ["41 edit company column: PRGF"]
+    },
+    {
+      "text": "text: Column setup and months of , kept in the dashboard.",
+      "why": "approved: Phase 3: the bar inside a dashboard that keeps the months too (the company name is in its own element)",
+      "onlyOn": ["76 embedded: months kept in the dashboard", "77 embedded: locked, the month covered, what was typed NOT saved", "78 embedded: a month NOT saved, someone else saved it", "79 embedded: months of a company you are not an admin of", "83 embedded: opened while the dashboard is locked"]
+    },
+    {
+      "text": "text: Import months to the dashboard",
+      "why": "approved: Phase 3: the one-time \"Import months to the dashboard\" (its button, and the title of its dialog)",
+      "onlyOn": ["76 embedded: months kept in the dashboard", "77 embedded: locked, the month covered, what was typed NOT saved", "78 embedded: a month NOT saved, someone else saved it", "83 embedded: opened while the dashboard is locked", "80 embedded: import months, backup first", "81 embedded: import months, what it will do", "82 embedded: import months, done"]
+    },
+    {
+      "text": "text: The month was NOT saved in the dashboard. The dashboard is locked. What you typed is kept on this screen and saved once the dashboard is unlocked.",
+      "why": "approved: Phase 3, D5: what was typed while the dashboard locked is kept on screen, NOT saved, and saved on unlocking",
+      "onlyOn": ["77 embedded: locked, the month covered, what was typed NOT saved"]
+    },
+    {
+      "text": "text: Unlock the dashboard",
+      "why": "approved: Phase 3, D5: asks the dashboard to show its password prompt",
+      "onlyOn": ["77 embedded: locked, the month covered, what was typed NOT saved", "83 embedded: opened while the dashboard is locked"]
+    },
+    {
+      "text": "aria-label: Locked",
+      "why": "approved: Phase 3, D5: the name of the region that covers the month while the dashboard is locked",
+      "onlyOn": ["77 embedded: locked, the month covered, what was typed NOT saved", "83 embedded: opened while the dashboard is locked"]
+    },
+    {
+      "text": "text: Unlock the dashboard to continue",
+      "why": "approved: Phase 3, D5 (decided 13 October): the month's table is covered while the dashboard is locked",
+      "onlyOn": ["77 embedded: locked, the month covered, what was typed NOT saved", "83 embedded: opened while the dashboard is locked"]
+    },
+    {
+      "text": "text: The dashboard locked after a while without activity, so the employees' figures are hidden. What you typed is kept on this screen, NOT saved yet, and is saved once the dashboard is unlocked.",
+      "why": "approved: Phase 3, D5: why the month is covered, and that what was typed is kept and saved on unlocking",
+      "onlyOn": ["77 embedded: locked, the month covered, what was typed NOT saved"]
+    },
+    {
+      "text": "text: October 2026 was NOT saved in the dashboard. Someone else saved October 2026 of Fake Co Ltd in the dashboard since it was opened here. What you see here is still on this screen, but it will be gone when this page is closed or reloaded.",
+      "why": "approved: Phase 3: two saves of the same month; the choices are \"Save mine over it\" and \"Use the dashboard's version\", as for the column setup",
+      "onlyOn": ["78 embedded: a month NOT saved, someone else saved it"]
+    },
+    {
+      "text": "text: 19,115.00",
+      "why": "not wording: on this screen a Basic Salary has been typed (19,115 instead of 18,115) before someone else saved the month, so the figures worked out from it differ from the base version's own page",
+      "onlyOn": ["78 embedded: a month NOT saved, someone else saved it"]
+    },
+    {
+      "text": "text: 21,115.00",
+      "why": "not wording: on this screen a Basic Salary has been typed (19,115 instead of 18,115) before someone else saved the month, so the figures worked out from it differ from the base version's own page",
+      "onlyOn": ["78 embedded: a month NOT saved, someone else saved it"]
+    },
+    {
+      "text": "text: 22,615.00",
+      "why": "not wording: on this screen a Basic Salary has been typed (19,115 instead of 18,115) before someone else saved the month, so the figures worked out from it differ from the base version's own page",
+      "onlyOn": ["78 embedded: a month NOT saved, someone else saved it"]
+    },
+    {
+      "text": "text: 22,087.13",
+      "why": "not wording: on this screen a Basic Salary has been typed (19,115 instead of 18,115) before someone else saved the month, so the figures worked out from it differ from the base version's own page",
+      "onlyOn": ["78 embedded: a month NOT saved, someone else saved it"]
+    },
+    {
+      "text": "text: 316.73",
+      "why": "not wording: on this screen a Basic Salary has been typed (19,115 instead of 18,115) before someone else saved the month, so the figures worked out from it differ from the base version's own page",
+      "onlyOn": ["78 embedded: a month NOT saved, someone else saved it"]
+    },
+    {
+      "text": "text: 211.15",
+      "why": "not wording: on this screen a Basic Salary has been typed (19,115 instead of 18,115) before someone else saved the month, so the figures worked out from it differ from the base version's own page",
+      "onlyOn": ["78 embedded: a month NOT saved, someone else saved it"]
+    },
+    {
+      "text": "text: 527.88",
+      "why": "not wording: on this screen a Basic Salary has been typed (19,115 instead of 18,115) before someone else saved the month, so the figures worked out from it differ from the base version's own page",
+      "onlyOn": ["78 embedded: a month NOT saved, someone else saved it"]
+    },
+    {
+      "text": "text: 316.725",
+      "why": "not wording: on this screen a Basic Salary has been typed (19,115 instead of 18,115) before someone else saved the month, so the figures worked out from it differ from the base version's own page",
+      "onlyOn": ["78 embedded: a month NOT saved, someone else saved it"]
+    },
+    {
+      "text": "text: 950.18",
+      "why": "not wording: on this screen a Basic Salary has been typed (19,115 instead of 18,115) before someone else saved the month, so the figures worked out from it differ from the base version's own page",
+      "onlyOn": ["78 embedded: a month NOT saved, someone else saved it"]
+    },
+    {
+      "text": "text: 1,794.78",
+      "why": "not wording: on this screen a Basic Salary has been typed (19,115 instead of 18,115) before someone else saved the month, so the figures worked out from it differ from the base version's own page",
+      "onlyOn": ["78 embedded: a month NOT saved, someone else saved it"]
+    },
+    {
+      "text": "text: You can see the columns and details of Fake Co Ltd. Only an admin of Fake Co Ltd can change them or see its employees.",
+      "why": "approved: Phase 3, D5: the months are admin-only; the Phase 2 sentence says so where the dashboard keeps them",
+      "onlyOn": ["79 embedded: months of a company you are not an admin of"]
+    },
+    {
+      "text": "text: Only an admin can see the employees",
+      "why": "approved: Phase 3, D5: the months are admin-only",
+      "onlyOn": ["79 embedded: months of a company you are not an admin of"]
+    },
+    {
+      "text": "text: Only an admin of Fake Co Ltd can see its employees' figures.",
+      "why": "approved: Phase 3, D5: the months are admin-only",
+      "onlyOn": ["79 embedded: months of a company you are not an admin of"]
+    },
+    {
+      "text": "text: The dashboard locked after a while without activity, so the employees' figures are hidden.",
+      "why": "approved: Phase 3, D5: why the month is covered",
+      "onlyOn": ["83 embedded: opened while the dashboard is locked"]
+    },
+    {
+      "text": "text: Copies this browser's months of employee data into the dashboard, once. This browser's own copy is not changed.",
+      "why": "approved: Phase 3: the one-time \"Import months to the dashboard\" (D4: this browser's copy is kept)",
+      "onlyOn": ["80 embedded: import months, backup first", "81 embedded: import months, what it will do", "82 embedded: import months, done"]
+    },
+    {
+      "text": "text: September 2026",
+      "why": "approved: Phase 3: the months listed in the import's preview",
+      "onlyOn": ["81 embedded: import months, what it will do"]
+    },
+    {
+      "text": "text: Import (2 employees)",
+      "why": "approved: Phase 3: the months listed in the import's preview, with their number of employees",
+      "onlyOn": ["81 embedded: import months, what it will do"]
+    },
+    {
+      "text": "text: October 2026",
+      "why": "approved: Phase 3: the months listed in the import's preview",
+      "onlyOn": ["81 embedded: import months, what it will do"]
+    },
+    {
+      "text": "text: Import (6 employees)",
+      "why": "approved: Phase 3: the months listed in the import's preview, with their number of employees",
+      "onlyOn": ["81 embedded: import months, what it will do"]
+    },
+    {
+      "text": "text: Import 2 months",
+      "why": "approved: Phase 3: the import's button, with the number of months chosen",
+      "onlyOn": ["81 embedded: import months, what it will do"]
+    },
+    {
+      "text": "text: : imported, and every figure checked.",
+      "why": "approved: Phase 3: each month is read back and every calculated figure compared before it counts as imported",
+      "onlyOn": ["82 embedded: import months, done"]
+    },
+    {
+      "text": "text: Fake Co Ltd, September 2026",
+      "why": "approved: Phase 3: the result of each month of the import, by company and month",
+      "onlyOn": ["82 embedded: import months, done"]
+    },
+    {
+      "text": "text: Fake Co Ltd, October 2026",
+      "why": "approved: Phase 3: the result of each month of the import, by company and month",
+      "onlyOn": ["82 embedded: import months, done"]
+    },
+    {
+      "text": "text: This browser's own months were left as they were. Opened on its own, the app still shows them, marked \"This browser only. Not the dashboard's copy.\"",
+      "why": "approved: Phase 3, D4: the import leaves this browser's copy as it was",
+      "onlyOn": ["82 embedded: import months, done"]
     }
   ],
   "removed": [
@@ -838,8 +994,8 @@
     },
     {
       "text": "aria-label: Delete Fake Co Ltd",
-      "why": "approved: Phase 2: inside a dashboard that keeps the column setup, the company is the one selected there; companies are added, renamed, deleted and restored in the dashboard, not here",
-      "onlyOn": ["65 embedded: column setup kept in the dashboard", "67 embedded: Global columns read-only, shared with a company you are not an admin of", "68 embedded: a company you are not an admin of", "69 embedded: saving", "70 embedded: NOT saved, someone else changed it"]
+      "why": "approved: Phase 2: inside a dashboard that keeps the column setup, the company is the one selected there; companies are added, renamed, deleted and restored in the dashboard, not here; also on the Phase 3 screens (months kept in the dashboard), where it is the same control or wording",
+      "onlyOn": ["65 embedded: column setup kept in the dashboard", "67 embedded: Global columns read-only, shared with a company you are not an admin of", "68 embedded: a company you are not an admin of", "69 embedded: saving", "70 embedded: NOT saved, someone else changed it", "76 embedded: months kept in the dashboard", "77 embedded: locked, the month covered, what was typed NOT saved", "78 embedded: a month NOT saved, someone else saved it", "79 embedded: months of a company you are not an admin of", "83 embedded: opened while the dashboard is locked"]
     },
     {
       "text": "text: + Add Column",
@@ -853,18 +1009,18 @@
     },
     {
       "text": "text: + New Company",
-      "why": "approved: Phase 2: inside a dashboard that keeps the column setup, the company is the one selected there; companies are added, renamed, deleted and restored in the dashboard, not here",
-      "onlyOn": ["65 embedded: column setup kept in the dashboard", "67 embedded: Global columns read-only, shared with a company you are not an admin of", "68 embedded: a company you are not an admin of", "69 embedded: saving", "70 embedded: NOT saved, someone else changed it"]
+      "why": "approved: Phase 2: inside a dashboard that keeps the column setup, the company is the one selected there; companies are added, renamed, deleted and restored in the dashboard, not here; also on the Phase 3 screens (months kept in the dashboard), where it is the same control or wording",
+      "onlyOn": ["65 embedded: column setup kept in the dashboard", "67 embedded: Global columns read-only, shared with a company you are not an admin of", "68 embedded: a company you are not an admin of", "69 embedded: saving", "70 embedded: NOT saved, someone else changed it", "76 embedded: months kept in the dashboard", "77 embedded: locked, the month covered, what was typed NOT saved", "78 embedded: a month NOT saved, someone else saved it", "79 embedded: months of a company you are not an admin of", "83 embedded: opened while the dashboard is locked"]
     },
     {
       "text": "text: Companies",
-      "why": "approved: Phase 2: inside a dashboard that keeps the column setup, the company is the one selected there; companies are added, renamed, deleted and restored in the dashboard, not here",
-      "onlyOn": ["65 embedded: column setup kept in the dashboard", "67 embedded: Global columns read-only, shared with a company you are not an admin of", "68 embedded: a company you are not an admin of", "69 embedded: saving", "70 embedded: NOT saved, someone else changed it"]
+      "why": "approved: Phase 2: inside a dashboard that keeps the column setup, the company is the one selected there; companies are added, renamed, deleted and restored in the dashboard, not here; also on the Phase 3 screens (months kept in the dashboard), where it is the same control or wording",
+      "onlyOn": ["65 embedded: column setup kept in the dashboard", "67 embedded: Global columns read-only, shared with a company you are not an admin of", "68 embedded: a company you are not an admin of", "69 embedded: saving", "70 embedded: NOT saved, someone else changed it", "76 embedded: months kept in the dashboard", "77 embedded: locked, the month covered, what was typed NOT saved", "78 embedded: a month NOT saved, someone else saved it", "79 embedded: months of a company you are not an admin of", "83 embedded: opened while the dashboard is locked"]
     },
     {
       "text": "text: Delete",
-      "why": "approved: Phase 2, D1: columns someone may not change are shown read-only inside the dashboard (no add, edit, delete, import or reorder)",
-      "onlyOn": ["67 embedded: Global columns read-only, shared with a company you are not an admin of", "68 embedded: a company you are not an admin of"]
+      "why": "approved: Phase 2, D1: columns someone may not change are shown read-only inside the dashboard (no add, edit, delete, import or reorder); also on the Phase 3 screens (months kept in the dashboard), where it is the same control or wording",
+      "onlyOn": ["67 embedded: Global columns read-only, shared with a company you are not an admin of", "68 embedded: a company you are not an admin of", "77 embedded: locked, the month covered, what was typed NOT saved", "79 embedded: months of a company you are not an admin of", "83 embedded: opened while the dashboard is locked"]
     },
     {
       "text": "text: Edit",
@@ -894,16 +1050,437 @@
     {
       "text": "text: ((emoluments > 200000) || (basicSalary < allowances)) ? (travelling) : (emoluments * 0.045)",
       "why": "approved: known issue 4 fixed: the Edit column form opens on the formula inside the exemption, so its formula box and rule summary no longer repeat the exemption",
-      "onlyOn": [
-        "41 edit company column: PRGF"
-      ]
+      "onlyOn": ["41 edit company column: PRGF"]
     },
     {
       "text": "text: If \"Emoluments\" is greater than 200,000 or \"Basic Salary\" is less than \"Allowances\", this amount is the value of \"Travelling\". Otherwise: ((emoluments > 200000) || (basicSalary < allowances)) ? (travelling) : (emoluments * 0.045)",
       "why": "approved: known issue 4 fixed: the Edit column form opens on the formula inside the exemption, so its formula box and rule summary no longer repeat the exemption",
-      "onlyOn": [
-        "41 edit company column: PRGF"
-      ]
+      "onlyOn": ["41 edit company column: PRGF"]
+    },
+    {
+      "text": "text: Send to dashboard",
+      "why": "approved: Phase 3, D5: inside a dashboard that keeps the months, the month's table is not shown while the dashboard is locked (77, 83), nor to someone who is not an admin of the company (79); the base version shows its own page there",
+      "onlyOn": ["77 embedded: locked, the month covered, what was typed NOT saved", "79 embedded: months of a company you are not an admin of", "83 embedded: opened while the dashboard is locked"]
+    },
+    {
+      "text": "text: Identifiers",
+      "why": "approved: Phase 3, D5: inside a dashboard that keeps the months, the month's table is not shown while the dashboard is locked (77, 83), nor to someone who is not an admin of the company (79); the base version shows its own page there",
+      "onlyOn": ["77 embedded: locked, the month covered, what was typed NOT saved", "79 embedded: months of a company you are not an admin of", "83 embedded: opened while the dashboard is locked"]
+    },
+    {
+      "text": "text: General",
+      "why": "approved: Phase 3, D5: inside a dashboard that keeps the months, the month's table is not shown while the dashboard is locked (77, 83), nor to someone who is not an admin of the company (79); the base version shows its own page there",
+      "onlyOn": ["77 embedded: locked, the month covered, what was typed NOT saved", "79 embedded: months of a company you are not an admin of", "83 embedded: opened while the dashboard is locked"]
+    },
+    {
+      "text": "text: Employee Contribution",
+      "why": "approved: Phase 3, D5: inside a dashboard that keeps the months, the month's table is not shown while the dashboard is locked (77, 83), nor to someone who is not an admin of the company (79); the base version shows its own page there",
+      "onlyOn": ["77 embedded: locked, the month covered, what was typed NOT saved", "79 embedded: months of a company you are not an admin of", "83 embedded: opened while the dashboard is locked"]
+    },
+    {
+      "text": "text: Employer Contribution",
+      "why": "approved: Phase 3, D5: inside a dashboard that keeps the months, the month's table is not shown while the dashboard is locked (77, 83), nor to someone who is not an admin of the company (79); the base version shows its own page there",
+      "onlyOn": ["77 embedded: locked, the month covered, what was typed NOT saved", "79 embedded: months of a company you are not an admin of", "83 embedded: opened while the dashboard is locked"]
+    },
+    {
+      "text": "text: Other Deductions",
+      "why": "approved: Phase 3, D5: inside a dashboard that keeps the months, the month's table is not shown while the dashboard is locked (77, 83), nor to someone who is not an admin of the company (79); the base version shows its own page there",
+      "onlyOn": ["77 embedded: locked, the month covered, what was typed NOT saved", "79 embedded: months of a company you are not an admin of", "83 embedded: opened while the dashboard is locked"]
+    },
+    {
+      "text": "text: ID",
+      "why": "approved: Phase 3, D5: inside a dashboard that keeps the months, the month's table is not shown while the dashboard is locked (77, 83), nor to someone who is not an admin of the company (79); the base version shows its own page there",
+      "onlyOn": ["77 embedded: locked, the month covered, what was typed NOT saved", "79 embedded: months of a company you are not an admin of", "83 embedded: opened while the dashboard is locked"]
+    },
+    {
+      "text": "title: Drag to resize",
+      "why": "approved: Phase 3, D5: inside a dashboard that keeps the months, the month's table is not shown while the dashboard is locked (77, 83), nor to someone who is not an admin of the company (79); the base version shows its own page there",
+      "onlyOn": ["77 embedded: locked, the month covered, what was typed NOT saved", "79 embedded: months of a company you are not an admin of", "83 embedded: opened while the dashboard is locked"]
+    },
+    {
+      "text": "text: Surname",
+      "why": "approved: Phase 3, D5: inside a dashboard that keeps the months, the month's table is not shown while the dashboard is locked (77, 83), nor to someone who is not an admin of the company (79); the base version shows its own page there",
+      "onlyOn": ["77 embedded: locked, the month covered, what was typed NOT saved", "79 embedded: months of a company you are not an admin of", "83 embedded: opened while the dashboard is locked"]
+    },
+    {
+      "text": "text: Other names",
+      "why": "approved: Phase 3, D5: inside a dashboard that keeps the months, the month's table is not shown while the dashboard is locked (77, 83), nor to someone who is not an admin of the company (79); the base version shows its own page there",
+      "onlyOn": ["77 embedded: locked, the month covered, what was typed NOT saved", "79 embedded: months of a company you are not an admin of", "83 embedded: opened while the dashboard is locked"]
+    },
+    {
+      "text": "text: Basic Salary",
+      "why": "approved: Phase 3, D5: inside a dashboard that keeps the months, the month's table is not shown while the dashboard is locked (77, 83), nor to someone who is not an admin of the company (79); the base version shows its own page there",
+      "onlyOn": ["77 embedded: locked, the month covered, what was typed NOT saved", "79 embedded: months of a company you are not an admin of", "83 embedded: opened while the dashboard is locked"]
+    },
+    {
+      "text": "text: Govt Increment",
+      "why": "approved: Phase 3, D5: inside a dashboard that keeps the months, the month's table is not shown while the dashboard is locked (77, 83), nor to someone who is not an admin of the company (79); the base version shows its own page there",
+      "onlyOn": ["77 embedded: locked, the month covered, what was typed NOT saved", "79 embedded: months of a company you are not an admin of", "83 embedded: opened while the dashboard is locked"]
+    },
+    {
+      "text": "text: New Basic Salary",
+      "why": "approved: Phase 3, D5: inside a dashboard that keeps the months, the month's table is not shown while the dashboard is locked (77, 83), nor to someone who is not an admin of the company (79); the base version shows its own page there",
+      "onlyOn": ["77 embedded: locked, the month covered, what was typed NOT saved", "79 embedded: months of a company you are not an admin of", "83 embedded: opened while the dashboard is locked"]
+    },
+    {
+      "text": "text: fx",
+      "why": "approved: Phase 3, D5: inside a dashboard that keeps the months, the month's table is not shown while the dashboard is locked (77, 83), nor to someone who is not an admin of the company (79); the base version shows its own page there",
+      "onlyOn": ["77 embedded: locked, the month covered, what was typed NOT saved", "79 embedded: months of a company you are not an admin of", "83 embedded: opened while the dashboard is locked"]
+    },
+    {
+      "text": "text: Full time / Part time",
+      "why": "approved: Phase 3, D5: inside a dashboard that keeps the months, the month's table is not shown while the dashboard is locked (77, 83), nor to someone who is not an admin of the company (79); the base version shows its own page there",
+      "onlyOn": ["77 embedded: locked, the month covered, what was typed NOT saved", "79 embedded: months of a company you are not an admin of", "83 embedded: opened while the dashboard is locked"]
+    },
+    {
+      "text": "text: Allowances",
+      "why": "approved: Phase 3, D5: inside a dashboard that keeps the months, the month's table is not shown while the dashboard is locked (77, 83), nor to someone who is not an admin of the company (79); the base version shows its own page there",
+      "onlyOn": ["77 embedded: locked, the month covered, what was typed NOT saved", "79 embedded: months of a company you are not an admin of", "83 embedded: opened while the dashboard is locked"]
+    },
+    {
+      "text": "text: Emoluments",
+      "why": "approved: Phase 3, D5: inside a dashboard that keeps the months, the month's table is not shown while the dashboard is locked (77, 83), nor to someone who is not an admin of the company (79); the base version shows its own page there",
+      "onlyOn": ["77 embedded: locked, the month covered, what was typed NOT saved", "79 embedded: months of a company you are not an admin of", "83 embedded: opened while the dashboard is locked"]
+    },
+    {
+      "text": "text: Travelling",
+      "why": "approved: Phase 3, D5: inside a dashboard that keeps the months, the month's table is not shown while the dashboard is locked (77, 83), nor to someone who is not an admin of the company (79); the base version shows its own page there",
+      "onlyOn": ["77 embedded: locked, the month covered, what was typed NOT saved", "79 embedded: months of a company you are not an admin of", "83 embedded: opened while the dashboard is locked"]
+    },
+    {
+      "text": "text: Gross Pay",
+      "why": "approved: Phase 3, D5: inside a dashboard that keeps the months, the month's table is not shown while the dashboard is locked (77, 83), nor to someone who is not an admin of the company (79); the base version shows its own page there",
+      "onlyOn": ["77 embedded: locked, the month covered, what was typed NOT saved", "79 embedded: months of a company you are not an admin of", "83 embedded: opened while the dashboard is locked"]
+    },
+    {
+      "text": "text: Age 60+",
+      "why": "approved: Phase 3, D5: inside a dashboard that keeps the months, the month's table is not shown while the dashboard is locked (77, 83), nor to someone who is not an admin of the company (79); the base version shows its own page there",
+      "onlyOn": ["77 embedded: locked, the month covered, what was typed NOT saved", "79 embedded: months of a company you are not an admin of", "83 embedded: opened while the dashboard is locked"]
+    },
+    {
+      "text": "text: Net Pay",
+      "why": "approved: Phase 3, D5: inside a dashboard that keeps the months, the month's table is not shown while the dashboard is locked (77, 83), nor to someone who is not an admin of the company (79); the base version shows its own page there",
+      "onlyOn": ["77 embedded: locked, the month covered, what was typed NOT saved", "79 embedded: months of a company you are not an admin of", "83 embedded: opened while the dashboard is locked"]
+    },
+    {
+      "text": "text: Internal Note",
+      "why": "approved: Phase 3, D5: inside a dashboard that keeps the months, the month's table is not shown while the dashboard is locked (77, 83), nor to someone who is not an admin of the company (79); the base version shows its own page there",
+      "onlyOn": ["77 embedded: locked, the month covered, what was typed NOT saved", "79 embedded: months of a company you are not an admin of", "83 embedded: opened while the dashboard is locked"]
+    },
+    {
+      "text": "text: not exported",
+      "why": "approved: Phase 3, D5: inside a dashboard that keeps the months, the month's table is not shown while the dashboard is locked (77, 83), nor to someone who is not an admin of the company (79); the base version shows its own page there",
+      "onlyOn": ["77 embedded: locked, the month covered, what was typed NOT saved", "79 embedded: months of a company you are not an admin of", "83 embedded: opened while the dashboard is locked"]
+    },
+    {
+      "text": "title: Not included in Excel exports or payslips",
+      "why": "approved: Phase 3, D5: inside a dashboard that keeps the months, the month's table is not shown while the dashboard is locked (77, 83), nor to someone who is not an admin of the company (79); the base version shows its own page there",
+      "onlyOn": ["77 embedded: locked, the month covered, what was typed NOT saved", "79 embedded: months of a company you are not an admin of", "83 embedded: opened while the dashboard is locked"]
+    },
+    {
+      "text": "text: CSG",
+      "why": "approved: Phase 3, D5: inside a dashboard that keeps the months, the month's table is not shown while the dashboard is locked (77, 83), nor to someone who is not an admin of the company (79); the base version shows its own page there",
+      "onlyOn": ["77 embedded: locked, the month covered, what was typed NOT saved", "79 embedded: months of a company you are not an admin of", "83 embedded: opened while the dashboard is locked"]
+    },
+    {
+      "text": "text: NSF",
+      "why": "approved: Phase 3, D5: inside a dashboard that keeps the months, the month's table is not shown while the dashboard is locked (77, 83), nor to someone who is not an admin of the company (79); the base version shows its own page there",
+      "onlyOn": ["77 embedded: locked, the month covered, what was typed NOT saved", "79 embedded: months of a company you are not an admin of", "83 embedded: opened while the dashboard is locked"]
+    },
+    {
+      "text": "text: PAYE",
+      "why": "approved: Phase 3, D5: inside a dashboard that keeps the months, the month's table is not shown while the dashboard is locked (77, 83), nor to someone who is not an admin of the company (79); the base version shows its own page there",
+      "onlyOn": ["77 embedded: locked, the month covered, what was typed NOT saved", "79 embedded: months of a company you are not an admin of", "83 embedded: opened while the dashboard is locked"]
+    },
+    {
+      "text": "text: Total deductions",
+      "why": "approved: Phase 3, D5: inside a dashboard that keeps the months, the month's table is not shown while the dashboard is locked (77, 83), nor to someone who is not an admin of the company (79); the base version shows its own page there",
+      "onlyOn": ["77 embedded: locked, the month covered, what was typed NOT saved", "79 embedded: months of a company you are not an admin of", "83 embedded: opened while the dashboard is locked"]
+    },
+    {
+      "text": "text: Levy",
+      "why": "approved: Phase 3, D5: inside a dashboard that keeps the months, the month's table is not shown while the dashboard is locked (77, 83), nor to someone who is not an admin of the company (79); the base version shows its own page there",
+      "onlyOn": ["77 embedded: locked, the month covered, what was typed NOT saved", "79 embedded: months of a company you are not an admin of", "83 embedded: opened while the dashboard is locked"]
+    },
+    {
+      "text": "text: PRGF",
+      "why": "approved: Phase 3, D5: inside a dashboard that keeps the months, the month's table is not shown while the dashboard is locked (77, 83), nor to someone who is not an admin of the company (79); the base version shows its own page there",
+      "onlyOn": ["77 embedded: locked, the month covered, what was typed NOT saved", "79 embedded: months of a company you are not an admin of", "83 embedded: opened while the dashboard is locked"]
+    },
+    {
+      "text": "text: Total MRA contributions",
+      "why": "approved: Phase 3, D5: inside a dashboard that keeps the months, the month's table is not shown while the dashboard is locked (77, 83), nor to someone who is not an admin of the company (79); the base version shows its own page there",
+      "onlyOn": ["77 embedded: locked, the month covered, what was typed NOT saved", "79 embedded: months of a company you are not an admin of", "83 embedded: opened while the dashboard is locked"]
+    },
+    {
+      "text": "text: EDF",
+      "why": "approved: Phase 3, D5: inside a dashboard that keeps the months, the month's table is not shown while the dashboard is locked (77, 83), nor to someone who is not an admin of the company (79); the base version shows its own page there",
+      "onlyOn": ["77 embedded: locked, the month covered, what was typed NOT saved", "79 embedded: months of a company you are not an admin of", "83 embedded: opened while the dashboard is locked"]
+    },
+    {
+      "text": "text: EDF (monthly)",
+      "why": "approved: Phase 3, D5: inside a dashboard that keeps the months, the month's table is not shown while the dashboard is locked (77, 83), nor to someone who is not an admin of the company (79); the base version shows its own page there",
+      "onlyOn": ["77 embedded: locked, the month covered, what was typed NOT saved", "79 embedded: months of a company you are not an admin of", "83 embedded: opened while the dashboard is locked"]
+    },
+    {
+      "text": "text: Total",
+      "why": "approved: Phase 3, D5: inside a dashboard that keeps the months, the month's table is not shown while the dashboard is locked (77, 83), nor to someone who is not an admin of the company (79); the base version shows its own page there",
+      "onlyOn": ["77 embedded: locked, the month covered, what was typed NOT saved", "79 embedded: months of a company you are not an admin of", "83 embedded: opened while the dashboard is locked"]
+    },
+    {
+      "text": "text: Actions",
+      "why": "approved: Phase 3, D5: inside a dashboard that keeps the months, the month's table is not shown while the dashboard is locked (77, 83), nor to someone who is not an admin of the company (79); the base version shows its own page there",
+      "onlyOn": ["77 embedded: locked, the month covered, what was typed NOT saved", "79 embedded: months of a company you are not an admin of", "83 embedded: opened while the dashboard is locked"]
+    },
+    {
+      "text": "title: Click to see calculation breakdown",
+      "why": "approved: Phase 3, D5: inside a dashboard that keeps the months, the month's table is not shown while the dashboard is locked (77, 83), nor to someone who is not an admin of the company (79); the base version shows its own page there",
+      "onlyOn": ["77 embedded: locked, the month covered, what was typed NOT saved", "79 embedded: months of a company you are not an admin of", "83 embedded: opened while the dashboard is locked"]
+    },
+    {
+      "text": "text: 18,115.00",
+      "why": "approved: Phase 3, D5: inside a dashboard that keeps the months, the month's table is not shown while the dashboard is locked (77, 83), nor to someone who is not an admin of the company (79); the base version shows its own page there",
+      "onlyOn": ["77 embedded: locked, the month covered, what was typed NOT saved", "78 embedded: a month NOT saved, someone else saved it", "79 embedded: months of a company you are not an admin of", "83 embedded: opened while the dashboard is locked"]
+    },
+    {
+      "text": "text: 20,115.00",
+      "why": "approved: Phase 3, D5: inside a dashboard that keeps the months, the month's table is not shown while the dashboard is locked (77, 83), nor to someone who is not an admin of the company (79); the base version shows its own page there",
+      "onlyOn": ["77 embedded: locked, the month covered, what was typed NOT saved", "78 embedded: a month NOT saved, someone else saved it", "79 embedded: months of a company you are not an admin of", "83 embedded: opened while the dashboard is locked"]
+    },
+    {
+      "text": "text: 21,615.00",
+      "why": "approved: Phase 3, D5: inside a dashboard that keeps the months, the month's table is not shown while the dashboard is locked (77, 83), nor to someone who is not an admin of the company (79); the base version shows its own page there",
+      "onlyOn": ["77 embedded: locked, the month covered, what was typed NOT saved", "78 embedded: a month NOT saved, someone else saved it", "79 embedded: months of a company you are not an admin of", "83 embedded: opened while the dashboard is locked"]
+    },
+    {
+      "text": "text: 21,112.13",
+      "why": "approved: Phase 3, D5: inside a dashboard that keeps the months, the month's table is not shown while the dashboard is locked (77, 83), nor to someone who is not an admin of the company (79); the base version shows its own page there",
+      "onlyOn": ["77 embedded: locked, the month covered, what was typed NOT saved", "78 embedded: a month NOT saved, someone else saved it", "79 embedded: months of a company you are not an admin of", "83 embedded: opened while the dashboard is locked"]
+    },
+    {
+      "text": "text: 201.15",
+      "why": "approved: Phase 3, D5: inside a dashboard that keeps the months, the month's table is not shown while the dashboard is locked (77, 83), nor to someone who is not an admin of the company (79); the base version shows its own page there",
+      "onlyOn": ["77 embedded: locked, the month covered, what was typed NOT saved", "78 embedded: a month NOT saved, someone else saved it", "79 embedded: months of a company you are not an admin of", "83 embedded: opened while the dashboard is locked"]
+    },
+    {
+      "text": "text: 0",
+      "why": "approved: Phase 3, D5: inside a dashboard that keeps the months, the month's table is not shown while the dashboard is locked (77, 83), nor to someone who is not an admin of the company (79); the base version shows its own page there",
+      "onlyOn": ["77 embedded: locked, the month covered, what was typed NOT saved", "79 embedded: months of a company you are not an admin of", "83 embedded: opened while the dashboard is locked"]
+    },
+    {
+      "text": "text: 502.88",
+      "why": "approved: Phase 3, D5: inside a dashboard that keeps the months, the month's table is not shown while the dashboard is locked (77, 83), nor to someone who is not an admin of the company (79); the base version shows its own page there",
+      "onlyOn": ["77 embedded: locked, the month covered, what was typed NOT saved", "78 embedded: a month NOT saved, someone else saved it", "79 embedded: months of a company you are not an admin of", "83 embedded: opened while the dashboard is locked"]
+    },
+    {
+      "text": "text: 301.725",
+      "why": "approved: Phase 3, D5: inside a dashboard that keeps the months, the month's table is not shown while the dashboard is locked (77, 83), nor to someone who is not an admin of the company (79); the base version shows its own page there",
+      "onlyOn": ["77 embedded: locked, the month covered, what was typed NOT saved", "78 embedded: a month NOT saved, someone else saved it", "79 embedded: months of a company you are not an admin of", "83 embedded: opened while the dashboard is locked"]
+    },
+    {
+      "text": "text: 905.18",
+      "why": "approved: Phase 3, D5: inside a dashboard that keeps the months, the month's table is not shown while the dashboard is locked (77, 83), nor to someone who is not an admin of the company (79); the base version shows its own page there",
+      "onlyOn": ["77 embedded: locked, the month covered, what was typed NOT saved", "78 embedded: a month NOT saved, someone else saved it", "79 embedded: months of a company you are not an admin of", "83 embedded: opened while the dashboard is locked"]
+    },
+    {
+      "text": "text: 30,000.00",
+      "why": "approved: Phase 3, D5: inside a dashboard that keeps the months, the month's table is not shown while the dashboard is locked (77, 83), nor to someone who is not an admin of the company (79); the base version shows its own page there",
+      "onlyOn": ["77 embedded: locked, the month covered, what was typed NOT saved", "79 embedded: months of a company you are not an admin of", "83 embedded: opened while the dashboard is locked"]
+    },
+    {
+      "text": "text: 0.00",
+      "why": "approved: Phase 3, D5: inside a dashboard that keeps the months, the month's table is not shown while the dashboard is locked (77, 83), nor to someone who is not an admin of the company (79); the base version shows its own page there",
+      "onlyOn": ["77 embedded: locked, the month covered, what was typed NOT saved", "79 embedded: months of a company you are not an admin of", "83 embedded: opened while the dashboard is locked"]
+    },
+    {
+      "text": "text: 48,500.00",
+      "why": "approved: Phase 3, D5: inside a dashboard that keeps the months, the month's table is not shown while the dashboard is locked (77, 83), nor to someone who is not an admin of the company (79); the base version shows its own page there",
+      "onlyOn": ["77 embedded: locked, the month covered, what was typed NOT saved", "79 embedded: months of a company you are not an admin of", "83 embedded: opened while the dashboard is locked"]
+    },
+    {
+      "text": "text: 50,000.00",
+      "why": "approved: Phase 3, D5: inside a dashboard that keeps the months, the month's table is not shown while the dashboard is locked (77, 83), nor to someone who is not an admin of the company (79); the base version shows its own page there",
+      "onlyOn": ["77 embedded: locked, the month covered, what was typed NOT saved", "79 embedded: months of a company you are not an admin of", "83 embedded: opened while the dashboard is locked"]
+    },
+    {
+      "text": "text: 46,202.90",
+      "why": "approved: Phase 3, D5: inside a dashboard that keeps the months, the month's table is not shown while the dashboard is locked (77, 83), nor to someone who is not an admin of the company (79); the base version shows its own page there",
+      "onlyOn": ["77 embedded: locked, the month covered, what was typed NOT saved", "79 embedded: months of a company you are not an admin of", "83 embedded: opened while the dashboard is locked"]
+    },
+    {
+      "text": "text: 1,500.00",
+      "why": "approved: Phase 3, D5: inside a dashboard that keeps the months, the month's table is not shown while the dashboard is locked (77, 83), nor to someone who is not an admin of the company (79); the base version shows its own page there",
+      "onlyOn": ["77 embedded: locked, the month covered, what was typed NOT saved", "79 embedded: months of a company you are not an admin of", "83 embedded: opened while the dashboard is locked"]
+    },
+    {
+      "text": "text: 297.10",
+      "why": "approved: Phase 3, D5: inside a dashboard that keeps the months, the month's table is not shown while the dashboard is locked (77, 83), nor to someone who is not an admin of the company (79); the base version shows its own page there",
+      "onlyOn": ["77 embedded: locked, the month covered, what was typed NOT saved", "79 embedded: months of a company you are not an admin of", "83 embedded: opened while the dashboard is locked"]
+    },
+    {
+      "text": "text: 2,000",
+      "why": "approved: Phase 3, D5: inside a dashboard that keeps the months, the month's table is not shown while the dashboard is locked (77, 83), nor to someone who is not an admin of the company (79); the base version shows its own page there",
+      "onlyOn": ["77 embedded: locked, the month covered, what was typed NOT saved", "79 embedded: months of a company you are not an admin of", "83 embedded: opened while the dashboard is locked"]
+    },
+    {
+      "text": "text: 3,797.10",
+      "why": "approved: Phase 3, D5: inside a dashboard that keeps the months, the month's table is not shown while the dashboard is locked (77, 83), nor to someone who is not an admin of the company (79); the base version shows its own page there",
+      "onlyOn": ["77 embedded: locked, the month covered, what was typed NOT saved", "79 embedded: months of a company you are not an admin of", "83 embedded: opened while the dashboard is locked"]
+    },
+    {
+      "text": "text: 1,000.000",
+      "why": "approved: Phase 3, D5: inside a dashboard that keeps the months, the month's table is not shown while the dashboard is locked (77, 83), nor to someone who is not an admin of the company (79); the base version shows its own page there",
+      "onlyOn": ["77 embedded: locked, the month covered, what was typed NOT saved", "79 embedded: months of a company you are not an admin of", "83 embedded: opened while the dashboard is locked"]
+    },
+    {
+      "text": "text: 2,250.00",
+      "why": "approved: Phase 3, D5: inside a dashboard that keeps the months, the month's table is not shown while the dashboard is locked (77, 83), nor to someone who is not an admin of the company (79); the base version shows its own page there",
+      "onlyOn": ["77 embedded: locked, the month covered, what was typed NOT saved", "79 embedded: months of a company you are not an admin of", "83 embedded: opened while the dashboard is locked"]
+    },
+    {
+      "text": "text: 7,047.10",
+      "why": "approved: Phase 3, D5: inside a dashboard that keeps the months, the month's table is not shown while the dashboard is locked (77, 83), nor to someone who is not an admin of the company (79); the base version shows its own page there",
+      "onlyOn": ["77 embedded: locked, the month covered, what was typed NOT saved", "79 embedded: months of a company you are not an admin of", "83 embedded: opened while the dashboard is locked"]
+    },
+    {
+      "text": "text: 250,000.00",
+      "why": "approved: Phase 3, D5: inside a dashboard that keeps the months, the month's table is not shown while the dashboard is locked (77, 83), nor to someone who is not an admin of the company (79); the base version shows its own page there",
+      "onlyOn": ["77 embedded: locked, the month covered, what was typed NOT saved", "79 embedded: months of a company you are not an admin of", "83 embedded: opened while the dashboard is locked"]
+    },
+    {
+      "text": "text: 260,000.56",
+      "why": "approved: Phase 3, D5: inside a dashboard that keeps the months, the month's table is not shown while the dashboard is locked (77, 83), nor to someone who is not an admin of the company (79); the base version shows its own page there",
+      "onlyOn": ["77 embedded: locked, the month covered, what was typed NOT saved", "79 embedded: months of a company you are not an admin of", "83 embedded: opened while the dashboard is locked"]
+    },
+    {
+      "text": "text: 207,903.33",
+      "why": "approved: Phase 3, D5: inside a dashboard that keeps the months, the month's table is not shown while the dashboard is locked (77, 83), nor to someone who is not an admin of the company (79); the base version shows its own page there",
+      "onlyOn": ["77 embedded: locked, the month covered, what was typed NOT saved", "79 embedded: months of a company you are not an admin of", "83 embedded: opened while the dashboard is locked"]
+    },
+    {
+      "text": "text: 7,800.02",
+      "why": "approved: Phase 3, D5: inside a dashboard that keeps the months, the month's table is not shown while the dashboard is locked (77, 83), nor to someone who is not an admin of the company (79); the base version shows its own page there",
+      "onlyOn": ["77 embedded: locked, the month covered, what was typed NOT saved", "79 embedded: months of a company you are not an admin of", "83 embedded: opened while the dashboard is locked"]
+    },
+    {
+      "text": "text: 44,000",
+      "why": "approved: Phase 3, D5: inside a dashboard that keeps the months, the month's table is not shown while the dashboard is locked (77, 83), nor to someone who is not an admin of the company (79); the base version shows its own page there",
+      "onlyOn": ["77 embedded: locked, the month covered, what was typed NOT saved", "79 embedded: months of a company you are not an admin of", "83 embedded: opened while the dashboard is locked"]
+    },
+    {
+      "text": "text: 52,097.23",
+      "why": "approved: Phase 3, D5: inside a dashboard that keeps the months, the month's table is not shown while the dashboard is locked (77, 83), nor to someone who is not an admin of the company (79); the base version shows its own page there",
+      "onlyOn": ["77 embedded: locked, the month covered, what was typed NOT saved", "79 embedded: months of a company you are not an admin of", "83 embedded: opened while the dashboard is locked"]
+    },
+    {
+      "text": "text: 1,500.000",
+      "why": "approved: Phase 3, D5: inside a dashboard that keeps the months, the month's table is not shown while the dashboard is locked (77, 83), nor to someone who is not an admin of the company (79); the base version shows its own page there",
+      "onlyOn": ["77 embedded: locked, the month covered, what was typed NOT saved", "79 embedded: months of a company you are not an admin of", "83 embedded: opened while the dashboard is locked"]
+    },
+    {
+      "text": "text: 53,597.23",
+      "why": "approved: Phase 3, D5: inside a dashboard that keeps the months, the month's table is not shown while the dashboard is locked (77, 83), nor to someone who is not an admin of the company (79); the base version shows its own page there",
+      "onlyOn": ["77 embedded: locked, the month covered, what was typed NOT saved", "79 embedded: months of a company you are not an admin of", "83 embedded: opened while the dashboard is locked"]
+    },
+    {
+      "text": "text: 38,461.54",
+      "why": "approved: Phase 3, D5: inside a dashboard that keeps the months, the month's table is not shown while the dashboard is locked (77, 83), nor to someone who is not an admin of the company (79); the base version shows its own page there",
+      "onlyOn": ["77 embedded: locked, the month covered, what was typed NOT saved", "79 embedded: months of a company you are not an admin of", "83 embedded: opened while the dashboard is locked"]
+    },
+    {
+      "text": "text: 221,539.02",
+      "why": "approved: Phase 3, D5: inside a dashboard that keeps the months, the month's table is not shown while the dashboard is locked (77, 83), nor to someone who is not an admin of the company (79); the base version shows its own page there",
+      "onlyOn": ["77 embedded: locked, the month covered, what was typed NOT saved", "79 embedded: months of a company you are not an admin of", "83 embedded: opened while the dashboard is locked"]
+    },
+    {
+      "text": "text: 30,635.01",
+      "why": "approved: Phase 3, D5: inside a dashboard that keeps the months, the month's table is not shown while the dashboard is locked (77, 83), nor to someone who is not an admin of the company (79); the base version shows its own page there",
+      "onlyOn": ["77 embedded: locked, the month covered, what was typed NOT saved", "79 embedded: months of a company you are not an admin of", "83 embedded: opened while the dashboard is locked"]
+    },
+    {
+      "text": "text: 31,385.51",
+      "why": "approved: Phase 3, D5: inside a dashboard that keeps the months, the month's table is not shown while the dashboard is locked (77, 83), nor to someone who is not an admin of the company (79); the base version shows its own page there",
+      "onlyOn": ["77 embedded: locked, the month covered, what was typed NOT saved", "79 embedded: months of a company you are not an admin of", "83 embedded: opened while the dashboard is locked"]
+    },
+    {
+      "text": "text: 30,862.48",
+      "why": "approved: Phase 3, D5: inside a dashboard that keeps the months, the month's table is not shown while the dashboard is locked (77, 83), nor to someone who is not an admin of the company (79); the base version shows its own page there",
+      "onlyOn": ["77 embedded: locked, the month covered, what was typed NOT saved", "79 embedded: months of a company you are not an admin of", "83 embedded: opened while the dashboard is locked"]
+    },
+    {
+      "text": "text: 459.53",
+      "why": "approved: Phase 3, D5: inside a dashboard that keeps the months, the month's table is not shown while the dashboard is locked (77, 83), nor to someone who is not an admin of the company (79); the base version shows its own page there",
+      "onlyOn": ["77 embedded: locked, the month covered, what was typed NOT saved", "79 embedded: months of a company you are not an admin of", "83 embedded: opened while the dashboard is locked"]
+    },
+    {
+      "text": "text: 64",
+      "why": "approved: Phase 3, D5: inside a dashboard that keeps the months, the month's table is not shown while the dashboard is locked (77, 83), nor to someone who is not an admin of the company (79); the base version shows its own page there",
+      "onlyOn": ["77 embedded: locked, the month covered, what was typed NOT saved", "79 embedded: months of a company you are not an admin of", "83 embedded: opened while the dashboard is locked"]
+    },
+    {
+      "text": "text: 523.03",
+      "why": "approved: Phase 3, D5: inside a dashboard that keeps the months, the month's table is not shown while the dashboard is locked (77, 83), nor to someone who is not an admin of the company (79); the base version shows its own page there",
+      "onlyOn": ["77 embedded: locked, the month covered, what was typed NOT saved", "79 embedded: months of a company you are not an admin of", "83 embedded: opened while the dashboard is locked"]
+    },
+    {
+      "text": "text: 459.525",
+      "why": "approved: Phase 3, D5: inside a dashboard that keeps the months, the month's table is not shown while the dashboard is locked (77, 83), nor to someone who is not an admin of the company (79); the base version shows its own page there",
+      "onlyOn": ["77 embedded: locked, the month covered, what was typed NOT saved", "79 embedded: months of a company you are not an admin of", "83 embedded: opened while the dashboard is locked"]
+    },
+    {
+      "text": "text: 1,378.58",
+      "why": "approved: Phase 3, D5: inside a dashboard that keeps the months, the month's table is not shown while the dashboard is locked (77, 83), nor to someone who is not an admin of the company (79); the base version shows its own page there",
+      "onlyOn": ["77 embedded: locked, the month covered, what was typed NOT saved", "79 embedded: months of a company you are not an admin of", "83 embedded: opened while the dashboard is locked"]
+    },
+    {
+      "text": "text: 2,361.13",
+      "why": "approved: Phase 3, D5: inside a dashboard that keeps the months, the month's table is not shown while the dashboard is locked (77, 83), nor to someone who is not an admin of the company (79); the base version shows its own page there",
+      "onlyOn": ["77 embedded: locked, the month covered, what was typed NOT saved", "79 embedded: months of a company you are not an admin of", "83 embedded: opened while the dashboard is locked"]
+    },
+    {
+      "text": "text: 76,923.08",
+      "why": "approved: Phase 3, D5: inside a dashboard that keeps the months, the month's table is not shown while the dashboard is locked (77, 83), nor to someone who is not an admin of the company (79); the base version shows its own page there",
+      "onlyOn": ["77 embedded: locked, the month covered, what was typed NOT saved", "79 embedded: months of a company you are not an admin of", "83 embedded: opened while the dashboard is locked"]
+    },
+    {
+      "text": "text: 5,000.00",
+      "why": "approved: Phase 3, D5: inside a dashboard that keeps the months, the month's table is not shown while the dashboard is locked (77, 83), nor to someone who is not an admin of the company (79); the base version shows its own page there",
+      "onlyOn": ["77 embedded: locked, the month covered, what was typed NOT saved", "79 embedded: months of a company you are not an admin of", "83 embedded: opened while the dashboard is locked"]
+    },
+    {
+      "text": "text: 5,300.00",
+      "why": "approved: Phase 3, D5: inside a dashboard that keeps the months, the month's table is not shown while the dashboard is locked (77, 83), nor to someone who is not an admin of the company (79); the base version shows its own page there",
+      "onlyOn": ["77 embedded: locked, the month covered, what was typed NOT saved", "79 embedded: months of a company you are not an admin of", "83 embedded: opened while the dashboard is locked"]
+    },
+    {
+      "text": "text: 5,225.00",
+      "why": "approved: Phase 3, D5: inside a dashboard that keeps the months, the month's table is not shown while the dashboard is locked (77, 83), nor to someone who is not an admin of the company (79); the base version shows its own page there",
+      "onlyOn": ["77 embedded: locked, the month covered, what was typed NOT saved", "79 embedded: months of a company you are not an admin of", "83 embedded: opened while the dashboard is locked"]
+    },
+    {
+      "text": "text: 75.00",
+      "why": "approved: Phase 3, D5: inside a dashboard that keeps the months, the month's table is not shown while the dashboard is locked (77, 83), nor to someone who is not an admin of the company (79); the base version shows its own page there",
+      "onlyOn": ["77 embedded: locked, the month covered, what was typed NOT saved", "79 embedded: months of a company you are not an admin of", "83 embedded: opened while the dashboard is locked"]
+    },
+    {
+      "text": "text: 0.000",
+      "why": "approved: Phase 3, D5: inside a dashboard that keeps the months, the month's table is not shown while the dashboard is locked (77, 83), nor to someone who is not an admin of the company (79); the base version shows its own page there",
+      "onlyOn": ["77 embedded: locked, the month covered, what was typed NOT saved", "79 embedded: months of a company you are not an admin of", "83 embedded: opened while the dashboard is locked"]
+    },
+    {
+      "text": "text: 300.00",
+      "why": "approved: Phase 3, D5: inside a dashboard that keeps the months, the month's table is not shown while the dashboard is locked (77, 83), nor to someone who is not an admin of the company (79); the base version shows its own page there",
+      "onlyOn": ["77 embedded: locked, the month covered, what was typed NOT saved", "79 embedded: months of a company you are not an admin of", "83 embedded: opened while the dashboard is locked"]
+    },
+    {
+      "text": "text: 375.00",
+      "why": "approved: Phase 3, D5: inside a dashboard that keeps the months, the month's table is not shown while the dashboard is locked (77, 83), nor to someone who is not an admin of the company (79); the base version shows its own page there",
+      "onlyOn": ["77 embedded: locked, the month covered, what was typed NOT saved", "79 embedded: months of a company you are not an admin of", "83 embedded: opened while the dashboard is locked"]
+    },
+    {
+      "text": "text: + Add Employee",
+      "why": "approved: Phase 3, D5: inside a dashboard that keeps the months, the month's table is not shown while the dashboard is locked (77, 83), nor to someone who is not an admin of the company (79); the base version shows its own page there",
+      "onlyOn": ["77 embedded: locked, the month covered, what was typed NOT saved", "79 embedded: months of a company you are not an admin of", "83 embedded: opened while the dashboard is locked"]
     }
   ]
 }

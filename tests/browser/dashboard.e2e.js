@@ -32,6 +32,8 @@ const standinHtml = (appUrl, appOrigin) => `<!doctype html><meta charset="utf-8"
     const answer = await window.hubHandle(type, payload)
     if (answer !== null) post(type === 'request-data' ? 'response-data' : 'received', answer, id)
   })
+  // What the dashboard sends by itself: whether its password gate is open.
+  window.pushToApp = (payload) => post('send-data', payload, 'push-' + String(Date.now()).padStart(13, '0'))
 </script>`
 
 // Everything the payroll app keeps in the browser for itself, exactly as stored.
@@ -130,6 +132,76 @@ describe('inside a dashboard that keeps the column setup', () => {
     await again.getByRole('cell', { name: 'TEST Bonus', exact: true }).waitFor()
     expect(await again.getByRole('button', { name: '+ Add Column' }).count()).toBe(0)
 
+    expect(outsideRequests).toEqual([])
+    await context.close()
+  })
+})
+
+describe('inside a dashboard that keeps the months too (its migration 0014)', () => {
+  test('import the months once with the same figures; the gate locks mid-entry and unlocking saves what was typed; two saves of the same month', async () => {
+    const seed = seededState()
+    const alone = await openSeeded(app, seed)
+    const figuresBefore = await readEmployeeTable(alone.page)
+    await alone.context.close()
+
+    const hub = createFakeSetupHub({ companies: [A, B], selectedBrn: A.brn, monthsSupported: true })
+    const { context, page, outsideRequests } = await openStandin(hub, seed)
+    const frame = page.frameLocator('#app')
+    const backUp = async (dialog) => {
+      const backup = page.waitForEvent('download')
+      await dialog.getByRole('button', { name: 'Download a backup file' }).click()
+      await backup
+      await dialog.getByRole('button', { name: 'Continue' }).click()
+    }
+
+    // The column setup first (Phase 2), then the months.
+    await frame.getByRole('button', { name: 'Import to the dashboard' }).click()
+    let dialog = frame.getByRole('dialog', { name: 'Import to the dashboard' })
+    await backUp(dialog)
+    await dialog.getByRole('button', { name: 'Import 2 companies' }).click()
+    await dialog.getByText(/imported and checked/).nth(2).waitFor()
+    await dialog.getByRole('button', { name: 'Close', exact: true }).last().click()
+    await frame.getByText('Column setup and months of TEST Co A, kept in the dashboard.').waitFor()
+    // Nothing of this browser's months is shown in place of the dashboard's.
+    await frame.getByText('No employees this month').waitFor()
+
+    await frame.getByRole('button', { name: 'Import months to the dashboard' }).click()
+    dialog = frame.getByRole('dialog', { name: 'Import months to the dashboard' })
+    await backUp(dialog)
+    await dialog.getByText('Nothing has been written to the dashboard yet.').waitFor()
+    expect(hub.state.log.filter((m) => m.type === 'send-data' && m.dataType === 'payroll-month')).toEqual([])
+    await dialog.getByRole('button', { name: 'Import 1 month' }).click()
+    await dialog.getByText('imported, and every figure checked.').waitFor()
+    await dialog.getByRole('button', { name: 'Close', exact: true }).last().click()
+    const inside = appFrame(page)
+    await frame.locator('tbody input').first().waitFor()
+    expect(await readEmployeeTable(inside)).toEqual(figuresBefore)
+    expect(hub.state.months.get('TEST-BRN-A|2026-09').revision).toBe(1)
+
+    // Typing, then the dashboard locks before it is saved: covered, NOT saved, nothing sent.
+    const salary = frame.locator('tbody tr').first().getByLabel('Basic Salary', { exact: true })
+    await salary.fill('19115')
+    hub.state.unlocked = false
+    await page.evaluate(() => window.pushToApp({ dataType: 'payroll-month', rows: [{ action: 'gate', unlocked: false }] }))
+    await frame.getByText('Unlock the dashboard to continue').waitFor()
+    await frame.getByText('NOT saved', { exact: true }).waitFor()
+    expect(await frame.locator('table').count()).toBe(0)
+    expect(hub.state.months.get('TEST-BRN-A|2026-09').revision).toBe(1)
+    // Unlocking from the app: the dashboard asks for the password (here: answered), then it is saved.
+    await frame.getByRole('region', { name: 'Locked' }).getByRole('button', { name: 'Unlock the dashboard' }).click()
+    await expect.poll(() => hub.state.months.get('TEST-BRN-A|2026-09').revision, { timeout: 5000 }).toBe(2)
+    expect(hub.state.months.get('TEST-BRN-A|2026-09').employees[0].values.basicSalary).toBe('19115')
+    await frame.getByText('Saved', { exact: true }).waitFor()
+
+    // Someone else saves the same month meanwhile: NOT saved, then "Save mine over it".
+    hub.changeMonthElsewhere(A.brn, '2026-09', hub.state.months.get('TEST-BRN-A|2026-09').employees.slice(0, 1))
+    await frame.locator('tbody tr').first().getByLabel('Basic Salary', { exact: true }).fill('20000')
+    await frame.getByRole('button', { name: 'Save mine over it' }).click()
+    await expect.poll(() => hub.state.months.get('TEST-BRN-A|2026-09').revision, { timeout: 5000 }).toBe(4)
+    expect(hub.state.months.get('TEST-BRN-A|2026-09').employees[0].values.basicSalary).toBe('20000')
+
+    // This browser's own copy was never written.
+    expect(Object.keys(await payrollStorage(inside))).toEqual(['payroll_app_state_v1', 'payroll_period_test-co-a_2026-09'])
     expect(outsideRequests).toEqual([])
     await context.close()
   })

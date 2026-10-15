@@ -1,17 +1,22 @@
 // The messages this app exchanges with the Payroll Hub dashboard about its
-// column setup (the dashboard's docs/INTEGRATION.md, "Payroll app: column
-// setup"). Everything goes through the copied bridge file; nothing here
-// talks to a server.
+// column setup and its months (the dashboard's docs/INTEGRATION.md, "Payroll
+// app: column setup" and "Payroll app: months"). Everything goes through the
+// copied bridge file; nothing here talks to a server.
 //
 // Every answer is one of:
 //   { ok: true, rows, meta: { brn, label, role } }      a request was answered
 //   { ok: true, result }                               a save was stored
 //   { ok: false, code, error }                         it was not; `code` says why:
 //     stale, forbidden, wrong-company, invalid, not-found, too-large, unavailable,
+//     locked         the dashboard's password gate is locked (months only)
+//     denied         the user turned the dashboard's question down
 //     no-answer      the dashboard did not answer at all
 //     not-supported  a dashboard that does not keep payroll setups yet
 
-const KNOWN_CODES = ['stale', 'forbidden', 'wrong-company', 'invalid', 'not-found', 'too-large', 'unavailable']
+const KNOWN_CODES = ['stale', 'forbidden', 'wrong-company', 'invalid', 'not-found', 'too-large', 'unavailable', 'locked', 'denied']
+
+export const SETUP = 'payroll-setup'
+export const MONTH = 'payroll-month'
 
 // How long a request may take before the app stops waiting. The bridge itself
 // waits up to two minutes for a request, because the dashboard may ask its
@@ -35,13 +40,13 @@ function readMeta(meta) {
 
 const NO_ANSWER = { ok: false, code: 'no-answer', error: 'The dashboard did not answer in time.' }
 
-export async function askHub(params, { waitMs = REQUEST_WAIT_MS } = {}) {
+export async function askHub(params, { waitMs = REQUEST_WAIT_MS, dataType = SETUP } = {}) {
   let timer
   const late = new Promise((resolve) => {
     timer = setTimeout(() => resolve(NO_ANSWER), waitMs)
   })
   const reply = await Promise.race([
-    window.PayrollHubBridge.sendToDashboard('request-data', { dataType: 'payroll-setup', params }),
+    window.PayrollHubBridge.sendToDashboard('request-data', { dataType, params }),
     late,
   ])
   clearTimeout(timer)
@@ -54,8 +59,8 @@ export async function askHub(params, { waitMs = REQUEST_WAIT_MS } = {}) {
   return { ok: true, rows: reply.rows, meta }
 }
 
-export async function sendHub(row) {
-  const reply = await window.PayrollHubBridge.sendToDashboard('send-data', { dataType: 'payroll-setup', rows: [row] })
+export async function sendHub(row, { dataType = SETUP } = {}) {
+  const reply = await window.PayrollHubBridge.sendToDashboard('send-data', { dataType, rows: [row] })
   if (reply?.ok !== true) return failureOf(reply)
   return { ok: true, result: reply.result ?? {} }
 }

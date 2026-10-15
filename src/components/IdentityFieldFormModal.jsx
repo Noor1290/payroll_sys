@@ -6,8 +6,9 @@ import { slugify, isValidKey } from '../lib/slugify'
 
 // What the "Change this field's key?" question says will be updated.
 function describeKeyChange({ keyChange, preview }, isIdField) {
-  const values =
-    preview.periods === 0
+  const values = preview.unknown
+    ? 'Its saved values will be moved in every month that holds them.'
+    : preview.periods === 0
       ? 'No saved values need to move.'
       : `Its saved values will be moved in ${preview.periods} month${preview.periods === 1 ? '' : 's'} across ${preview.companies} compan${
           preview.companies === 1 ? 'y' : 'ies'

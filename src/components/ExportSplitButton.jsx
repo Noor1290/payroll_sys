@@ -9,7 +9,7 @@ const MENU_HINT = 'mt-0.5 block text-xs font-normal text-muted'
 // unchanged). The chevron opens a small menu offering both xlsx options
 // plus the "PDF fill" CSV/JSON exports, which go through a separate
 // column-picker flow (onExportPdfFill) instead of straight to a download.
-export default function ExportSplitButton({ onExport, onExportPdfFill }) {
+export default function ExportSplitButton({ onExport, onExportPdfFill, disabled = false }) {
   const [open, setOpen] = useState(false)
   const containerRef = useRef(null)
   // Keyboard: Escape closes the menu and focus returns to its button.
@@ -35,12 +35,13 @@ export default function ExportSplitButton({ onExport, onExportPdfFill }) {
 
   return (
     <div className="relative inline-flex" ref={containerRef}>
-      <button onClick={() => choose('values')} className="btn btn-primary rounded-r-none">
+      <button onClick={() => choose('values')} disabled={disabled} className="btn btn-primary rounded-r-none">
         <FileSpreadsheet aria-hidden="true" />
         Export to Excel
       </button>
       <button
         onClick={() => setOpen((o) => !o)}
+        disabled={disabled}
         className="btn btn-primary btn-icon ml-px w-9 rounded-l-none"
         aria-label="More export options"
         aria-haspopup="menu"

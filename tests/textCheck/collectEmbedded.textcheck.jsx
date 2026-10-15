@@ -7,7 +7,8 @@
 // The stand-in answers the app's questions about its column setup the way the
 // dashboard live today does ("not registered": it does not keep them), so the
 // screens up to 64 are the ones the app has always shown there. From 65 on it
-// is a dashboard that keeps them (tests/helpers/fakeSetupHub.js).
+// is a dashboard that keeps them (tests/helpers/fakeSetupHub.js); from 76 on,
+// one that keeps the months too (its migration 0014).
 
 import fs from 'node:fs'
 import path from 'node:path'
@@ -80,7 +81,8 @@ function reply(type, id, payload) {
 }
 
 async function answerSetup(message) {
-  if ((message.type !== 'request-data' && message.type !== 'send-data') || message.payload?.dataType !== 'payroll-setup') return
+  const dataType = message.payload?.dataType
+  if ((message.type !== 'request-data' && message.type !== 'send-data') || (dataType !== 'payroll-setup' && dataType !== 'payroll-month')) return
   const answer = setupHub
     ? await setupHub.handle(message.type, structuredClone(message.payload))
     : { ok: false, error: `This app is not registered to ${message.type === 'request-data' ? 'receive' : 'send'} this kind of data.` }
@@ -93,6 +95,8 @@ async function start({ october = octoberEmployees, details = company.details, wa
     await act(async () => root.unmount())
     container.remove()
   }
+  // As a page reload does: nothing held in memory from the screen before.
+  if (KNOWS_MONTHS) (await load('lib/dashboardMonths.js')).forgetDashboardMonths()
   localStorage.clear()
   localStorage.setItem(
     'payroll_app_state_v1',
@@ -145,6 +149,24 @@ const openDetails = () => act(async () => document.querySelector('[aria-label="F
 // differs is exactly what the dashboard changes; screens that exist only inside a
 // dashboard that keeps setups (dialogs, the start screens) are not collected for it.
 const KNOWS_SETUPS = fs.existsSync(path.join(SRC, 'lib/dashboardSetup.js'))
+const KNOWS_MONTHS = fs.existsSync(path.join(SRC, 'lib/dashboardMonths.js'))
+
+// "Import months to the dashboard", from this browser's October (and a September added
+// to it), started again so the button is offered.
+async function startMonthsImport(hub) {
+  await start({ hub, waitFor: 'Import months to the dashboard' })
+  localStorage.setItem('payroll_period_company-fake_2026-09', JSON.stringify({ employees: octoberEmployees.slice(0, 2) }))
+  await click('Import months to the dashboard')
+  snapDialog('80 embedded: import months, backup first')
+  await click('Download a backup file', topDialog())
+  await click('Continue', topDialog())
+  await vi.waitFor(() => expect(topDialog().textContent).toContain('Nothing has been written'))
+  snapDialog('81 embedded: import months, what it will do')
+  await click('Import 2 months', topDialog())
+  await vi.waitFor(() => expect(topDialog().textContent).toContain('every figure checked'))
+  snapDialog('82 embedded: import months, done')
+  await click('Close', topDialog())
+}
 const startDashboard = (hub, waitFor) => (KNOWS_SETUPS ? start({ hub, waitFor }) : start())
 
 test('collect every visible string (inside the dashboard)', async () => {
@@ -231,6 +253,62 @@ test('collect every visible string (inside the dashboard)', async () => {
     hub.state.down = true
     await start({ hub, waitFor: 'could not be loaded' })
     snap('75 embedded: column setup could not be loaded')
+  }
+
+  // ---------- a dashboard that keeps the months too (its migration 0014) ----------
+  // The base version shows its own page for the page screens (as for 65 to 70); the
+  // import's dialogs exist only here and are not collected for it.
+  if (!KNOWS_MONTHS) {
+    await start()
+    for (const name of [
+      '76 embedded: months kept in the dashboard',
+      '77 embedded: locked, the month covered, what was typed NOT saved',
+      '78 embedded: a month NOT saved, someone else saved it',
+      '79 embedded: months of a company you are not an admin of',
+      '83 embedded: opened while the dashboard is locked',
+    ])
+      snap(name)
+  } else {
+    const monthsHub = (more = {}) =>
+      attachedHub({ monthsSupported: true, months: { 'C00000001|2026-10': { employees: octoberEmployees } }, ...more })
+    const gate = (unlocked) => reply('send-data', `gate-${String(Date.now()).padStart(13, '0')}`, { dataType: 'payroll-month', rows: [{ action: 'gate', unlocked }] })
+
+    let hub = monthsHub()
+    await start({ hub, waitFor: 'months of Fake Co Ltd, kept in the dashboard' })
+    await vi.waitFor(() => expect(document.querySelector('tbody input')).toBeTruthy())
+    snap('76 embedded: months kept in the dashboard')
+
+    // Typed, then the dashboard locks before it is saved.
+    const salary = document.querySelector('tbody [aria-label="Basic Salary"]')
+    const setter = Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, 'value').set
+    await act(async () => {
+      setter.call(salary, '19115')
+      salary.dispatchEvent(new Event('input', { bubbles: true }))
+    })
+    hub.state.unlocked = false
+    await gate(false)
+    await vi.waitFor(() => expect(document.body.textContent).toContain('NOT saved'), { timeout: 4000 })
+    snap('77 embedded: locked, the month covered, what was typed NOT saved')
+
+    hub = monthsHub()
+    await start({ hub, waitFor: 'months of Fake Co Ltd, kept in the dashboard' })
+    await vi.waitFor(() => expect(document.querySelector('tbody input')).toBeTruthy())
+    hub.changeMonthElsewhere('C00000001', '2026-10', octoberEmployees.slice(0, 2))
+    const again = document.querySelector('tbody [aria-label="Basic Salary"]')
+    await act(async () => {
+      setter.call(again, '19115')
+      again.dispatchEvent(new Event('input', { bubbles: true }))
+    })
+    await vi.waitFor(() => expect(document.body.textContent).toContain('Save mine over it'), { timeout: 4000 })
+    snap('78 embedded: a month NOT saved, someone else saved it')
+
+    await start({ hub: monthsHub({ companies: [{ ...FAKE, role: 'member' }, OTHER] }), waitFor: 'Only an admin can see the employees' })
+    snap('79 embedded: months of a company you are not an admin of')
+
+    await startMonthsImport(monthsHub({ months: {} }))
+
+    await start({ hub: monthsHub({ unlocked: false }), waitFor: 'Unlock the dashboard to continue' })
+    snap('83 embedded: opened while the dashboard is locked')
   }
 
   expect(OUT, 'TEXT_CHECK_OUT_EMBEDDED').toBeTruthy()

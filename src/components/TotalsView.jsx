@@ -1,15 +1,54 @@
-import { useMemo, useState } from 'react'
-import { FileSpreadsheet, TriangleAlert } from 'lucide-react'
+import { useEffect, useMemo, useState } from 'react'
+import { CircleAlert, FileSpreadsheet, LoaderCircle, TriangleAlert } from 'lucide-react'
 import TotalsTable from './TotalsTable'
 import { dataStore } from '../lib/dataStore'
 import { enumeratePeriods, periodKey, parsePeriodKey, formatPeriodLabel } from '../lib/periods'
 import { computeTotals } from '../lib/totals'
 import { getColumnsByKey } from '../lib/model'
 
+const isPending = (result) => typeof result?.then === 'function'
+
+// The months of a range: at once from this browser; inside the dashboard they
+// may have to be read first. Never part of a range: a month that could not be
+// read stops the totals, with the reason.
+//   { periodsWithData } | { blocked } | null while reading
+function useRangeMonths(companyId, periodsList, reloadToken) {
+  const direct = useMemo(() => {
+    // Read again when asked to (the dashboard was unlocked): the token says when.
+    void reloadToken
+    const results = periodsList.map(({ year, month }) => ({ year, month, result: dataStore.loadPeriod(companyId, year, month) }))
+    if (results.some((r) => isPending(r.result))) return { pending: results }
+    const failed = results.find((r) => r.result.blocked)
+    if (failed) return { blocked: failed.result.blocked }
+    return { periodsWithData: results.map(({ year, month, result }) => ({ year, month, employees: result.employees })) }
+  }, [companyId, periodsList, reloadToken])
+
+  const [read, setRead] = useState(null) // { for, ...result }
+  useEffect(() => {
+    if (!direct.pending) return
+    let live = true
+    Promise.all(direct.pending.map((r) => Promise.resolve(r.result))).then((list) => {
+      if (!live) return
+      const failed = list.find((r) => r.blocked)
+      setRead(
+        failed
+          ? { for: direct, blocked: failed.blocked }
+          : { for: direct, periodsWithData: list.map((r, i) => ({ year: direct.pending[i].year, month: direct.pending[i].month, employees: r.employees })) }
+      )
+    })
+    return () => {
+      live = false
+    }
+  }, [direct])
+
+  if (!direct.pending) return direct
+  return read?.for === direct ? read : null
+}
+
 // Aggregates a company's employees across a user-chosen month range,
 // matched by the designated ID field, and reuses the standard export
 // pipeline to send the aggregated table to Excel.
-export default function TotalsView({ company, identityFields, idFieldKey, effectiveColumns, defaultYear, defaultMonth, onExport }) {
+export default function TotalsView({ company, identityFields, idFieldKey, effectiveColumns, defaultYear, defaultMonth, onExport, reloadToken = 0 }) {
   const [fromKey, setFromKey] = useState(periodKey(defaultYear, defaultMonth))
   const [toKey, setToKey] = useState(periodKey(defaultYear, defaultMonth))
 
@@ -18,24 +57,23 @@ export default function TotalsView({ company, identityFields, idFieldKey, effect
 
   const columnsByKey = useMemo(() => getColumnsByKey(effectiveColumns), [effectiveColumns])
 
-  const { employees, computedGrid, rangeLabel } = useMemo(() => {
-    const periodsList = enumeratePeriods(fromYear, fromMonth, toYear, toMonth)
-    const periodsWithData = periodsList.map(({ year, month }) => ({
-      year,
-      month,
-      employees: dataStore.loadPeriod(company.id, year, month).employees,
-    }))
-    const result = computeTotals(periodsWithData, effectiveColumns, columnsByKey, idFieldKey)
+  const periodsList = useMemo(() => enumeratePeriods(fromYear, fromMonth, toYear, toMonth), [fromYear, fromMonth, toYear, toMonth])
+  const range = useRangeMonths(company.id, periodsList, reloadToken)
 
+  const rangeLabel = useMemo(() => {
     const first = periodsList[0]
     const last = periodsList[periodsList.length - 1]
-    const label =
-      periodsList.length === 1
-        ? formatPeriodLabel(first.year, first.month)
-        : `${formatPeriodLabel(first.year, first.month)} to ${formatPeriodLabel(last.year, last.month)}`
+    return periodsList.length === 1
+      ? formatPeriodLabel(first.year, first.month)
+      : `${formatPeriodLabel(first.year, first.month)} to ${formatPeriodLabel(last.year, last.month)}`
+  }, [periodsList])
 
-    return { ...result, rangeLabel: label }
-  }, [company.id, fromYear, fromMonth, toYear, toMonth, effectiveColumns, columnsByKey, idFieldKey])
+  const totals = useMemo(
+    () => (range?.periodsWithData ? computeTotals(range.periodsWithData, effectiveColumns, columnsByKey, idFieldKey) : null),
+    [range, effectiveColumns, columnsByKey, idFieldKey]
+  )
+  const employees = totals?.employees ?? []
+  const computedGrid = totals?.computedGrid ?? {}
 
   return (
     <div className="flex h-full min-h-0 flex-col gap-4">
@@ -50,13 +88,23 @@ export default function TotalsView({ company, identityFields, idFieldKey, effect
         </label>
         <span className="pb-3 text-xs text-muted">Summing {rangeLabel}</span>
         <div className="flex-1" />
-        <button onClick={() => onExport(employees, computedGrid, rangeLabel)} className="btn btn-primary mb-0.5">
+        <button onClick={() => onExport(employees, computedGrid, rangeLabel)} disabled={!totals} className="btn btn-primary mb-0.5">
           <FileSpreadsheet aria-hidden="true" />
           Export to Excel
         </button>
       </div>
 
-      {!idFieldKey ? (
+      {!range ? (
+        <p role="status" className="flex items-center gap-2 text-sm text-muted">
+          <LoaderCircle className="h-4 w-4 motion-safe:animate-spin" aria-hidden="true" />
+          Loading the months from the dashboard…
+        </p>
+      ) : range.blocked ? (
+        <div role="alert" className="panel panel-danger text-sm">
+          <CircleAlert aria-hidden="true" />
+          <span>No totals: a month of this range could not be loaded from the dashboard. {range.blocked.error}</span>
+        </div>
+      ) : !idFieldKey ? (
         <div className="panel text-sm [--panel:var(--warn)]">
           <TriangleAlert aria-hidden="true" />
           <span>

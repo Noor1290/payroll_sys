@@ -1,5 +1,5 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
-import { Building2, CircleAlert, Copy, Menu, Trash2, Upload, X } from 'lucide-react'
+import { useCallback, useEffect, useMemo, useRef, useState, useSyncExternalStore } from 'react'
+import { Building2, CircleAlert, Copy, LoaderCircle, LockKeyhole, Menu, RotateCw, Trash2, Upload, X } from 'lucide-react'
 import Sidebar from './components/Sidebar'
 import ColumnManager from './components/ColumnManager'
 import IdentityFieldsManager from './components/IdentityFieldsManager'
@@ -21,9 +21,12 @@ import BackupMessage from './components/BackupMessage'
 import DashboardBar from './components/DashboardBar'
 import DashboardStart from './components/DashboardStart'
 import ImportToDashboardModal from './components/ImportToDashboardModal'
+import ImportMonthsModal from './components/ImportMonthsModal'
 import { dataStore, renameValueKey, resetDataStore, setDataStore } from './lib/dataStore'
 import { connectDashboard, dashboardCompany, dashboardStore, onSetupReplaced, readImported, sharedAccess } from './lib/dashboardSetup'
 import { hasSomethingToImport } from './lib/dashboardImport'
+import { askToUnlock, gateChanged, monthStatus, onMonthsChanged } from './lib/dashboardMonths'
+import { hasMonthsToImport } from './lib/monthImport'
 import { findErrorCells } from './lib/exportErrors'
 import { findFormulasUsingColumn, findScopeChangeBlockers, renameKeyInColumn, renameKeyInWidths } from './lib/columnUsage'
 import {
@@ -63,16 +66,40 @@ const TABS = [
 ]
 
 // Every read and save goes through the data store (see lib/dataStore.js).
-const { loadState, saveState, loadPeriod, savePeriod, deletePeriodsForCompany, countPeriodsHoldingKey, renameValueKeyInPeriods } = dataStore
+const {
+  loadState,
+  saveState,
+  loadPeriod,
+  savePeriod,
+  periodHasEmployees,
+  deletePeriodsForCompany,
+  countPeriodsHoldingKey,
+  renameValueKeyInPeriods,
+} = dataStore
+
+// What the dashboard sends this app by itself: whether its password gate is
+// open (the months are behind it). Anything else is turned down.
+function receiveFromDashboard(payload) {
+  const row = payload?.rows?.[0]
+  if (payload?.dataType === 'payroll-month' && row?.action === 'gate' && typeof row.unlocked === 'boolean') {
+    gateChanged(row.unlocked)
+    return true
+  }
+  return false
+}
+
+const isPending = (result) => typeof result?.then === 'function'
 
 // The app, started from whatever is stored. After a backup has been restored
 // it is started again from scratch, so nothing of the replaced data stays on
 // screen or in memory.
 //
 // Inside the Payroll Hub dashboard the column setup comes from the dashboard
-// (lib/dashboardSetup.js) and is saved there; the months stay in this browser.
-// Opened on its own, or inside a dashboard that does not keep payroll setups
-// yet, everything is in this browser exactly as before.
+// (lib/dashboardSetup.js) and is saved there, and so are the months
+// (lib/dashboardMonths.js), behind the dashboard's password gate. A dashboard
+// that does not keep months yet leaves them in this browser. Opened on its own,
+// or inside a dashboard that does not keep payroll setups yet, everything is
+// in this browser exactly as before.
 //   mode: 'browser' | 'starting' | 'dashboard' | 'empty' | 'failed'
 export default function App() {
   const [startedFrom, setStartedFrom] = useState(0)
@@ -80,10 +107,11 @@ export default function App() {
   const [mode, setMode] = useState(() => (window.PayrollHubBridge.isEmbedded() ? 'starting' : 'browser'))
   const [startProblem, setStartProblem] = useState('')
   const [importOpen, setImportOpen] = useState(false)
+  const [importMonthsOpen, setImportMonthsOpen] = useState(false)
 
   // No-op unless this app is running inside the Payroll Hub dashboard's iframe.
   useEffect(() => {
-    window.PayrollHubBridge.init({ appId: 'payroll' })
+    window.PayrollHubBridge.init({ appId: 'payroll', onData: receiveFromDashboard })
   }, [])
 
   // What a load from the dashboard answered decides what is shown.
@@ -157,14 +185,24 @@ export default function App() {
         inDashboard={mode === 'dashboard'}
         onReloadDashboard={() => void loadFromDashboard()}
         onOpenImport={() => setImportOpen(true)}
+        onOpenImportMonths={() => setImportMonthsOpen(true)}
       />
       {restoreMessage && <BackupMessage {...restoreMessage} onClose={() => setRestoreMessage(null)} />}
       {importDialog}
+      {importMonthsOpen && (
+        <ImportMonthsModal
+          onClose={() => setImportMonthsOpen(false)}
+          onDone={() => {
+            setImportMonthsOpen(false)
+            void loadFromDashboard()
+          }}
+        />
+      )}
     </>
   )
 }
 
-function PayrollApp({ onRestored, inDashboard = false, onReloadDashboard, onOpenImport }) {
+function PayrollApp({ onRestored, inDashboard = false, onReloadDashboard, onOpenImport, onOpenImportMonths }) {
   const [identityFields, setIdentityFields] = useState([])
   const [idFieldKey, setIdFieldKey] = useState(null)
   const [globalColumns, setGlobalColumns] = useState([])
@@ -253,22 +291,63 @@ function PayrollApp({ onRestored, inDashboard = false, onReloadDashboard, onOpen
   const [browserOnly] = useState(() => !inDashboard && Object.keys(readImported().companies).length > 0)
   const [canImport] = useState(() => inDashboard && companyRole === 'admin' && hasSomethingToImport())
 
+  // Inside a dashboard that keeps the months: they are behind its password gate.
+  const months = useSyncExternalStore(monthStatus.subscribe, monthStatus.get)
+  const monthsInDashboard = inDashboard && months.supported
+  const [canImportMonths] = useState(() => monthsInDashboard && companyRole === 'admin' && hasMonthsToImport())
+  // While the gate is locked the month's figures are covered; what was typed stays in memory.
+  const covered = monthsInDashboard && months.gate === 'locked'
+  // Bumped when the month on screen must be read again (the gate opened, the dashboard's version was taken).
+  const [monthReload, setMonthReload] = useState(0)
+  // The month on screen could not be read: { key, code, error } | null.
+  const [monthBlocked, setMonthBlocked] = useState(null)
+
   const activeCompany = companies.find((c) => c.id === activeCompanyId) ?? null
   const selectedYear = activeCompany?.viewYear ?? null
   const selectedMonth = activeCompany?.viewMonth ?? null
   const currentPeriodKey = activeCompanyId && selectedYear && selectedMonth ? `${activeCompanyId}:${selectedYear}-${selectedMonth}` : null
 
   // Load the selected month's employees whenever the company or month changes.
+  // From this browser it is there at once; from the dashboard it may take a
+  // moment, or not be readable at all (then nothing is shown or saved).
   useEffect(() => {
     if (!activeCompanyId || !selectedYear || !selectedMonth) {
       setPeriodEmployees([])
       setLoadedPeriodKey(null)
+      setMonthBlocked(null)
       return
     }
-    const { employees } = loadPeriod(activeCompanyId, selectedYear, selectedMonth)
-    setPeriodEmployees(employees)
-    setLoadedPeriodKey(`${activeCompanyId}:${selectedYear}-${selectedMonth}`)
-  }, [activeCompanyId, selectedYear, selectedMonth])
+    const key = `${activeCompanyId}:${selectedYear}-${selectedMonth}`
+    const apply = (result) => {
+      if (result.blocked) {
+        setMonthBlocked({ key, ...result.blocked })
+        return
+      }
+      setMonthBlocked(null)
+      setPeriodEmployees(result.employees)
+      setLoadedPeriodKey(key)
+    }
+    const result = loadPeriod(activeCompanyId, selectedYear, selectedMonth)
+    if (!isPending(result)) return apply(result)
+    let live = true
+    result.then((loaded) => {
+      if (live) apply(loaded)
+    })
+    return () => {
+      live = false
+    }
+  }, [activeCompanyId, selectedYear, selectedMonth, monthReload])
+
+  // Inside the dashboard: read the month again when the dashboard opens its gate
+  // or its version of the month replaced the one on screen.
+  useEffect(
+    () =>
+      onMonthsChanged(() => {
+        setLoadedPeriodKey(null)
+        setMonthReload((n) => n + 1)
+      }),
+    []
+  )
 
   // Save the month on screen. Only ever the month that was actually loaded:
   // right after the company or month changes, `loadedEmployees` still holds
@@ -282,26 +361,37 @@ function PayrollApp({ onRestored, inDashboard = false, onReloadDashboard, onOpen
     if (savePeriod(activeCompanyId, selectedYear, selectedMonth, { employees: loadedEmployees })) return
     // Not saved: put the screen back to what is saved, and say so.
     revertingPeriod.current = true
-    setPeriodEmployees(loadPeriod(activeCompanyId, selectedYear, selectedMonth).employees)
+    const saved = loadPeriod(activeCompanyId, selectedYear, selectedMonth)
+    setPeriodEmployees(isPending(saved) ? loadedEmployees : saved.employees)
     setSaveFailed(true)
   }, [loadedPeriodKey, currentPeriodKey, activeCompanyId, selectedYear, selectedMonth, loadedEmployees])
 
   const periodEmployees = currentPeriodKey && loadedPeriodKey === currentPeriodKey ? loadedEmployees : NO_EMPLOYEES
+  // The month on screen is there to work on: read, and not covered. (In this
+  // browser it always is: it is read at once.)
+  const blocked = monthBlocked && monthBlocked.key === currentPeriodKey ? monthBlocked : null
+  const monthReady = !monthsInDashboard || (Boolean(currentPeriodKey) && loadedPeriodKey === currentPeriodKey && !covered)
 
   // Whether "Copy from Previous Month" has anything to offer right now -
   // read fresh (not kept in React state) each time it's relevant, since
   // it's only ever consulted right before the user might click the button.
   const previousPeriodHasData = useMemo(() => {
+    // Asked again when the dashboard's list of months changes (`months`).
+    void months
     if (!activeCompanyId || !selectedYear || !selectedMonth) return false
     const prev = shiftPeriod(selectedYear, selectedMonth, -1)
-    return loadPeriod(activeCompanyId, prev.year, prev.month).employees.length > 0
-  }, [activeCompanyId, selectedYear, selectedMonth])
+    return periodHasEmployees(activeCompanyId, prev.year, prev.month)
+  }, [activeCompanyId, selectedYear, selectedMonth, months])
 
   function handleOpenCopyPreviousMonth() {
     if (!activeCompanyId || !selectedYear || !selectedMonth) return
     const prev = shiftPeriod(selectedYear, selectedMonth, -1)
-    const { employees } = loadPeriod(activeCompanyId, prev.year, prev.month)
-    setCopyPreviousMonthData({ employees, year: prev.year, month: prev.month })
+    const apply = (result) => {
+      if (!result.blocked) setCopyPreviousMonthData({ employees: result.employees, year: prev.year, month: prev.month })
+    }
+    const result = loadPeriod(activeCompanyId, prev.year, prev.month)
+    if (isPending(result)) void result.then(apply)
+    else apply(result)
   }
 
   function handleConfirmCopyPreviousMonth(nextEmployees) {
@@ -670,6 +760,8 @@ function PayrollApp({ onRestored, inDashboard = false, onReloadDashboard, onOpen
             access={access}
             onReload={onReloadDashboard}
             onImport={canImport ? onOpenImport : null}
+            months={inDashboard ? months : null}
+            onImportMonths={canImportMonths ? onOpenImportMonths : null}
           />
         )}
 
@@ -710,12 +802,12 @@ function PayrollApp({ onRestored, inDashboard = false, onReloadDashboard, onOpen
                     className="hidden"
                     onChange={handleFileSelected}
                   />
-                  <button onClick={handleImportClick} className="btn btn-secondary">
+                  <button onClick={handleImportClick} disabled={!monthReady} className="btn btn-secondary">
                     <Upload aria-hidden="true" />
                     Import from Excel
                   </button>
-                  <ExportSplitButton onExport={handleOpenExportPreview} onExportPdfFill={setPdfFillFormat} />
-                  {selectedYear && selectedMonth && (
+                  <ExportSplitButton onExport={handleOpenExportPreview} onExportPdfFill={setPdfFillFormat} disabled={!monthReady} />
+                  {selectedYear && selectedMonth && monthReady && (
                     <SendToDashboardButton
                       // Remounts per company + month, so a "Sent" message never lingers over different data.
                       key={`${activeCompany.id}:${selectedYear}-${selectedMonth}`}
@@ -731,7 +823,7 @@ function PayrollApp({ onRestored, inDashboard = false, onReloadDashboard, onOpen
                   )}
                   <button
                     onClick={handleOpenCopyPreviousMonth}
-                    disabled={!previousPeriodHasData}
+                    disabled={!previousPeriodHasData || !monthReady}
                     title={previousPeriodHasData ? undefined : 'No data in the previous month for this company'}
                     className="btn btn-secondary"
                   >
@@ -740,7 +832,7 @@ function PayrollApp({ onRestored, inDashboard = false, onReloadDashboard, onOpen
                   </button>
                   <button
                     onClick={() => setConfirmingDeleteAll(true)}
-                    disabled={periodEmployees.length === 0}
+                    disabled={periodEmployees.length === 0 || !monthReady}
                     className="btn btn-danger"
                   >
                     <Trash2 aria-hidden="true" />
@@ -863,7 +955,11 @@ function PayrollApp({ onRestored, inDashboard = false, onReloadDashboard, onOpen
                 />
               )}
 
-              {activeTab === 'employees' && (
+              {(activeTab === 'employees' || activeTab === 'totals') && (covered || blocked || !monthReady) && monthsInDashboard ? (
+                <MonthCover covered={covered} blocked={blocked} unsaved={months.state === 'not-saved'} onRetry={() => setMonthReload((n) => n + 1)} />
+              ) : null}
+
+              {activeTab === 'employees' && (!monthsInDashboard || monthReady) && (
                 <EmployeeTable
                   employees={periodEmployees}
                   identityFields={identityFields}
@@ -879,7 +975,7 @@ function PayrollApp({ onRestored, inDashboard = false, onReloadDashboard, onOpen
                 />
               )}
 
-              {activeTab === 'totals' && selectedYear && selectedMonth && (
+              {activeTab === 'totals' && selectedYear && selectedMonth && (!monthsInDashboard || monthReady) && (
                 <TotalsView
                   company={activeCompany}
                   identityFields={identityFields}
@@ -888,6 +984,7 @@ function PayrollApp({ onRestored, inDashboard = false, onReloadDashboard, onOpen
                   defaultYear={selectedYear}
                   defaultMonth={selectedMonth}
                   onExport={handleOpenTotalsExportPreview}
+                  reloadToken={monthReload}
                 />
               )}
             </div>
@@ -986,5 +1083,62 @@ function PayrollApp({ onRestored, inDashboard = false, onReloadDashboard, onOpen
           )
         })()}
     </div>
+  )
+}
+
+// Inside the dashboard, in place of the month's table: while the dashboard's
+// password gate is locked (the figures are not left on an unattended screen),
+// while the month is read, or when it could not be.
+function MonthCover({ covered, blocked, unsaved, onRetry }) {
+  const [asking, setAsking] = useState(false)
+
+  async function unlock() {
+    setAsking(true)
+    await askToUnlock()
+    setAsking(false)
+  }
+
+  if (covered) {
+    return (
+      <div role="region" aria-label="Locked" className="flex min-h-64 flex-col items-center justify-center gap-3 text-center">
+        <span className="icon-tile icon-tile-neutral" aria-hidden="true">
+          <LockKeyhole />
+        </span>
+        <p className="text-base font-semibold text-fg">Unlock the dashboard to continue</p>
+        <p className="max-w-md text-sm text-muted">
+          The dashboard locked after a while without activity, so the employees' figures are hidden.
+          {unsaved ? ' What you typed is kept on this screen, NOT saved yet, and is saved once the dashboard is unlocked.' : ''}
+        </p>
+        <button onClick={() => void unlock()} disabled={asking} className="btn btn-primary">
+          <LockKeyhole aria-hidden="true" />
+          Unlock the dashboard
+        </button>
+      </div>
+    )
+  }
+  if (blocked) {
+    return (
+      <div role="alert" className="flex min-h-64 flex-col items-center justify-center gap-3 text-center">
+        <span className="icon-tile icon-tile-danger" aria-hidden="true">
+          <CircleAlert />
+        </span>
+        <p className="text-base font-semibold text-fg">
+          {blocked.code === 'forbidden' ? 'Only an admin can see the employees' : 'This month could not be loaded from the dashboard'}
+        </p>
+        <p className="max-w-md text-sm text-muted">{blocked.error || 'The dashboard could not be reached.'}</p>
+        {blocked.code !== 'forbidden' && (
+          <button onClick={onRetry} className="btn btn-primary">
+            <RotateCw aria-hidden="true" />
+            Try again
+          </button>
+        )}
+      </div>
+    )
+  }
+  return (
+    <p role="status" className="flex min-h-64 items-center justify-center gap-2 text-sm text-muted">
+      <LoaderCircle className="h-4 w-4 motion-safe:animate-spin" aria-hidden="true" />
+      Loading the month from the dashboard…
+    </p>
   )
 }

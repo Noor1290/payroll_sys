@@ -130,9 +130,15 @@ Company Details.
 
 ## 7. Between Phase 2 and Phase 3: a key changed inside the dashboard is not changed in this browser's own copy
 
-Found while building Phase 2 of the migration (14 October 2026). Not fixed: it comes
-from keeping the column setup in the dashboard while the months are still in the
-browser, and goes away when the months move too (Phase 3).
+Found while building Phase 2 of the migration (14 October 2026). **Resolved by Phase 3
+(15 October 2026)** inside a dashboard that keeps the months: a change of key moves the
+values in the dashboard's months, in one step with the column setup that carries the
+new key, and this browser's own copy (its setup and its months) is not touched, so it
+stays whole. Proven through the real screens by `tests/audit/dashboardMonthsApp.test.jsx`
+("known issue 7"): opened on its own afterwards, the app shows the same figures as
+before and its stored text is unchanged. It can still happen inside a dashboard that
+does not keep months yet (the dashboard of Phase 2 without Phase 3): there the months are
+still this browser's, as described below.
 
 **What happens.** Inside the dashboard, changing a column's key (or an identity
 field's) moves that column's values in every saved month, as it always has; the months

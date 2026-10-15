@@ -9,8 +9,12 @@
 // The operations, and what each must do:
 //   loadState()                                    the saved setup and companies, or null when nothing is saved
 //   saveState(state)                               true when saved, false when it was refused
-//   loadPeriod(companyId, year, month)             { employees } for one month (empty when nothing is saved)
+//   loadPeriod(companyId, year, month)             { employees } for one month (empty when nothing is saved);
+//                                                  a store that reads over the network may answer with a
+//                                                  promise of it, or with { employees: [], blocked: { code, error } }
+//                                                  when the month cannot be read (nothing to show, nothing to save)
 //   savePeriod(companyId, year, month, data)       true when saved, false when it was refused
+//   periodHasEmployees(companyId, year, month)     whether a saved month has anyone in it
 //   deletePeriodsForCompany(companyId)             removes every saved month of a company
 //   countPeriodsHoldingKey(companyIds, key)        { periods, companies } holding a value under that key
 //   renameValueKeyInPeriods(companyIds, old, new)  moves those values; false if any write was refused
@@ -22,6 +26,7 @@ export const STORE_OPERATIONS = [
   'saveState',
   'loadPeriod',
   'savePeriod',
+  'periodHasEmployees',
   'deletePeriodsForCompany',
   'countPeriodsHoldingKey',
   'renameValueKeyInPeriods',
