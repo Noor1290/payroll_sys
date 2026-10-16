@@ -16,7 +16,7 @@ import {
   CATEGORIES,
 } from '../../src/lib/categories'
 import { formatFormulaForDisplay, computeGridForEmployees } from '../../src/lib/formulaEngine'
-import { describeTieredRule, describeCompareRule } from '../../src/lib/tieredFormula'
+import { compileTieredFormula, describeTieredRule, describeCompareRule } from '../../src/lib/tieredFormula'
 import { describeProgressiveRule } from '../../src/lib/progressiveFormula'
 import { buildColumnSetupExport, parseColumnSetupFile, planColumnImport } from '../../src/lib/columnSetup'
 import { input, simple, tiered, EMPLOYEE, EMPLOYER, OTHER, testColumns, testEmployees, computeRow } from './build'
@@ -218,7 +218,7 @@ describe('the rule summaries in the builders', () => {
   test('tiered', () => {
     expect(
       describeTieredRule('New Basic', [{ operator: 'below', threshold: 50000, rate: 3 }, { operator: 'above', threshold: 50000, rate: 6 }], null)
-    ).toBe('If New Basic is below 50,000, apply 3%. If New Basic is above 50,000, apply 6%.')
+    ).toBe('If New Basic is below 50,000, apply 3%. If New Basic is above 50,000, apply 6%. Exactly 50,000 matches no tier, so the rate there is 0%.')
   })
 
   test('one rate with a cap', () => {
@@ -510,10 +510,15 @@ describe('scope: a Global column that becomes Company-specific', () => {
 })
 
 describe('tiered formula text', () => {
-  // Not a wrong figure (the difference is far below a cent), but this is what
-  // the column list and a Live-Formulas export show for a rate of 1.1%.
-  test.fails('BUG: a rate of 1.1% is written into the formula as 0.011', () => {
+  // Was report L1: not a wrong figure (the difference is far below a cent),
+  // but the column list and a Live-Formulas export showed 0.011000000000000001.
+  test('a rate of 1.1% is written into the formula as 0.011', () => {
     const column = tiered('Levy', 'levy', { baseKey: 'basicSalary', tiers: [{ operator: 'from', threshold: 0, rate: 1.1 }, { operator: 'from', threshold: 100, rate: 2 }], cap: null })
     expect(column.formula).toContain('0.011 ')
+    expect(column.formula).toBe('(basicSalary) * (basicSalary >= 100 ? 0.02 : basicSalary >= 0 ? 0.011 : 0)')
+  })
+
+  test('the same for a flat rate with a cap', () => {
+    expect(compileTieredFormula({ baseKey: 'basicSalary', tiers: [{ operator: 'from', threshold: 0, rate: 1.1 }], cap: 29710 })).toBe('(Math.min(basicSalary, 29710)) * (0.011)')
   })
 })

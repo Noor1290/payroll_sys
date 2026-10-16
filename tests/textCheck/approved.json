@@ -1123,9 +1123,17 @@
       "text": "text: [date], [time], saved by you",
       "why": "approved: History and restore of the column setup and of a month (Phase 3 follow-ups, 15 October 2026)",
       "onlyOn": ["84 embedded: History of the Global columns, an earlier version", "85 embedded: History of the Global columns, restore asked", "86 embedded: History of the Global columns, restored", "87 embedded: History of the Global columns, the months could not be checked (locked)", "88 embedded: History of a company's columns, the version in use, not an admin", "89 embedded: History of a month, an earlier version", "90 embedded: History of a month, restore asked", "91 embedded: History of a month, only the record of a save kept"]
+    },
+    {
+      "text": "text: If Emoluments is below 20,000, apply 0%. If Emoluments is above 20,000, apply 1.5%. If Emoluments is equal to 50,000, apply 2%. Exactly 20,000 matches no tier, so the rate there is 0%. Capped at a maximum Emoluments value of 100,000.",
+      "why": "approved (backlog batch A, audit L2): the tiered rule summary says when exactly a threshold matches no tier; here exactly 20,000 for Below 20,000 + Above 20,000. Figures unchanged"
     }
   ],
   "removed": [
+    {
+      "text": "text: If Emoluments is below 20,000, apply 0%. If Emoluments is above 20,000, apply 1.5%. If Emoluments is equal to 50,000, apply 2%. Capped at a maximum Emoluments value of 100,000.",
+      "why": "not removed from the app: the same summary now ends with the sentence on exactly 20,000 (backlog batch A, audit L2)"
+    },
     {
       "text": "text: ⓘ",
       "why": "approved: replaced by bundled icons (company details button, aria-label and tooltip unchanged)"

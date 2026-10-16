@@ -6,23 +6,35 @@ import { buildTieredExplanation, buildCompareExplanation } from './tieredFormula
 import { buildProgressiveExplanation } from './progressiveFormula'
 import { evaluateExemptionCondition, buildExemptionExplanation } from './exemptionCondition'
 import { formatDecimal } from './format'
+import { outdatedTieredRule } from './outdatedRules'
 
 // Identifiers that are safe to leave unresolved in an expression (global
 // JS values/functions) rather than flagging as an "unknown column reference".
+// The Math functions are only reached as Math.min, Math.round and so on: a
+// bare "min" or "round" does not exist, so it is an unknown name.
 const ALLOWED_GLOBALS = new Set([
   'Math', 'Number', 'String', 'Boolean',
   'parseFloat', 'parseInt', 'Infinity', 'NaN', 'undefined',
-  'true', 'false', 'abs', 'round', 'min', 'max', 'floor', 'ceil', 'pow', 'sqrt',
+  'true', 'false',
 ])
+
+// The first line of a refusal for a formula that could only ever show Error,
+// and the hints for its two common causes. The line after it is the message
+// a cell would show.
+const CANNOT_SAVE = "This formula can't be saved:"
+const MATH_HINT_NAMES = new Set(['min', 'max', 'round'])
+const MATH_HINT = 'Did you mean Math.min, Math.max or Math.round?'
+const YES_NO_HINT = 'The formula must give a number. For a yes/no rule, use a condition such as (x > 5 ? 1 : 0).'
 
 function escapeRegExp(s) {
   return s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
 }
 
 // Extracts every identifier-like token from an expression (crude but
-// sufficient for a JS-like arithmetic expression language).
+// sufficient for a JS-like arithmetic expression language). A name after a
+// dot is a property, not a name of its own: "Math.max" gives "Math" only.
 function extractIdentifiersSafe(expr) {
-  const matches = String(expr).match(/[A-Za-z_$][A-Za-z0-9_$]*/g)
+  const matches = String(expr).match(/(?<![.\w$])[A-Za-z_$][A-Za-z0-9_$]*/g)
   return matches ? Array.from(new Set(matches)) : []
 }
 
@@ -68,11 +80,14 @@ export function validateFormulaSyntax(expr, availableKeys) {
   )
 
   if (unknown.length > 0) {
-    return {
-      valid: false,
-      error: `Unknown column reference: ${unknown.join(', ')}`,
-      dependencies: [],
+    const message = `Unknown column reference: ${unknown.join(', ')}`
+    // A bare Math function ("min" for Math.min) was allowed before October
+    // 2026 and then always showed Error; it is said plainly, with a hint.
+    if (unknown.some((name) => typeof Math[name] === 'function')) {
+      const hint = unknown.some((name) => MATH_HINT_NAMES.has(name)) ? `\n${MATH_HINT}` : ''
+      return { valid: false, error: `${CANNOT_SAVE}\n${message}${hint}`, dependencies: [] }
     }
+    return { valid: false, error: message, dependencies: [] }
   }
 
   try {
@@ -82,7 +97,23 @@ export function validateFormulaSyntax(expr, availableKeys) {
     return { valid: false, error: `Syntax error: ${e.message}`, dependencies: [] }
   }
 
-  return { valid: true, error: null, dependencies: getDependencies(expr, availableKeys) }
+  // Worked out once with every column at 1, the way a cell is: a formula
+  // that cannot give a number for any employee (a comparison on its own, a
+  // function that does not exist) is refused here, with the message the
+  // cell would show, instead of being saved to show Error everywhere.
+  // Dividing by zero or the like is left to the cells: it depends on the figures.
+  const dependencies = getDependencies(expr, availableKeys)
+  try {
+    const sample = evaluateFormula(expr, Object.fromEntries(dependencies.map((key) => [key, 1])))
+    if (typeof sample !== 'number') {
+      const hint = typeof sample === 'boolean' ? `\n${YES_NO_HINT}` : ''
+      return { valid: false, error: `${CANNOT_SAVE}\nFormula did not return a number (got ${typeof sample})${hint}`, dependencies: [] }
+    }
+  } catch (e) {
+    return { valid: false, error: `${CANNOT_SAVE}\n${e.message}`, dependencies: [] }
+  }
+
+  return { valid: true, error: null, dependencies }
 }
 
 // Builds a dependency graph (key -> [dependency keys]) for every formula
@@ -288,7 +319,7 @@ export function computeCell(key, employee, columnsByKey, memo, visiting = new Se
         const baseValue = depValues[col.tiered.baseKey] ?? 0
         const baseName = columnsByKey[col.tiered.baseKey]?.name ?? col.tiered.baseKey
         const baseDecimals = columnsByKey[col.tiered.baseKey]?.decimals ?? 2
-        tiered = buildTieredExplanation(col.tiered, baseValue, baseName, value, baseDecimals, decimals)
+        tiered = buildTieredExplanation(col.tiered, baseValue, baseName, value, baseDecimals, decimals, outdatedTieredRule(col) !== null)
       }
     } else if (col.builderMode === 'progressive' && col.progressive) {
       const baseValue = depValues[col.progressive.baseKey] ?? 0

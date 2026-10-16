@@ -14,6 +14,9 @@ import {
   computeGridForEmployees,
 } from '../../src/lib/formulaEngine'
 import { formatDecimal, roundHalfUp } from '../../src/lib/format'
+import { compileTieredFormula, compileTieredFormulaBeforeFix, describeTieredRule, resolveMatchedTier } from '../../src/lib/tieredFormula'
+import { OUTDATED_RULE_NOTES, outdatedTieredRule } from '../../src/lib/outdatedRules'
+import { compileExemptionWrapper } from '../../src/lib/exemptionCondition'
 import { input, simple, tiered, compare, progressive, checkboxExemption, computeValues, computeRow } from './build'
 
 const basic = () => input('Basic Salary', 'basicSalary')
@@ -130,8 +133,9 @@ describe('invalid formulas are rejected on save', () => {
     expect(result).toEqual({ valid: true, error: null, dependencies: ['basicSalary', 'govtIncrement'] })
   })
 
-  // BUG: these are accepted on save but can never produce a number.
-  test.fails('BUG: "min(basicSalary, 5)" is accepted on save although it always errors', () => {
+  // Were audit bugs (report M3): both were accepted on save, but can never
+  // produce a number.
+  test('"min(basicSalary, 5)" is not accepted on save, since it always errors', () => {
     const expr = 'min(basicSalary, 5)'
     const accepted = validateFormulaSyntax(expr, keys).valid
     const row = computeRow([basic(), simple('X', 'x', expr)], { basicSalary: '10' })
@@ -139,11 +143,37 @@ describe('invalid formulas are rejected on save', () => {
     expect(accepted && row.x.trace.error !== undefined).toBe(false)
   })
 
-  test.fails('BUG: a comparison such as "basicSalary > 5" is accepted on save although it always errors', () => {
+  test('a comparison such as "basicSalary > 5" is not accepted on save, since it always errors', () => {
     const expr = 'basicSalary > 5'
     const accepted = validateFormulaSyntax(expr, keys).valid
     const row = computeRow([basic(), simple('X', 'x', expr)], { basicSalary: '10' })
     expect(accepted && row.x.trace.error !== undefined).toBe(false)
+  })
+
+  test.each([
+    ['a bare "min"', 'min(basicSalary, 5)', "This formula can't be saved:\nUnknown column reference: min\nDid you mean Math.min, Math.max or Math.round?"],
+    ['a bare "round"', 'round(basicSalary)', "This formula can't be saved:\nUnknown column reference: round\nDid you mean Math.min, Math.max or Math.round?"],
+    ['a bare "floor"', 'floor(basicSalary)', "This formula can't be saved:\nUnknown column reference: floor"],
+    [
+      'a comparison on its own',
+      'basicSalary > 5',
+      "This formula can't be saved:\nFormula did not return a number (got boolean)\nThe formula must give a number. For a yes/no rule, use a condition such as (x > 5 ? 1 : 0).",
+    ],
+    ['a Math function that does not exist', 'Math.minimum(basicSalary, 5)', "This formula can't be saved:\nMath.minimum is not a function"],
+    // A name that is not a Math function keeps the message it always had.
+    ['an unknown column', 'basicSalry * 2', 'Unknown column reference: basicSalry'],
+  ])('%s is refused with the message the cell would show', (_label, expr, message) => {
+    expect(validateFormulaSyntax(expr, keys)).toEqual({ valid: false, error: message, dependencies: [] })
+  })
+
+  test.each([
+    ['Math.min(basicSalary, 5)'],
+    ['basicSalary > 5 ? 100 : 0'],
+    ['(basicSalary > 5) * 100'],
+    // Divides by zero at 1 - 1, but not for every employee: left to the cells.
+    ['basicSalary / (govtIncrement - 1)'],
+  ])('"%s" is still accepted', (expr) => {
+    expect(validateFormulaSyntax(expr, keys).valid).toBe(true)
   })
 })
 
@@ -228,14 +258,26 @@ describe('tiered rules at and around a threshold', () => {
     expect(ruleAt(column, 50001)).toBeCloseTo(1500.03, 10)
   })
 
-  // Not a bug, but worth knowing: nothing warns that exactly 50,000 falls
-  // through "Below 50,000" + "Above 50,000" and gets 0.
-  test('Below + Above at the same threshold leaves the threshold itself at 0', () => {
-    const column = thresholdColumn([
+  // Exactly 50,000 falls through "Below 50,000" + "Above 50,000" and gets 0.
+  // That is the rule as entered; until report L2 nothing said so.
+  test('Below + Above at the same threshold leaves the threshold itself at 0, and the rule summary says so', () => {
+    const tiers = [
       { operator: 'below', threshold: 50000, rate: 1.5 },
       { operator: 'above', threshold: 50000, rate: 3 },
-    ])
-    expect(ruleAt(column, 50000)).toBe(0)
+    ]
+    expect(ruleAt(thresholdColumn(tiers), 50000)).toBe(0)
+    expect(describeTieredRule('Basic Salary', tiers, null)).toBe(
+      'If Basic Salary is below 50,000, apply 1.5%. If Basic Salary is above 50,000, apply 3%. Exactly 50,000 matches no tier, so the rate there is 0%.'
+    )
+  })
+
+  test('the summary says nothing more where the threshold is covered, or where nothing applies on one side', () => {
+    const covered = [
+      { operator: 'below', threshold: 50000, rate: 1.5 },
+      { operator: 'from', threshold: 50000, rate: 3 },
+    ]
+    expect(describeTieredRule('Basic Salary', covered, null)).not.toContain('matches no tier')
+    expect(describeTieredRule('Basic Salary', [{ operator: 'below', threshold: 50000, rate: 3 }], null)).not.toContain('matches no tier')
   })
 
   test('three "From" bands pick the highest one reached', () => {
@@ -249,14 +291,30 @@ describe('tiered rules at and around a threshold', () => {
     expect(ruleAt(column, 50000)).toBe(1500)
   })
 
-  // BUG: with two "Below" tiers the wider one always wins, so the narrower
-  // tier can never apply.
-  test.fails('BUG: "Below 50,000 at 3%" + "Below 100,000 at 5%" gives 3% for 30,000', () => {
+  // Was an audit bug (report M1): with two "Below" tiers the wider one
+  // always won, so the narrower tier could never apply.
+  test('"Below 50,000 at 3%" + "Below 100,000 at 5%" gives 3% for 30,000', () => {
     const column = thresholdColumn([
       { operator: 'below', threshold: 50000, rate: 3 },
       { operator: 'below', threshold: 100000, rate: 5 },
     ])
     expect(ruleAt(column, 30000)).toBe(900)
+  })
+
+  test('three "Below" tiers and a "From": each figure gets the narrowest tier it is in, in any order of entry', () => {
+    const tiers = [
+      { operator: 'from', threshold: 100000, rate: 7 },
+      { operator: 'below', threshold: 100000, rate: 5 },
+      { operator: 'below', threshold: 20000, rate: 1 },
+      { operator: 'below', threshold: 50000, rate: 3 },
+    ]
+    const column = thresholdColumn(tiers)
+    expect(ruleAt(column, 10000)).toBe(100)
+    expect(ruleAt(column, 30000)).toBe(900)
+    expect(ruleAt(column, 70000)).toBe(3500)
+    expect(ruleAt(column, 100000)).toBeCloseTo(7000, 10)
+    // The breakdown names the tier the figure came from.
+    expect(resolveMatchedTier(tiers, 30000)).toEqual({ operator: 'below', threshold: 50000, rate: 3 })
   })
 })
 
@@ -282,10 +340,84 @@ describe('caps', () => {
     expect(ruleAt(multi, 250000)).toBe(1500)
   })
 
-  // BUG: with ONE tier and a cap, the tier's own condition is dropped.
-  test.fails('BUG: "Above 10,000 at 1%, capped at 29,710" gives 0 for 5,000', () => {
+  // Was an audit bug (report M2): with ONE tier and a cap, the tier's own
+  // condition was dropped.
+  test('"Above 10,000 at 1%, capped at 29,710" gives 0 for 5,000', () => {
     const single = thresholdColumn([{ operator: 'above', threshold: 10000, rate: 1 }], 29710)
     expect(ruleAt(single, 5000)).toBe(0)
+  })
+
+  test('one tier with a cap: the condition is tested on the real figure, and only the base is capped', () => {
+    const single = thresholdColumn([{ operator: 'above', threshold: 10000, rate: 1 }], 29710)
+    expect(ruleAt(single, 10000)).toBe(0)
+    expect(ruleAt(single, 20000)).toBe(200)
+    expect(ruleAt(single, 40000)).toBeCloseTo(297.1, 10)
+  })
+
+  test('"From 0 at 1%, capped" is still the flat rate up to a maximum, with the same formula as before', () => {
+    const state = { baseKey: 'basicSalary', tiers: [{ operator: 'from', threshold: 0, rate: 1 }], cap: 29710 }
+    expect(compileTieredFormula(state)).toBe('(Math.min(basicSalary, 29710)) * (0.01)')
+    expect(compileTieredFormula(state)).toBe(compileTieredFormulaBeforeFix(state))
+    expect(describeTieredRule('Basic Salary', state.tiers, state.cap)).toBe('1% of Basic Salary, up to a maximum of 29,710.')
+  })
+})
+
+describe('a tiered column saved before the M1 / M2 fixes', () => {
+  // As it was stored: the tiers, and the formula the old rule compiled.
+  const savedBefore = (tiers, cap = null) => {
+    const state = { baseKey: 'basicSalary', tiers, cap }
+    return { ...tiered('Rule', 'rule', state), formula: compileTieredFormulaBeforeFix(state) }
+  }
+  const twoBelow = [
+    { operator: 'below', threshold: 50000, rate: 3 },
+    { operator: 'below', threshold: 100000, rate: 5 },
+  ]
+  const capped = [{ operator: 'above', threshold: 10000, rate: 1 }]
+
+  test.each([
+    ['two "Below" tiers', () => savedBefore(twoBelow), 'below', 30000, 1500, 'This is below 100,000.00 → rate: 5%.'],
+    ['one tier with a cap', () => savedBefore(capped, 29710), 'cap', 5000, 50, '5,000.00 × 1% = 50.00.'],
+  ])('%s keeps its figure, is flagged, and its breakdown explains the rule the figure came from', (_label, make, shape, base, figure, explained) => {
+    const column = make()
+    expect(outdatedTieredRule(column)).toBe(shape)
+    const row = computeRow([basic(), column], { basicSalary: String(base) })
+    expect(row.rule.value).toBe(figure)
+    expect(row.rule.trace.tiered.sentence).toContain(explained)
+  })
+
+  test('saved again, it gets the corrected figure and is no longer flagged', () => {
+    for (const column of [tiered('Rule', 'rule', { baseKey: 'basicSalary', tiers: twoBelow, cap: null }), tiered('Rule', 'rule', { baseKey: 'basicSalary', tiers: capped, cap: 29710 })]) {
+      expect(outdatedTieredRule(column)).toBeNull()
+    }
+    expect(ruleAt(thresholdColumn(twoBelow), 30000)).toBe(900)
+    expect(computeRow([basic(), thresholdColumn(twoBelow)], { basicSalary: '30000' }).rule.trace.tiered.sentence).toContain('This is below 50,000.00 → rate: 3%.')
+  })
+
+  test('a rule the fixes do not change is never flagged, however it was saved', () => {
+    const unchanged = [
+      [{ operator: 'from', threshold: 0, rate: 1 }],
+      [{ operator: 'below', threshold: 50000, rate: 1.5 }, { operator: 'from', threshold: 50000, rate: 3 }],
+      // Two "Below" tiers at one rate give the same figures either way.
+      [{ operator: 'below', threshold: 50000, rate: 3 }, { operator: 'below', threshold: 100000, rate: 3 }],
+    ]
+    expect(outdatedTieredRule(savedBefore(unchanged[0], 29710))).toBeNull()
+    expect(outdatedTieredRule(savedBefore(unchanged[1]))).toBeNull()
+    expect(outdatedTieredRule(savedBefore(unchanged[2]))).toBeNull()
+    expect(outdatedTieredRule(simple('X', 'x', 'basicSalary * 2'))).toBeNull()
+  })
+
+  test('with an exemption, the saved formula is recognised inside its wrapper', () => {
+    const exemption = { enabled: true, combineWith: 'AND', conditions: [{ type: 'compare', columnKey: 'basicSalary', operator: '>', compareToType: 'value', compareToValue: 200000 }], resultType: 'fixed', resultValue: 0 }
+    const state = { baseKey: 'basicSalary', tiers: twoBelow, cap: null }
+    const column = { ...tiered('Rule', 'rule', state, { exemption }), formula: compileExemptionWrapper(exemption, compileTieredFormulaBeforeFix(state)) }
+    expect(outdatedTieredRule(column)).toBe('below')
+  })
+
+  test('the notes say what is wrong and what to do', () => {
+    expect(OUTDATED_RULE_NOTES).toEqual({
+      below: "Figures use the old rule, which picked the wrong 'Below' tier. Open and save this column to apply the corrected rule. Its figures will change.",
+      cap: "Figures use the old rule, which ignored this tier's condition because of the cap. Open and save this column to apply the corrected rule. Its figures will change.",
+    })
   })
 })
 

@@ -6,6 +6,7 @@ import ColumnSetupImportModal from './ColumnSetupImportModal'
 import { SELECTABLE_CATEGORIES, DEFAULT_CATEGORY, labelColumnsForHelper } from '../lib/categories'
 import { buildColumnSetupExport, buildColumnSetupFilename, downloadColumnSetup, parseColumnSetupFile } from '../lib/columnSetup'
 import { formatFormulaForDisplay } from '../lib/formulaEngine'
+import { OUTDATED_RULE_NOTES, outdatedTieredRule } from '../lib/outdatedRules'
 
 function CategorySection({ category, ownColumns, otherColumns, onEdit, onDelete, onDragStart, onDrop, draggingId, formulaLabels, readOnly }) {
   return (
@@ -57,7 +58,12 @@ function CategorySection({ category, ownColumns, otherColumns, onEdit, onDelete,
                     <GripVertical className="mx-auto h-4 w-4" aria-hidden="true" />
                   </td>
                 )}
-                <td className="px-4 py-2.5 font-medium text-fg">{col.name}</td>
+                <td className="px-4 py-2.5 font-medium text-fg">
+                  {col.name}
+                  {outdatedTieredRule(col) && (
+                    <span className="block max-w-72 text-xs font-normal text-warn">{OUTDATED_RULE_NOTES[outdatedTieredRule(col)]}</span>
+                  )}
+                </td>
                 <td className="num px-4 py-2.5 text-xs text-muted">{col.key}</td>
                 <td className="whitespace-nowrap px-4 py-2.5 capitalize text-muted">
                   {col.type}

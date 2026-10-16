@@ -67,10 +67,10 @@ function tierConditionText(operator, threshold, decimals) {
 // actually overlap with each other so their relative order doesn't matter.
 const OPERATOR_TIE_PRIORITY = { equal: 0, above: 1, below: 1, from: 2 }
 
-// Tiers can be entered in any order / with any thresholds. To pick which
-// tier applies to a given value unambiguously, tiers are evaluated
-// highest-threshold-first, then by the tie-break priority above.
-export function resolvePriorityOrder(tiers) {
+// The order tiers were evaluated in before October 2026: highest threshold
+// first, then by the tie-break priority above. Kept for columns saved with
+// it (see outdatedRules.js).
+function priorityOrderBeforeFix(tiers) {
   return [...tiers].sort((a, b) => {
     const ta = Number(a.threshold) || 0
     const tb = Number(b.threshold) || 0
@@ -79,10 +79,21 @@ export function resolvePriorityOrder(tiers) {
   })
 }
 
-// Finds the single tier that applies to a given numeric value, using the
-// same priority order the compiled expression encodes.
-export function resolveMatchedTier(tiers, value) {
-  const ordered = resolvePriorityOrder(tiers)
+// Tiers can be entered in any order / with any thresholds. To pick which
+// tier applies to a given value unambiguously, tiers are evaluated
+// highest-threshold-first, then by the tie-break priority above - except
+// that among "Below" tiers the narrowest (lowest threshold) is evaluated
+// first: "Below 50,000" and "Below 100,000" both hold for 30,000, and the
+// narrower one is meant. The "Below" tiers keep the places the other order
+// gave them, so nothing changes for a rule with one "Below" tier.
+export function resolvePriorityOrder(tiers) {
+  const ordered = priorityOrderBeforeFix(tiers)
+  const belowAscending = ordered.filter((t) => t.operator === 'below').sort((a, b) => (Number(a.threshold) || 0) - (Number(b.threshold) || 0))
+  let next = 0
+  return ordered.map((t) => (t.operator === 'below' ? belowAscending[next++] : t))
+}
+
+function matchInOrder(ordered, value) {
   for (const tier of ordered) {
     const threshold = Number(tier.threshold) || 0
     if (testTierCondition(tier.operator, threshold, value)) return tier
@@ -90,34 +101,84 @@ export function resolveMatchedTier(tiers, value) {
   return null
 }
 
+// Finds the single tier that applies to a given numeric value, using the
+// same priority order the compiled expression encodes.
+export function resolveMatchedTier(tiers, value) {
+  return matchInOrder(resolvePriorityOrder(tiers), value)
+}
+
+const hasCapValue = (cap) => cap !== null && cap !== undefined && cap !== ''
+
+// A rate in percent as the fraction written into the formula, without the
+// float noise of the division: 1.1% is 0.011, not 0.011000000000000001.
+const rateFraction = (rate) => Number(((Number(rate) || 0) / 100).toPrecision(12))
+
+// A single "From 0" (or lower) tier + a cap is the "flat rate up to a
+// maximum" shape (e.g. "1% of Gross Pay, up to a maximum of 29,710" - see
+// describeTieredRule's matching special case, and the Cap checkbox's own
+// label: "apply the rate to a maximum of..."). Its condition holds for any
+// figure from 0 up, so the rate always applies; only the BASE is capped.
+// Any other single tier keeps its condition, tested on the real (uncapped)
+// base like every tiered rule: "Above 10,000 at 1%, capped at 29,710" is 0
+// for 5,000.
+function isFlatRateWithCap(tiers, cap) {
+  return tiers.length === 1 && hasCapValue(cap) && (tiers[0].operator ?? 'from') === 'from' && (Number(tiers[0].threshold) || 0) <= 0
+}
+
 // Compiles { baseKey, tiers, cap } into a plain JS-like expression, e.g.
 // "(Math.min(basicSalary, 29710)) * (basicSalary >= 0 ? 0.01 : 0)"
 export function compileTieredFormula({ baseKey, tiers, cap }) {
-  const hasCap = cap !== null && cap !== undefined && cap !== ''
-  const valueExpr = hasCap ? `Math.min(${baseKey}, ${Number(cap)})` : baseKey
-
-  // A single tier + a cap is the "flat rate up to a maximum" shape (e.g.
-  // "1% of Gross Pay, up to a maximum of 29,710" - see describeTieredRule's
-  // matching special case, and the Cap checkbox's own label: "apply the
-  // rate to a maximum of..."). The rate always applies; only the BASE is
-  // capped. The tier's own operator/threshold don't gate anything here -
-  // using them would wrongly zero out the rate once the base exceeds the
-  // cap, which is exactly the bug this guards against.
-  if (tiers.length === 1 && hasCap) {
-    const rate = (Number(tiers[0].rate) || 0) / 100
-    return `(${valueExpr}) * (${rate})`
-  }
+  const valueExpr = hasCapValue(cap) ? `Math.min(${baseKey}, ${Number(cap)})` : baseKey
+  if (isFlatRateWithCap(tiers, cap)) return `(${valueExpr}) * (${rateFraction(tiers[0].rate)})`
 
   const ordered = resolvePriorityOrder(tiers)
   let rateExpr = '0'
   for (let i = ordered.length - 1; i >= 0; i--) {
     const tier = ordered[i]
     const threshold = Number(tier.threshold) || 0
-    const rate = (Number(tier.rate) || 0) / 100
     const cond = tierConditionExpr(tier.operator, baseKey, threshold)
-    rateExpr = `${cond} ? ${rate} : ${rateExpr}`
+    rateExpr = `${cond} ? ${rateFraction(tier.rate)} : ${rateExpr}`
   }
   return `(${valueExpr}) * (${rateExpr})`
+}
+
+// The formula as compiled before October 2026, exactly: the old order, the
+// cap ignoring a single tier's condition, and the rate as divided. Only to
+// recognise a column still saved with it (see outdatedRules.js).
+export function compileTieredFormulaBeforeFix({ baseKey, tiers, cap }) {
+  const hasCap = hasCapValue(cap)
+  const valueExpr = hasCap ? `Math.min(${baseKey}, ${Number(cap)})` : baseKey
+  if (tiers.length === 1 && hasCap) return `(${valueExpr}) * (${(Number(tiers[0].rate) || 0) / 100})`
+
+  const ordered = priorityOrderBeforeFix(tiers)
+  let rateExpr = '0'
+  for (let i = ordered.length - 1; i >= 0; i--) {
+    const tier = ordered[i]
+    const threshold = Number(tier.threshold) || 0
+    const rate = (Number(tier.rate) || 0) / 100
+    rateExpr = `${tierConditionExpr(tier.operator, baseKey, threshold)} ? ${rate} : ${rateExpr}`
+  }
+  return `(${valueExpr}) * (${rateExpr})`
+}
+
+// Which of the two old rules gives this rule other figures than the rule
+// now: 'below' (two or more "Below" tiers, with different thresholds and
+// rates), 'cap' (one tier with a cap, other than "From 0"), or null.
+export function oldRuleShape({ tiers, cap }) {
+  const below = tiers.filter((t) => t.operator === 'below')
+  const differ = (pick) => new Set(below.map((t) => Number(pick(t)) || 0)).size > 1
+  if (differ((t) => t.threshold) && differ((t) => t.rate)) return 'below'
+  if (tiers.length === 1 && hasCapValue(cap) && !isFlatRateWithCap(tiers, cap)) return 'cap'
+  return null
+}
+
+// Thresholds that no tier covers although tiers apply just below and just
+// above them, e.g. exactly 50,000 with "Below 50,000" + "Above 50,000".
+function uncoveredThresholds(tiers) {
+  const thresholds = [...new Set(tiers.map((t) => Number(t.threshold) || 0))].sort((a, b) => a - b)
+  return thresholds.filter(
+    (t) => !resolveMatchedTier(tiers, t) && resolveMatchedTier(tiers, t - 0.005) && resolveMatchedTier(tiers, t + 0.005)
+  )
 }
 
 // Live, rule-level plain-language summary shown above the builder as the
@@ -130,18 +191,17 @@ export function describeTieredRule(baseName, tiers, cap) {
   const validTiers = tiers.filter((t) => t.threshold !== '' && t.rate !== '')
   if (validTiers.length === 0) return 'Add at least one tier to see a summary.'
 
-  const hasCap = cap !== null && cap !== undefined && cap !== ''
+  const hasCap = hasCapValue(cap)
 
-  if (validTiers.length === 1 && hasCap) {
+  if (isFlatRateWithCap(validTiers, cap)) {
     return `${validTiers[0].rate || 0}% of ${baseName}, up to a maximum of ${formatNum(cap)}.`
   }
 
   const ascending = [...validTiers].sort((a, b) => (Number(a.threshold) || 0) - (Number(b.threshold) || 0))
-  const sentence = ascending
-    .map((t) => `If ${baseName} is ${tierConditionText(t.operator, t.threshold)}, apply ${t.rate || 0}%.`)
-    .join(' ')
-
-  return hasCap ? `${sentence} Capped at a maximum ${baseName} value of ${formatNum(cap)}.` : sentence
+  const sentences = ascending.map((t) => `If ${baseName} is ${tierConditionText(t.operator, t.threshold)}, apply ${t.rate || 0}%.`)
+  for (const t of uncoveredThresholds(validTiers)) sentences.push(`Exactly ${formatNum(t)} matches no tier, so the rate there is 0%.`)
+  if (hasCap) sentences.push(`Capped at a maximum ${baseName} value of ${formatNum(cap)}.`)
+  return sentences.join(' ')
 }
 
 // Per-employee plain-language explanation of a computed tiered result, for
@@ -150,18 +210,22 @@ export function describeTieredRule(baseName, tiers, cap) {
 // baseDecimals/resultDecimals are the BASE column's and THIS formula
 // column's own configured decimal places, respectively, so each value in
 // the sentence rounds to its own column's setting.
-export function buildTieredExplanation(tieredConfig, baseValue, baseName, resultValue, baseDecimals = 2, resultDecimals = 2) {
+//
+// beforeFix: the column is still saved with the formula of the old rule
+// (see outdatedRules.js), so it is explained by that rule, the one its
+// figure comes from.
+export function buildTieredExplanation(tieredConfig, baseValue, baseName, resultValue, baseDecimals = 2, resultDecimals = 2, beforeFix = false) {
   const { tiers, cap } = tieredConfig
-  const hasCap = cap !== null && cap !== undefined && cap !== ''
-  // Mirrors compileTieredFormula's own special case: a single tier + a cap
+  const hasCap = hasCapValue(cap)
+  // Mirrors compileTieredFormula's own special case: a flat rate + a cap
   // always applies that tier's rate (the cap only limits the base), so the
   // breakdown must resolve the rate the same way the compiled expression
   // actually did, not via the normal below/above tier lookup.
-  const isFlatRateWithCap = tiers.length === 1 && hasCap
-  const matched = isFlatRateWithCap ? tiers[0] : resolveMatchedTier(tiers, baseValue)
+  const flat = beforeFix ? tiers.length === 1 && hasCap : isFlatRateWithCap(tiers, cap)
+  const matched = flat ? tiers[0] : matchInOrder(beforeFix ? priorityOrderBeforeFix(tiers) : resolvePriorityOrder(tiers), baseValue)
   const isCapped = hasCap && baseValue > Number(cap)
   const appliedValue = isCapped ? Number(cap) : baseValue
-  const rate = isFlatRateWithCap ? Number(tiers[0].rate) || 0 : matched ? Number(matched.rate) || 0 : 0
+  const rate = matched ? Number(matched.rate) || 0 : 0
 
   const parts = [`${baseName}: ${formatNum(baseValue, baseDecimals)}.`]
 

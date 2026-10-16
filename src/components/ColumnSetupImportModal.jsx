@@ -89,7 +89,7 @@ export default function ColumnSetupImportModal({ fileScope, fileCompanyName, fil
                 <tr key={i} className={p.column ? 'text-fg' : 'text-subtle'}>
                   <td className="px-3 py-2">
                     {p.name}
-                    {p.problem && <span className="block text-xs text-warn">{p.problem}</span>}
+                    {p.problem && <span className="block whitespace-pre-line text-xs text-warn">{p.problem}</span>}
                   </td>
                   <td className="px-3 py-2">{getCategoryLabel(p.category)}</td>
                   <td className="px-3 py-2 capitalize">{p.type}</td>

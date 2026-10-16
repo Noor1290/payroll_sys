@@ -683,7 +683,7 @@ export default function ColumnFormModal({
         {error && (
           <div role="alert" className="panel panel-danger text-sm">
             <CircleAlert aria-hidden="true" />
-            <span>{error}</span>
+            <span className="whitespace-pre-line">{error}</span>
           </div>
         )}
 
