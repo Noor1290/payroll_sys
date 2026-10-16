@@ -72,15 +72,15 @@ export default function ImportMappingModal({ headers, rows, systemFields, initia
             <div className="max-h-56 space-y-2 overflow-y-auto rounded-xl border border-line bg-surface p-3">
               {systemFields.map((field) => (
                 <div key={field.key} className="flex items-center gap-3">
-                  <span className="w-32 shrink-0 truncate text-sm text-fg sm:w-52" title={field.name}>
-                    {field.name}
+                  <span className="w-32 shrink-0 truncate text-sm text-fg sm:w-52" title={field.label ?? field.name}>
+                    {field.label ?? field.name}
                     <span className={`badge ml-1.5 normal-case ${field.kind === 'identity' ? '' : 'badge-accent'}`}>
                       {field.kind === 'identity' ? 'identity' : 'input'}
                     </span>
                   </span>
                   <select
                     value={mapping[field.key] ?? ''}
-                    aria-label={field.name}
+                    aria-label={field.label ?? field.name}
                     onChange={(e) => setFieldMapping(field.key, e.target.value)}
                     className="field field-cell min-w-0 flex-1"
                   >
@@ -123,7 +123,7 @@ export default function ImportMappingModal({ headers, rows, systemFields, initia
                 <tr className="border-b border-line">
                   {systemFields.map((field) => (
                     <th key={field.key} className="whitespace-nowrap bg-elevated px-3 py-2">
-                      {field.name}
+                      {field.label ?? field.name}
                     </th>
                   ))}
                 </tr>

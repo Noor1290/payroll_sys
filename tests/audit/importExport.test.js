@@ -540,21 +540,57 @@ describe('Import from Excel: an outside file, mapped by hand', () => {
     expect(findUnreadableValues({ rows, systemFields: fields, mapping: { ...guessMapping(fields, headers), basicSalary: 3 } })).toEqual([])
   })
 
-  // BUG: Import matches by column NAME, so two input columns with the same
-  // name are both pointed at the same file column (and the mapping screen
-  // lists them both as just "Rate").
-  test.fails('BUG: two input columns with the same name are not both mapped to the same file column', () => {
+  // Was an audit bug (report M7): both were pointed at the same file column,
+  // and the mapping screen listed them both as just "Rate".
+  test('two input columns with the same name are not both mapped to the same file column', () => {
     const twins = [input('Rate', 'rate', { category: 'employeeContribution' }), input('Rate', 'rate_employer', { category: 'employerContribution' })]
     const mapping = guessMapping(getImportableSystemFields([], twins), ['Rate'])
     expect(mapping.rate).not.toBe(mapping.rate_employer)
   })
 
-  // BUG: the header row is taken to be the first row with two or more filled
-  // cells, so a two-cell banner is mistaken for the headers.
-  test.fails('BUG: a banner with two filled cells is not taken for the header row', async () => {
+  test('two input columns with the same name are labelled with their category, and each finds its own column by that label', () => {
+    const twins = [input('Rate', 'rate', { category: 'employeeContribution' }), input('Rate', 'rate_employer', { category: 'employerContribution' })]
+    const fields = getImportableSystemFields(identityFields, twins)
+    expect(fields.map((f) => f.label)).toEqual(['ID', 'Name', 'Surname', 'Rate (Employee Contribution)', 'Rate (Employer Contribution)'])
+    expect(guessMapping(fields, ['ID', 'Rate (Employer Contribution)', 'Rate (Employee Contribution)'])).toEqual({ id: 0, name: null, surname: null, rate: 2, rate_employer: 1 })
+    // Two plain "Rate" columns in the file: one each, in order.
+    expect(guessMapping(fields, ['Rate', 'Rate'])).toMatchObject({ rate: 0, rate_employer: 1 })
+  })
+
+  test("a guess never takes a column that the export's metadata gave to another field", () => {
+    const fields = getImportableSystemFields([], [input('Basic Salary', 'basicSalary'), input('Basic Salary', 'basicPay', { category: 'otherDeductions' })])
+    expect(resolveImportMapping(fields, ['Basic Salary'], { columnKeys: ['basicSalary'] })).toEqual({ basicSalary: 0, basicPay: null })
+  })
+
+  // Was an audit bug (report M5): the header row was the first row with two
+  // or more filled cells, so a two-cell banner was taken for the headers.
+  test('a banner with two filled cells is not taken for the header row', async () => {
     const bytes = workbookBytes([['TEST Co A', 'September 2026'], [], ['ID', 'Name', 'Basic Salary'], ['TST301', 'Uno', 100]])
     const { headers } = await parseWorkbookFile(asFile(bytes))
     expect(headers).toEqual(['ID', 'Name', 'Basic Salary'])
+  })
+
+  test('the header row is the one that names the most fields, even below a fuller banner, with figures held as text', async () => {
+    const bytes = workbookBytes([['TEST Co A', 'Payroll', 'September 2026', 'Draft'], ['ID', 'Basic Salary', 'Notes'], ['TST301', '18,115.00', 'n/a']])
+    const { headers, rows } = await parseWorkbookFile(asFile(bytes), ['ID', 'Name', 'Basic Salary'])
+    // The banner makes the sheet 4 columns wide; the blank header cell is named, as always.
+    expect(headers).toEqual(['ID', 'Basic Salary', 'Notes', 'Column 4'])
+    expect(rows).toEqual([['TST301', '18,115.00', 'n/a', '']])
+  })
+
+  test('with no field names to go by, the fullest row before the first figures is the header row', async () => {
+    const bytes = workbookBytes([['TEST Co A', 'September 2026'], ['Code', 'Person', 'Pay', 'Extra'], ['TST301', 'Uno', '18,115.00', '']])
+    const { headers } = await parseWorkbookFile(asFile(bytes), ['Something else'])
+    expect(headers).toEqual(['Code', 'Person', 'Pay', 'Extra'])
+  })
+
+  // Was report M12 (KNOWN_ISSUES no. 3): a text file renamed .xlsx was read
+  // as a one-column sheet.
+  test('a file that is not a workbook is refused before it is read', async () => {
+    const text = (t) => asFile(new TextEncoder().encode(t).buffer)
+    await expect(parseWorkbookFile(text('this is not an Excel file'))).rejects.toThrow('ZIP signature')
+    await expect(parseWorkbookFile(text('ID,Name\nTST301,Uno'))).rejects.toThrow('ZIP signature')
+    await expect(parseWorkbookFile(asFile(new ArrayBuffer(0)))).rejects.toThrow('ZIP signature')
   })
 })
 
@@ -625,12 +661,31 @@ describe('Import from Excel: the app\'s own export', () => {
     expect(describeUnrecognizedMeta(meta, COMPANY_ID, currentKeys)).toContain('Totals export')
   })
 
-  // BUG: with every identity field deleted there is no "TOTAL" label, so the
-  // totals row is imported as one more employee carrying the sums.
-  test.fails('BUG: with no identity fields, the TOTAL row is not imported as an employee', async () => {
-    const plan = planFor('values', { identityFields: [] })
+  // Was an audit bug (report M6): with every identity field deleted there is
+  // no "TOTAL" label, so the totals row was imported as one more employee
+  // carrying the sums.
+  test.each(['values', 'formulas'])('exported with %s and no identity fields, the TOTAL row is not imported as an employee', async (mode) => {
+    const plan = planFor(mode, { identityFields: [] })
     const parsed = await parseWorkbookFile(asFile(await buildWorkbookBuffer(plan)))
     expect(parsed.rows).toHaveLength(employees.length)
+    expect(parsed.meta.rowCount).toBe(employees.length)
+  })
+
+  test('a file exported before the row count was recorded still leaves out its TOTAL row', async () => {
+    const workbook = await openWorkbook(await buildWorkbookBuffer(planFor('values')))
+    const metaCell = workbook.getWorksheet('_meta').getCell('A1')
+    const { rowCount, ...older } = JSON.parse(metaCell.value)
+    expect(rowCount).toBe(employees.length)
+    metaCell.value = JSON.stringify(older)
+    const parsed = await parseWorkbookFile(asFile(await workbook.xlsx.writeBuffer()))
+    expect(parsed.meta.rowCount).toBeUndefined()
+    expect(parsed.rows.map((r) => r[0])).toEqual(['TST001', 'TST002', 'TST003'])
+  })
+
+  test('an empty month exported with no identity fields gives no rows', async () => {
+    const plan = planFor('values', { identityFields: [], employees: [] })
+    const parsed = await parseWorkbookFile(asFile(await buildWorkbookBuffer(plan)))
+    expect(parsed.rows).toEqual([])
   })
 })
 

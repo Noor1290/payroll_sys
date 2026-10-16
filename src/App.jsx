@@ -663,8 +663,8 @@ function PayrollApp({ onRestored, inDashboard = false, offline = null, onReloadD
     e.target.value = '' // allow re-selecting the same file later
     if (!file || !activeCompanyId) return
     try {
-      const { headers, rows, meta } = await parseWorkbookFile(file)
       const systemFields = getImportableSystemFields(identityFields, effectiveColumns)
+      const { headers, rows, meta } = await parseWorkbookFile(file, systemFields.flatMap((f) => [f.name, f.label]))
       const allCurrentKeys = new Set([...identityFields.map((f) => f.key), ...effectiveColumns.map((c) => c.key)])
       const recognized = isRecognizedExport(meta, activeCompanyId, allCurrentKeys)
       const initialMapping = resolveImportMapping(systemFields, headers, meta)

@@ -1,4 +1,5 @@
 import * as XLSX from 'xlsx'
+import { labelColumnsForHelper } from './categories'
 
 const META_SHEET_NAME = '_meta'
 const META_GENERATOR = 'payroll-sys'
@@ -31,25 +32,60 @@ function extractSystemMeta(workbook) {
   }
 }
 
-// Real spreadsheets often have a title/banner row (e.g. a company name
-// spanning one cell) before the actual column headers, sometimes with a
-// blank row in between. A genuine header row for a multi-column table has
-// several cells filled in; a banner row typically has just one. Scan for
-// the first row with at least 2 non-empty cells and treat that as the
-// header row, instead of assuming row 0.
+// A cell holding a figure, as a number or as text that reads as one
+// ("18,115.00"). A header label is never one; a data row nearly always has one.
+function isFigureCell(cell) {
+  return isNonEmptyCell(cell) && parseNumberCell(cell).ok
+}
+
+const normalizeLabel = (value) => String(value ?? '').trim().toLowerCase()
+
+// Real spreadsheets often have a title/banner row (e.g. a company name,
+// sometimes with a month beside it) before the actual column headers,
+// sometimes with a blank row in between. Within the first 20 rows:
+//   1. the row with the most cells that are the name of a field this company
+//      can import into is the header row (the earliest, on a tie);
+//   2. if no row names any field, it is the fullest row (the earliest, on a
+//      tie) before the first row holding a figure: banners and headers are
+//      labels, data rows hold figures;
+//   3. failing that, the first row with at least 2 filled cells, as before.
 //
-// NOTE: this heuristic is only used for genuinely external files. A
-// system export's own category-group row (e.g. "Identifiers" | "General")
-// also has several non-empty cells and would otherwise be mistaken for
-// the real header row - system exports use the known fixed row index
-// instead (see SYSTEM_EXPORT_HEADER_ROW_INDEX below).
-function findHeaderRowIndex(rows) {
-  const scanLimit = Math.min(rows.length, 20)
-  for (let i = 0; i < scanLimit; i++) {
-    const nonEmptyCount = (rows[i] ?? []).filter(isNonEmptyCell).length
-    if (nonEmptyCount >= 2) return i
+// NOTE: this is only used for genuinely external files. A system export's
+// own category-group row (e.g. "Identifiers" | "General") would otherwise be
+// a candidate - system exports use the known fixed row index instead (see
+// SYSTEM_EXPORT_HEADER_ROW_INDEX above).
+function findHeaderRowIndex(rows, knownNames = []) {
+  const scanned = rows.slice(0, 20).map((row) => row ?? [])
+  const known = new Set(knownNames.map(normalizeLabel))
+
+  let best = -1
+  let bestMatches = 0
+  scanned.forEach((row, i) => {
+    const matches = row.filter((cell) => isNonEmptyCell(cell) && known.has(normalizeLabel(cell))).length
+    if (matches > bestMatches) [best, bestMatches] = [i, matches]
+  })
+  if (best >= 0) return best
+
+  let fullest = -1
+  let fullestCount = 1
+  for (let i = 0; i < scanned.length && !scanned[i].some(isFigureCell); i++) {
+    const count = scanned[i].filter(isNonEmptyCell).length
+    if (count > fullestCount) [fullest, fullestCount] = [i, count]
   }
-  return 0
+  if (fullest >= 0) return fullest
+
+  const first = scanned.findIndex((row) => row.filter(isNonEmptyCell).length >= 2)
+  return first >= 0 ? first : 0
+}
+
+// An .xlsx workbook is a ZIP file, which always starts with these 4 bytes.
+// Anything else (a text or CSV file renamed .xlsx, for example) is refused
+// before it is read, rather than turned into a one-column sheet.
+const ZIP_SIGNATURE = [0x50, 0x4b, 0x03, 0x04]
+
+function isZipFile(buffer) {
+  const bytes = ArrayBuffer.isView(buffer) ? new Uint8Array(buffer.buffer, buffer.byteOffset, buffer.byteLength) : new Uint8Array(buffer)
+  return bytes.length >= ZIP_SIGNATURE.length && ZIP_SIGNATURE.every((byte, i) => bytes[i] === byte)
 }
 
 // Reads an uploaded .xlsx File into a header row + the remaining data rows,
@@ -57,15 +93,20 @@ function findHeaderRowIndex(rows) {
 // is index-aligned with each row in `rows` (blank header cells get a
 // generated placeholder label rather than being dropped, so column
 // positions never shift out of alignment with the data).
-export async function parseWorkbookFile(file) {
+//
+// knownNames: the names of the fields the company can import into, used to
+// find the header row of an external file (see findHeaderRowIndex).
+// Throws for a file that is not a workbook at all.
+export async function parseWorkbookFile(file, knownNames = []) {
   const buffer = await file.arrayBuffer()
+  if (!isZipFile(buffer)) throw new Error('Not an .xlsx workbook: it does not start with the ZIP signature.')
   const workbook = XLSX.read(buffer, { type: 'array' })
   const meta = extractSystemMeta(workbook)
   const sheetName = workbook.SheetNames.find((n) => n !== META_SHEET_NAME) ?? workbook.SheetNames[0]
   const sheet = workbook.Sheets[sheetName]
   const allRows = XLSX.utils.sheet_to_json(sheet, { header: 1, raw: true, defval: '' })
 
-  const headerRowIndex = meta ? (SYSTEM_EXPORT_HEADER_ROW_INDEX[meta.version] ?? findHeaderRowIndex(allRows)) : findHeaderRowIndex(allRows)
+  const headerRowIndex = (meta && SYSTEM_EXPORT_HEADER_ROW_INDEX[meta.version]) ?? findHeaderRowIndex(allRows, knownNames)
   const headerRow = allRows[headerRowIndex] ?? []
   const headers = headerRow.map((h, i) => {
     const label = String(h ?? '').trim()
@@ -73,15 +114,21 @@ export async function parseWorkbookFile(file) {
   })
 
   // A system export always ends with its own trailing totals row (see
-  // excelExport.js), whose very first cell is the literal string "TOTAL" -
-  // real employee data, never that. Only filtered for a RECOGNIZED system
-  // export (meta truthy): a genuinely external file could coincidentally
-  // have an employee literally named/ID'd "TOTAL", and this must never
-  // silently eat a real row from one of those.
+  // excelExport.js), straight after its employee rows. Its _meta records how
+  // many employee rows there are, so exactly those are read: with no
+  // identity field there is no "TOTAL" label to recognise the totals row by.
+  // A file written before that count was recorded is recognised as before,
+  // by the literal "TOTAL" in its first cell - real employee data, never
+  // that. Only for a RECOGNIZED system export (meta truthy): a genuinely
+  // external file could coincidentally have an employee literally
+  // named/ID'd "TOTAL", and this must never silently eat a real row from
+  // one of those.
+  const dataStart = headerRowIndex + 1
+  const rowCount = Number.isInteger(meta?.rowCount) && meta.rowCount >= 0 ? meta.rowCount : null
   const rows = allRows
-    .slice(headerRowIndex + 1)
+    .slice(dataStart, rowCount === null ? undefined : dataStart + rowCount)
     .filter((r) => r.some(isNonEmptyCell))
-    .filter((r) => !(meta && r[0] === 'TOTAL'))
+    .filter((r) => !(meta && rowCount === null && r[0] === 'TOTAL'))
 
   if (import.meta.env.DEV) {
     const sample = rows.slice(0, 3).map((row) => Object.fromEntries(headers.map((h, i) => [h, row[i]])))
@@ -95,25 +142,43 @@ export async function parseWorkbookFile(file) {
 // Builds the system-field list a company can import into: every identity
 // field, plus every input column (global + company-specific) it can see.
 // Formula columns are computed, not importable.
+//
+// `label` is what the mapping screen shows: the name, or, when two input
+// columns share a name, the name with its category, e.g.
+// "Rate (Employer Contribution)" - the same label the column helper and
+// "Export for PDF fill" use.
 export function getImportableSystemFields(identityFields, effectiveColumns) {
   return [
-    ...identityFields.map((f) => ({ key: f.key, name: f.name, kind: 'identity' })),
-    ...effectiveColumns
-      .filter((c) => c.type === 'input')
-      .map((c) => ({ key: c.key, name: c.name, kind: 'input', valueType: c.valueType ?? 'number' })),
+    ...identityFields.map((f) => ({ key: f.key, name: f.name, label: f.name, kind: 'identity' })),
+    ...labelColumnsForHelper(effectiveColumns.filter((c) => c.type === 'input')).map((c) => ({
+      key: c.key,
+      name: c.name,
+      label: c.helperLabel,
+      kind: 'input',
+      valueType: c.valueType ?? 'number',
+    })),
   ]
 }
 
 // Best-effort auto-mapping: matches a system field to a file column with the
-// same header text, case/whitespace-insensitively. Mapping values are
-// column INDEXES (not header strings), so duplicate header names never
-// cause ambiguity.
-export function guessMapping(systemFields, headers) {
+// same header text, case/whitespace-insensitively - first by its label (so
+// "Rate (Employer Contribution)" finds its own column), then by its plain
+// name. Each file column is given to one field at most: two fields with the
+// same name are never both pointed at one column. Mapping values are column
+// INDEXES (not header strings), so duplicate header names never cause
+// ambiguity. `taken`: column indexes already given to other fields.
+export function guessMapping(systemFields, headers, taken = new Set()) {
+  const used = new Set(taken)
   const mapping = {}
-  for (const field of systemFields) {
-    const index = headers.findIndex((h) => h.toLowerCase() === field.name.toLowerCase())
-    mapping[field.key] = index >= 0 ? index : null
+  const claim = (field, text) => {
+    const index = headers.findIndex((h, i) => !used.has(i) && normalizeLabel(h) === normalizeLabel(text))
+    if (index < 0) return
+    mapping[field.key] = index
+    used.add(index)
   }
+  for (const field of systemFields) if (field.label && field.label !== field.name) claim(field, field.label)
+  for (const field of systemFields) if (mapping[field.key] === undefined) claim(field, field.name)
+  for (const field of systemFields) mapping[field.key] ??= null
   return mapping
 }
 
@@ -157,14 +222,21 @@ export function describeUnrecognizedMeta(meta, companyId, allCurrentKeys) {
 // doesn't cover (e.g. a column added since export, or a genuinely external
 // file with no metadata at all).
 export function resolveImportMapping(systemFields, headers, meta) {
-  const nameGuess = guessMapping(systemFields, headers)
-  if (!meta) return nameGuess
+  if (!meta) return guessMapping(systemFields, headers)
 
-  const mapping = {}
+  const byKey = {}
   for (const field of systemFields) {
     const idx = meta.columnKeys.indexOf(field.key)
-    mapping[field.key] = idx >= 0 ? idx : nameGuess[field.key]
+    if (idx >= 0) byKey[field.key] = idx
   }
+  // A guess never takes a column the metadata already gave to another field.
+  const nameGuess = guessMapping(
+    systemFields.filter((f) => byKey[f.key] === undefined),
+    headers,
+    new Set(Object.values(byKey))
+  )
+  const mapping = {}
+  for (const field of systemFields) mapping[field.key] = byKey[field.key] ?? nameGuess[field.key]
   return mapping
 }
 
@@ -277,7 +349,7 @@ export function findUnreadableValues({ rows, systemFields, mapping, meta }) {
       .join(' ')
     for (const field of systemFields) {
       if (convertImportValue(field, raw[field.key]).unreadable) {
-        found.push({ rowIndex, employee: who || `Row ${rowIndex + 1}`, field: field.name, raw: String(raw[field.key]) })
+        found.push({ rowIndex, employee: who || `Row ${rowIndex + 1}`, field: field.label ?? field.name, raw: String(raw[field.key]) })
       }
     }
   })

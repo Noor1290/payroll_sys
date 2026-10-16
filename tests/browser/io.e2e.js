@@ -328,12 +328,16 @@ describe('Import from Excel', () => {
     await context.close()
   })
 
-  // KNOWN_ISSUES.md no. 3, still there.
-  test('evidence (BUG, already known): a text file renamed .xlsx is accepted and goes to mapping', async () => {
+  // Was KNOWN_ISSUES.md no. 3 (report M12): a text file renamed .xlsx was
+  // accepted and went to mapping.
+  test('a text file renamed .xlsx gives the same plain message, and never reaches mapping', async () => {
     const { context, page } = await openSeeded(app)
     await chooseExcel(page, Buffer.from('this is not an Excel file'), 'not-a-workbook.xlsx')
-    await dialog(page, 'Import from Excel').waitFor()
-    expect(await page.getByRole('alert').count()).toBe(0)
+    const alert = page.getByRole('alert')
+    await alert.waitFor()
+    expect(await alert.textContent()).toContain('Could not read that file. Please make sure it is a valid .xlsx file.')
+    expect(await dialog(page, 'Import from Excel').count()).toBe(0)
+    expect(await readEmployeeTable(page)).toHaveLength(3)
     await context.close()
   })
 

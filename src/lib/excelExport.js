@@ -454,8 +454,10 @@ export async function buildWorkbookBuffer(plan) {
   // own Unhide-sheet dialog), carrying enough for a later import to
   // recognize this exact file and know precisely which column key sits at
   // which position, without guessing from header text.
+  // `rowCount`, the number of employee rows, lets an import stop before the
+  // totals row even when there is no identity column to hold "TOTAL".
   const metaSheet = wb.addWorksheet(META_SHEET_NAME)
-  metaSheet.getCell('A1').value = JSON.stringify(plan.meta)
+  metaSheet.getCell('A1').value = JSON.stringify({ ...plan.meta, rowCount: plan.rows.length })
   metaSheet.state = 'veryHidden'
 
   return wb.xlsx.writeBuffer()
