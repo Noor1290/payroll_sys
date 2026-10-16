@@ -291,9 +291,11 @@ describe('the Employee Table', () => {
     expect((await firstRow()).NSF).toBe('187.50')
   })
 
-  // The brief asks for "select all / clear all" on a checkbox column.
-  test('evidence (MISSING): there is no "select all / clear all" for a checkbox column', async () => {
-    expect(await page.getByRole('button', { name: /select all|clear all/i }).count()).toBe(0)
+  // The brief asks for "select all / clear all" on a checkbox column. Was audit M13, missing:
+  // now a "Tick all" box in the column's header (what it does: tests/browser/screens.e2e.js).
+  test('a checkbox column has a "Tick all" box in its header, and a figure column has none', async () => {
+    expect(await page.getByRole('checkbox', { name: 'Tick all: Age 60+' }).count()).toBe(1)
+    expect(await page.getByRole('checkbox', { name: /^Tick all: / }).count()).toBe(1)
   })
 
   test('a salary over the cap and into the top bracket', async () => {

@@ -1127,6 +1127,14 @@
     {
       "text": "text: If Emoluments is below 20,000, apply 0%. If Emoluments is above 20,000, apply 1.5%. If Emoluments is equal to 50,000, apply 2%. Exactly 20,000 matches no tier, so the rate there is 0%. Capped at a maximum Emoluments value of 100,000.",
       "why": "approved (backlog batch A, audit L2): the tiered rule summary says when exactly a threshold matches no tier; here exactly 20,000 for Below 20,000 + Above 20,000. Figures unchanged"
+    },
+    {
+      "text": "aria-label: Tick all: Age 60+",
+      "why": "approved (backlog batch E, audit M13): the \"Tick all\" box in the header of a checkbox column, here Age 60+"
+    },
+    {
+      "text": "title: Tick or untick Age 60+ for every employee this month",
+      "why": "approved (backlog batch E, audit M13): the tooltip of the \"Tick all\" box in the header of a checkbox column, here Age 60+"
     }
   ],
   "removed": [

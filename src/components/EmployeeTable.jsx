@@ -36,6 +36,29 @@ function ResizeHandle({ onResizeStart }) {
   )
 }
 
+// The header box of a checkbox column: ticked when every employee is ticked,
+// part-ticked when some are. Clicking it ticks everyone, or unticks everyone
+// when all were ticked.
+function TickAllBox({ column, employees, onSetForEveryone }) {
+  const ticked = employees.filter((emp) => Boolean(emp.values?.[column.key])).length
+  const all = employees.length > 0 && ticked === employees.length
+  const some = ticked > 0 && !all
+  return (
+    <input
+      type="checkbox"
+      aria-label={`Tick all: ${column.name}`}
+      title={`Tick or untick ${column.name} for every employee this month`}
+      className="h-4 w-4 shrink-0 align-middle accent-accent"
+      checked={all}
+      ref={(box) => {
+        if (box) box.indeterminate = some
+      }}
+      disabled={employees.length === 0}
+      onChange={() => onSetForEveryone(column.key, !all)}
+    />
+  )
+}
+
 export default function EmployeeTable({
   employees,
   identityFields,
@@ -45,6 +68,9 @@ export default function EmployeeTable({
   columnWidths,
   onResizeColumn,
   onUpdateValue,
+  // (key, value): the same value in that column for every employee - the
+  // "tick all" box of a checkbox column.
+  onSetForEveryone,
   onAddEmployee,
   onDeleteEmployee,
   onOpenBreakdown,
@@ -195,6 +221,9 @@ export default function EmployeeTable({
                 >
                   {/* Long names wrap onto a second line instead of being cut off. */}
                   <div className={`flex flex-wrap items-center gap-x-1.5 gap-y-1 overflow-hidden ${isFigureColumn(col) ? 'justify-end text-right' : ''}`}>
+                    {col.type === 'input' && col.valueType === 'checkbox' && onSetForEveryone && (
+                      <TickAllBox column={col} employees={employees} onSetForEveryone={onSetForEveryone} />
+                    )}
                     <span className="max-w-full overflow-hidden text-ellipsis leading-tight">{col.name}</span>
                     {col.type === 'formula' && <span className="badge badge-glow">fx</span>}
                     {col.excludeFromExport && (

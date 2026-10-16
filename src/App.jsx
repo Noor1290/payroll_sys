@@ -666,6 +666,10 @@ function PayrollApp({ onRestored, inDashboard = false, offline = null, onReloadD
       prev.map((e) => (e.id === empId ? { ...e, values: { ...e.values, [key]: value } } : e))
     )
   }
+  // The "tick all" box of a checkbox column: one value for every employee of the month.
+  function handleSetForEveryone(key, value) {
+    setPeriodEmployees((prev) => prev.map((e) => ({ ...e, values: { ...e.values, [key]: value } })))
+  }
   function handleResizeColumn(key, width) {
     updateCompany(activeCompanyId, (c) => ({ ...c, columnWidths: { ...c.columnWidths, [key]: width } }))
   }
@@ -791,9 +795,12 @@ function PayrollApp({ onRestored, inDashboard = false, offline = null, onReloadD
         browserOnly={browserOnly}
         activeCompanyId={activeCompanyId}
         onSelect={(id) => {
+          // At narrow widths the list is a drawer. Clicking the company already
+          // selected keeps it open, so a double-click on its name can rename it
+          // there (known issue 6); choosing another company closes it as before.
+          if (id !== activeCompanyId) setSidebarOpen(false)
           setActiveCompanyId(id)
           setActiveTab('employees')
-          setSidebarOpen(false)
         }}
         onAddCompany={handleAddCompany}
         onRenameCompany={handleRenameCompany}
@@ -1049,6 +1056,7 @@ function PayrollApp({ onRestored, inDashboard = false, offline = null, onReloadD
                   columnWidths={activeCompany.columnWidths}
                   onResizeColumn={handleResizeColumn}
                   onUpdateValue={handleUpdateValue}
+                  onSetForEveryone={handleSetForEveryone}
                   onAddEmployee={handleAddEmployee}
                   onDeleteEmployee={handleDeleteEmployee}
                   onOpenBreakdown={setBreakdownTrace}

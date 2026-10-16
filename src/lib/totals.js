@@ -21,6 +21,23 @@ import { formatPeriodLabel } from './periods'
 // Returns { employees, computedGrid } shaped exactly like a normal
 // (employees, computedGrid) pair, so it can be fed straight into the
 // existing Excel export/preview pipeline.
+// IDs held by more than one employee within one month of `periods`: their
+// figures are added together in one Totals row, so the screen says so.
+// [{ year, month, id, count }], in month order then ID order.
+export function findSharedIds(periods, idFieldKey) {
+  if (!idFieldKey) return []
+  const shared = []
+  for (const { year, month, employees } of periods) {
+    const counts = new Map()
+    for (const emp of employees) {
+      const id = String(emp.values?.[idFieldKey] ?? '').trim()
+      if (id !== '') counts.set(id, (counts.get(id) ?? 0) + 1)
+    }
+    for (const [id, count] of [...counts].sort(([a], [b]) => a.localeCompare(b))) if (count > 1) shared.push({ year, month, id, count })
+  }
+  return shared
+}
+
 export function computeTotals(periods, effectiveColumns, columnsByKey, idFieldKey) {
   const isFixedColumn = (c) => c.valueType === 'text' || c.valueType === 'checkbox'
   const numericColumns = effectiveColumns.filter((c) => (c.type === 'input' || c.type === 'formula') && !isFixedColumn(c))

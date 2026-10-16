@@ -3,7 +3,7 @@ import { CircleAlert, FileSpreadsheet, LoaderCircle, TriangleAlert } from 'lucid
 import TotalsTable from './TotalsTable'
 import { dataStore } from '../lib/dataStore'
 import { enumeratePeriods, periodKey, parsePeriodKey, formatPeriodLabel } from '../lib/periods'
-import { computeTotals } from '../lib/totals'
+import { computeTotals, findSharedIds } from '../lib/totals'
 import { getColumnsByKey } from '../lib/model'
 
 const isPending = (result) => typeof result?.then === 'function'
@@ -72,6 +72,8 @@ export default function TotalsView({ company, identityFields, idFieldKey, effect
     () => (range?.periodsWithData ? computeTotals(range.periodsWithData, effectiveColumns, columnsByKey, idFieldKey) : null),
     [range, effectiveColumns, columnsByKey, idFieldKey]
   )
+  // Audit R7: two employees with one ID in a month are added together in one row; say so.
+  const sharedIds = useMemo(() => (range?.periodsWithData ? findSharedIds(range.periodsWithData, idFieldKey) : []), [range, idFieldKey])
   const employees = totals?.employees ?? []
   const computedGrid = totals?.computedGrid ?? {}
 
@@ -118,13 +120,26 @@ export default function TotalsView({ company, identityFields, idFieldKey, effect
           </span>
         </div>
       ) : (
-        <TotalsTable
-          identityFields={identityFields}
-          idFieldKey={idFieldKey}
-          effectiveColumns={effectiveColumns}
-          employees={employees}
-          computedGrid={computedGrid}
-        />
+        <>
+          {sharedIds.length > 0 && (
+            <div role="alert" className="panel text-sm [--panel:var(--warn)]">
+              <TriangleAlert aria-hidden="true" />
+              <span>
+                {sharedIds
+                  .map((s) => `In ${formatPeriodLabel(s.year, s.month)}, ${s.count} employees have the ID "${s.id}".`)
+                  .join(' ')}{' '}
+                Their figures are added together in one row here. Give each employee their own ID in the Employee Table.
+              </span>
+            </div>
+          )}
+          <TotalsTable
+            identityFields={identityFields}
+            idFieldKey={idFieldKey}
+            effectiveColumns={effectiveColumns}
+            employees={employees}
+            computedGrid={computedGrid}
+          />
+        </>
       )}
     </div>
   )

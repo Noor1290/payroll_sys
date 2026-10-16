@@ -67,13 +67,17 @@ export default function ExportPreviewModal({ plan, onClose }) {
 
         {/* The sheet itself is a picture of the Excel file, so it keeps the
             file's own white paper, serif font and header colours in both themes. */}
-        <div className="overflow-auto rounded-xl border border-line" style={{ maxHeight: '55vh' }}>
+        <div className="@container overflow-auto rounded-xl border border-line" style={{ maxHeight: '55vh' }}>
           <div className="min-w-max bg-white p-2 font-serif text-slate-900 scheme-light">
-            <div className="text-center text-base font-bold text-slate-800">{plan.companyName}</div>
-            <div className="text-center text-sm italic text-slate-500">{plan.exportDateLabel}</div>
-            {includeDetails && detailsLine && (
-              <div className="text-center text-xs italic text-slate-500">{detailsLine}</div>
-            )}
+            {/* Kept in view on a sheet wider than the dialog (known issue 5): as wide as
+                the visible part, and held at its left edge while the sheet scrolls. */}
+            <div data-testid="export-preview-title" className="sticky left-2 w-[calc(100cqw-1rem)]">
+              <div className="text-center text-base font-bold text-slate-800">{plan.companyName}</div>
+              <div className="text-center text-sm italic text-slate-500">{plan.exportDateLabel}</div>
+              {includeDetails && detailsLine && (
+                <div className="text-center text-xs italic text-slate-500">{detailsLine}</div>
+              )}
+            </div>
             <div className="h-2" />
             <table className="border-collapse text-xs">
               <thead className="sticky top-0">
