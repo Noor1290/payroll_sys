@@ -657,10 +657,12 @@ describe('the same flow when the employee\'s and the employer\'s column are both
     await context.close()
   })
 
-  // The template editor never offers the employer's "CSG" for a payslip line. Under its new
-  // name the employer's column is offered like any other.
-  test('evidence (BUG): the employer\'s column, as "CSG (Employer Contribution)", is offered for the payslip\'s CSG line', () => {
-    expect(flow.csgOptions.some((o) => o.includes('CSG (Employer Contribution)'))).toBe(true)
+  // The template editor never offers the employer's "CSG" for a payslip line. Was audit M18:
+  // under its new name the employer's column was offered like any other. The employee's column
+  // under its new name still is.
+  test('the employer\'s column, as "CSG (Employer Contribution)", is not offered for the payslip\'s CSG line; the employee\'s is', () => {
+    expect(flow.csgOptions.some((o) => o.includes('CSG (Employer Contribution)'))).toBe(false)
+    expect(flow.csgOptions.some((o) => o.includes('CSG (Employee Contribution)'))).toBe(true)
     expect(flow.csgOptions.filter((o) => o.trim() === 'NSF')).toEqual([])
   })
 })
