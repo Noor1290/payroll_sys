@@ -11,17 +11,22 @@ columns use the unrounded values, so a total can disagree by a cent with the sum
 the rounded figures on the same row. The Excel export, "Export for PDF fill" and
 "Send to dashboard" carry the same figures as the screen.
 
-**Evidence.** Fake employee F001 (October 2026): emoluments 20,115.
+**Evidence.** Fake employee F001 (October 2026): emoluments 20,115, gross pay 21,615.
 
 | Column | Unrounded | Shown and exported |
 |---|---|---|
-| CSG (1.5%) | 301.725 | 301.72 |
+| CSG (1.5%) | 301.725 | 301.73 |
 | NSF (1%) | 201.15 | 201.15 |
 | PAYE | 0 | 0 |
-| Total deductions (`csg + nsf + paye`) | 502.875 | **502.88** |
+| Total deductions (`csg + nsf + paye`) | 502.875 | 502.88 |
+| Net Pay (`grossPay - totalDeductions`) | 21,112.125 | **21,112.13** |
 
-301.72 + 201.15 + 0 = 502.87, but Total deductions shows 502.88. Recorded in
+21,615.00 - 502.88 = 21,112.12, but Net Pay shows 21,112.13. Recorded in
 `tests/safetyNet/expected/calculated-figures.json` and `send-to-dashboard-message.json`.
+
+(Example updated 16 October 2026. Since the audit's half-up rounding fix, CSG shows 301.73,
+not 301.72, so Total deductions now matches its lines on this row; the cent shows on Net Pay
+instead. The rounding policy itself is unchanged.)
 
 **To decide.** Whether each column should be rounded before it is used by other
 formulas. That changes calculated figures, so it needs a deliberate decision and a
@@ -73,6 +78,11 @@ ZIP signature followed by junk bytes: the error message appeared as expected.
 **To decide.** Whether to check that the file really is an `.xlsx` workbook before
 reading it.
 
+**Fixed (16 October 2026, backlog batch B).** A file that does not start with the ZIP
+signature every `.xlsx` has is refused before it is read, with the same message, and never
+reaches the column-matching dialog. Proven by `tests/browser/io.e2e.js` ("a text file renamed
+.xlsx gives the same plain message, and never reaches mapping") and `tests/audit/importExport.test.js`.
+
 ## 4. Re-saving a Simple formula that has an exemption nests the exemption again
 
 **What happens.** For a column using the Simple builder with an exemption, the stored
@@ -114,6 +124,10 @@ white band above the column headers. Same before and after the redesign.
 
 **To decide.** Whether the preview should keep the title lines in view.
 
+**Fixed (16 October 2026, backlog batch E).** The title lines are as wide as the visible part
+of the preview and stay at its left edge while the sheet scrolls. The file is not affected.
+Proven by `tests/browser/screens.e2e.js` (known issue 5), which fails on the old preview.
+
 ## 6. Narrow width: double-click rename is hard to use
 
 **What happens.** At narrow widths the company list is a drawer that closes when a
@@ -128,7 +142,15 @@ drawer closes; reopening it shows the rename box.
 clicked again, or whether renaming at narrow widths should only be offered from
 Company Details.
 
-## 7. Between Phase 2 and Phase 3: a key changed inside the dashboard is not changed in this browser's own copy
+**Fixed (16 October 2026, backlog batch E).** The drawer stays open when the company already
+selected is clicked, so a double-click on its name opens the rename box in the open drawer.
+Choosing another company still closes the drawer. To rename a company that is not selected,
+select it first. Proven by `tests/browser/screens.e2e.js` (known issue 6).
+
+## 7. (Obsolete) Between Phase 2 and Phase 3: a key changed inside the dashboard is not changed in this browser's own copy
+
+**Obsolete (16 October 2026).** The dashboard that is live keeps the months (Phase 3), where this
+cannot happen; a dashboard of Phase 2 without Phase 3 is no longer deployed. Kept for the record.
 
 Found while building Phase 2 of the migration (14 October 2026). **Resolved by Phase 3
 (15 October 2026)** inside a dashboard that keeps the months: a change of key moves the
@@ -156,6 +178,39 @@ TST003, and the figures worked out from it change.
 **What would avoid it.** Either do key changes only once the months are in the
 dashboard (Phase 3), or, until then, warn in the "Change this field's key?" question
 that the browser's own copy will not follow.
+
+## 8. One screen test runs close to the 5-second limit
+
+Found during the backlog fixes (16 October 2026); not part of that work, so not changed.
+
+**What happens.** `tests/audit/dashboardApp.test.jsx`, "opening and saving every column with no
+change, of every kind, sends nothing", takes about 4.3 seconds of Vitest's 5-second limit per test.
+
+**Evidence.** Run on its own: 4.3 s on the code before the backlog fixes, 4.3 to 4.7 s after. In
+one full `npm test` run on a busy machine it stopped at 5.03 s ("Test timed out in 5000ms"); run
+again, alone and in full, it passed.
+
+**Risk.** A red run that says nothing about the code, as with the dashboard's own slow tests
+(payroll_hub known issues 1 and 2).
+
+**To decide.** If it times out again, make the test faster (for example fewer columns opened per
+run, or a shorter save delay under test). Do not raise the limit, and do not cut what it checks.
+
+## 9. An "Equal to" tier can be shadowed by a "Below" tier with a higher threshold
+
+Found while fixing audit M1 (16 October 2026); not part of that fix, so not changed.
+
+**What happens.** Tiers are tried highest threshold first. A "Below" tier holds for every figure
+under its threshold, so an "Equal to" tier at a lower threshold is never reached.
+
+**Evidence.** Fake rule "Equal to 30,000 at 4%" + "Below 50,000 at 3%": exactly 30,000 gets 3%
+(900.00), not 4% (1,200.00). Recorded as a marked failing test in
+`tests/audit/formulaEngine.test.js` ("BUG: "Equal to 30,000 at 4%" next to "Below 50,000 at 3%"
+gives 4% for exactly 30,000"); it passes only while the bug is there.
+
+**To decide.** Whether an "Equal to" tier should always win over a "Below" or "Above" tier that
+also holds for its figure. Fixing it changes figures for any column with that shape, so it needs
+the same treatment as M1 (fixed on save, flagged until then).
 
 ## Possible later feature: on-screen grand total
 

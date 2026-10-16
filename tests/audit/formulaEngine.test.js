@@ -301,6 +301,17 @@ describe('tiered rules at and around a threshold', () => {
     expect(ruleAt(column, 30000)).toBe(900)
   })
 
+  // BUG (found with backlog batch A, KNOWN_ISSUES.md no. 9, not fixed): an "Equal to" tier is
+  // never reached when a "Below" tier with a higher threshold also holds for its figure, because
+  // tiers are tried highest threshold first. 30,000 gets the Below rate, 3%, not 4%.
+  test.fails('BUG: "Equal to 30,000 at 4%" next to "Below 50,000 at 3%" gives 4% for exactly 30,000', () => {
+    const column = thresholdColumn([
+      { operator: 'equal', threshold: 30000, rate: 4 },
+      { operator: 'below', threshold: 50000, rate: 3 },
+    ])
+    expect(ruleAt(column, 30000)).toBe(1200)
+  })
+
   test('three "Below" tiers and a "From": each figure gets the narrowest tier it is in, in any order of entry', () => {
     const tiers = [
       { operator: 'from', threshold: 100000, rate: 7 },
