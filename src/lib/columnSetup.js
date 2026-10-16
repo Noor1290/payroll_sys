@@ -10,7 +10,9 @@
 
 import { newColumn } from './model'
 import { generateUniqueKey } from './categories'
-import { slugify } from './slugify'
+import { renameKeyInColumn } from './columnUsage'
+import { validateFormulaSyntax } from './formulaEngine'
+import { isValidKey, slugify } from './slugify'
 
 const COLUMN_SETUP_APP_ID = 'payroll-sys-column-setup'
 const COLUMN_SETUP_VERSION = 1
@@ -105,7 +107,36 @@ export async function parseColumnSetupFile(file) {
     return { valid: false, error: 'This file is not a recognized column-setup export.' }
   }
 
+  // Every column is checked; one that could not be built by hand is not
+  // imported, and neither is the rest of the file.
+  const problems = parsed.columns
+    .map((col, i) => {
+      const found = columnProblems(col)
+      if (found.length === 0) return null
+      const name = typeof col?.name === 'string' && col.name.trim() !== '' ? ` ("${col.name.trim()}")` : ''
+      return `Column ${i + 1}${name}: ${found.join(', ')}.`
+    })
+    .filter(Boolean)
+  if (problems.length > 0) {
+    return { valid: false, error: `This file cannot be imported. ${problems.join(' ')}` }
+  }
+
   return { valid: true, scope: meta.scope, companyName: meta.companyName ?? null, columns: parsed.columns }
+}
+
+const VALUE_TYPES = ['number', 'text', 'checkbox']
+
+// What a column in a file lacks to be a column the column form could have
+// made, e.g. ['no name', 'no valid key'].
+function columnProblems(col) {
+  if (!col || typeof col !== 'object' || Array.isArray(col)) return ['not a column']
+  const found = []
+  if (typeof col.name !== 'string' || col.name.trim() === '') found.push('no name')
+  if (typeof col.key !== 'string' || !isValidKey(col.key)) found.push('no valid key')
+  if (col.type !== 'input' && col.type !== 'formula') found.push('no valid type')
+  if (col.type === 'formula' && (typeof col.formula !== 'string' || col.formula.trim() === '')) found.push('no formula')
+  if (col.type === 'input' && col.valueType !== undefined && !VALUE_TYPES.includes(col.valueType)) found.push('an unknown value type')
+  return found
 }
 
 // For each column in the file, decides whether it's brand-new, collides
@@ -114,8 +145,42 @@ export async function parseColumnSetupFile(file) {
 // already used everywhere else a duplicate name/key can arise. Returns one
 // plan row per file column, in file order (which is what preserves each
 // category's relative order once appended and re-displayed).
-export function planColumnImport(fileColumns, existingKeys, mode) {
+//
+// Then the imported formulas:
+//   - a column given a new key in 'duplicate' mode takes the file's formulas
+//     with it: they point at the imported copy, not at the column that was
+//     already there;
+//   - each must only use columns a formula here may use (`referenceableKeys`,
+//     by default every existing key) or columns imported with it. One that
+//     does not is 'problem', with the reason, and is not imported - nor is a
+//     formula that uses it.
+export function planColumnImport(fileColumns, existingKeys, mode, referenceableKeys = existingKeys) {
+  const plan = planKeys(fileColumns, existingKeys, mode)
+
+  for (const { originalKey, finalKey } of plan.filter((p) => p.action === 'duplicate')) {
+    for (const p of plan) if (p.column) p.column = renameKeyInColumn(p.column, originalKey, finalKey)
+  }
+
+  const imported = () => plan.filter((p) => p.column)
+  let changed = true
+  while (changed) {
+    changed = false
+    const available = [...referenceableKeys, ...imported().map((p) => p.finalKey)]
+    for (const p of imported()) {
+      if (p.column.type !== 'formula') continue
+      const result = validateFormulaSyntax(p.column.formula, available)
+      if (result.valid) continue
+      Object.assign(p, { action: 'problem', problem: result.error, column: null })
+      changed = true
+    }
+  }
+  return plan
+}
+
+function planKeys(fileColumns, existingKeys, mode) {
   const usedKeys = new Set(existingKeys)
+  // A new key is never one that a later column of the file has already.
+  const fileKeys = fileColumns.map((raw) => raw.key)
 
   return fileColumns.map((raw) => {
     const category = raw.category ?? 'general'
@@ -130,15 +195,16 @@ export function planColumnImport(fileColumns, existingKeys, mode) {
         originalKey: raw.key,
         finalKey: raw.key,
         action: 'new',
+        problem: null,
         column: newColumn(raw),
       }
     }
 
     if (mode === 'skip') {
-      return { name: raw.name, category, type: raw.type, originalKey: raw.key, finalKey: raw.key, action: 'skip', column: null }
+      return { name: raw.name, category, type: raw.type, originalKey: raw.key, finalKey: raw.key, action: 'skip', problem: null, column: null }
     }
 
-    const finalKey = generateUniqueKey(raw.key, category, [...usedKeys])
+    const finalKey = generateUniqueKey(raw.key, category, [...usedKeys, ...fileKeys])
     usedKeys.add(finalKey)
     return {
       name: raw.name,
@@ -147,6 +213,7 @@ export function planColumnImport(fileColumns, existingKeys, mode) {
       originalKey: raw.key,
       finalKey,
       action: 'duplicate',
+      problem: null,
       column: newColumn({ ...raw, key: finalKey }),
     }
   })

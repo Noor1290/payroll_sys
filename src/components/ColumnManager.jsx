@@ -147,6 +147,8 @@ export default function ColumnManager({
   const importInputRef = useRef(null)
 
   const allKeysInScope = [...reservedKeys, ...otherScopeColumns.map((c) => c.key), ...columns.map((c) => c.key)]
+  // What an imported formula may use, besides the columns imported with it.
+  const referenceableKeys = useMemo(() => referenceableColumns.map((c) => c.key), [referenceableColumns])
 
   // key -> readable label (name, or "Name (Category)" when another column
   // shares that name) for every column a formula here could reference -
@@ -324,6 +326,7 @@ export default function ColumnManager({
           fileCompanyName={importPreview.companyName}
           fileColumns={importPreview.columns}
           existingKeys={allKeysInScope}
+          referenceableKeys={referenceableKeys}
           onConfirm={handleConfirmImport}
           onCancel={() => setImportPreview(null)}
         />

@@ -384,31 +384,89 @@ describe('column setup: export, delete, import again', () => {
     expect(await parseColumnSetupFile(asFile(content))).toEqual({ valid: false, error: message })
   })
 
-  // BUG: only the wrapper is checked. Columns with no name, no key or no
-  // type are accepted and would be added to the company as they are.
-  test.fails('BUG: a column with no name, key or type is refused', async () => {
+  // Was an audit bug (report M8): only the wrapper was checked, so columns
+  // with no name, no key or no type were added as they were.
+  test('a column with no name, key or type is refused', async () => {
     const parsed = await parseColumnSetupFile(asFile({ _meta: { app: 'payroll-sys-column-setup', version: 1, scope: 'global' }, columns: [{}] }))
     const plan = parsed.valid ? planColumnImport(parsed.columns, [], 'skip') : []
     expect(plan.filter((p) => p.action === 'new')).toHaveLength(0)
   })
 
-  // BUG: an imported formula is not checked against the columns that exist,
-  // so a file from another company can add formulas that can only show Error.
-  test.fails('BUG: a formula that uses a column the company does not have is flagged on import', async () => {
+  test('a file with a column that could not be made by hand is refused whole, and every problem is named', async () => {
+    const columns = [
+      {},
+      { name: 'Net', key: 'net pay', type: 'formula' },
+      { name: '  ', key: 'rate', type: 'input', valueType: 'percent' },
+      'not a column',
+      ...buildColumnSetupExport(testColumns(), 'global').columns,
+    ]
+    expect(await parseColumnSetupFile(asFile({ _meta: { app: 'payroll-sys-column-setup', version: 1, scope: 'global' }, columns }))).toEqual({
+      valid: false,
+      error:
+        'This file cannot be imported. Column 1: no name, no valid key, no valid type. Column 2 ("Net"): no valid key, no formula. ' +
+        'Column 3: no name, an unknown value type. Column 4: not a column.',
+    })
+    // The app's own export of every kind of column passes the same checks.
+    expect((await parseColumnSetupFile(asFile(buildColumnSetupExport(testColumns(), 'global')))).valid).toBe(true)
+  })
+
+  // Was an audit bug (report M9): an imported formula was not checked
+  // against the columns that exist, so a file from another company could add
+  // formulas that can only show Error.
+  test('a formula that uses a column the company does not have is flagged on import', async () => {
     const lonely = [simple('Net', 'net', 'grossFromElsewhere - 100')]
     const parsed = await parseColumnSetupFile(asFile(buildColumnSetupExport(lonely, 'company', 'TEST Co B')))
     const plan = planColumnImport(parsed.columns, [], 'skip')
     expect(plan[0].action).not.toBe('new')
   })
 
-  // BUG: "Import as new/duplicate" gives the copy a new key, but the other
-  // imported formulas still point at the column that was already there.
-  test.fails('BUG: importing as a duplicate keeps the imported formulas pointing at the imported copy', async () => {
+  test('such a formula is not imported, says why, and neither is a formula that uses it', async () => {
+    const file = [simple('Net', 'net', 'grossFromElsewhere - 100'), simple('Half Net', 'halfNet', 'net / 2'), simple('Doubled', 'doubled', 'basicSalary * 2')]
+    const parsed = await parseColumnSetupFile(asFile(buildColumnSetupExport(file, 'company', 'TEST Co B')))
+    const plan = planColumnImport(parsed.columns, ['id', 'basicSalary'], 'skip', ['basicSalary'])
+    expect(plan.map((p) => [p.originalKey, p.action, p.problem])).toEqual([
+      ['net', 'problem', 'Unknown column reference: grossFromElsewhere'],
+      ['halfNet', 'problem', 'Unknown column reference: net'],
+      ['doubled', 'new', null],
+    ])
+    expect(plan.filter((p) => p.column).map((p) => p.column.key)).toEqual(['doubled'])
+  })
+
+  test('a formula may use a column that is skipped because it exists here, but not one that exists only where formulas here cannot reach', async () => {
+    const file = [input('Basic Salary', 'basicSalary'), simple('Doubled', 'doubled', 'basicSalary * 2')]
+    const parsed = await parseColumnSetupFile(asFile(buildColumnSetupExport(file, 'global')))
+    // Global scope: "basicSalary" is a Global column here, so the formula uses that one.
+    expect(planColumnImport(parsed.columns, ['basicSalary'], 'skip', ['basicSalary']).map((p) => p.action)).toEqual(['skip', 'new'])
+    // "basicSalary" is only another company's column: a Global formula cannot use it.
+    expect(planColumnImport(parsed.columns, ['basicSalary'], 'skip', []).map((p) => p.action)).toEqual(['skip', 'problem'])
+  })
+
+  // Was an audit bug (report M10): "Import as new/duplicate" gave the copy a
+  // new key, but the other imported formulas still pointed at the column
+  // that was already there.
+  test('importing as a duplicate keeps the imported formulas pointing at the imported copy', async () => {
     const file = [input('Rate Base', 'rateBase'), simple('Charge', 'charge', 'rateBase * 0.5')]
     const parsed = await parseColumnSetupFile(asFile(buildColumnSetupExport(file, 'global')))
     const plan = planColumnImport(parsed.columns, ['rateBase', 'charge'], 'duplicate')
     const copyOfBase = plan.find((p) => p.originalKey === 'rateBase').finalKey
     expect(plan.find((p) => p.originalKey === 'charge').column.formula).toBe(`${copyOfBase} * 0.5`)
+  })
+
+  test('a copy given a new key takes the builder settings of the imported formulas with it, and never takes a key the file uses later', async () => {
+    const file = [
+      input('CSG', 'csg', { category: EMPLOYEE }),
+      tiered('Levy', 'levy', { baseKey: 'csg', tiers: [{ operator: 'above', threshold: 100, rate: 1 }], cap: null }),
+      input('CSG Employee', 'csg_employee', { category: EMPLOYEE }),
+    ]
+    const parsed = await parseColumnSetupFile(asFile(buildColumnSetupExport(file, 'global')))
+    const plan = planColumnImport(parsed.columns, ['csg', 'levy'], 'duplicate')
+    const [csg, levy, csgEmployee] = plan
+    expect(csg.finalKey).not.toBe('csg_employee')
+    expect(csgEmployee).toMatchObject({ action: 'new', finalKey: 'csg_employee' })
+    expect(levy.column.tiered.baseKey).toBe(csg.finalKey)
+    expect(levy.column.formula).toContain(csg.finalKey)
+    expect(levy.column.formula).not.toMatch(/\bcsg\b/)
+    expect(levy.column.formula).not.toContain('csg_employee')
   })
 })
 

@@ -8,24 +8,31 @@ const STATUS_LABEL = {
   new: 'New',
   duplicate: 'Renamed (duplicate key)',
   skip: 'Already exists — skipped',
+  problem: 'Not imported',
 }
 
 // Preview/confirm screen shown before actually creating any columns from an
 // imported column-setup file. Recomputes the plan live as the user toggles
 // how collisions should be handled, so what they see always matches what
 // Import will do.
-export default function ColumnSetupImportModal({ fileScope, fileCompanyName, fileColumns, existingKeys, onConfirm, onCancel }) {
+//
+// referenceableKeys: the keys a formula in this scope may use. An imported
+// formula that uses anything else (or a column that is not imported) is
+// listed as not imported, with the reason.
+export default function ColumnSetupImportModal({ fileScope, fileCompanyName, fileColumns, existingKeys, referenceableKeys, onConfirm, onCancel }) {
   const [mode, setMode] = useState('skip') // 'skip' | 'duplicate'
 
-  const plan = useMemo(() => planColumnImport(fileColumns, existingKeys, mode), [fileColumns, existingKeys, mode])
+  const plan = useMemo(() => planColumnImport(fileColumns, existingKeys, mode, referenceableKeys), [fileColumns, existingKeys, mode, referenceableKeys])
 
   const hasCollisions = useMemo(
-    () => planColumnImport(fileColumns, existingKeys, 'skip').some((p) => p.action !== 'new'),
-    [fileColumns, existingKeys]
+    () => planColumnImport(fileColumns, existingKeys, 'skip', referenceableKeys).some((p) => p.action === 'skip'),
+    [fileColumns, existingKeys, referenceableKeys]
   )
 
-  const importCount = plan.filter((p) => p.action !== 'skip').length
+  const importCount = plan.filter((p) => p.column).length
   const skipCount = plan.filter((p) => p.action === 'skip').length
+  const problemCount = plan.filter((p) => p.action === 'problem').length
+  const leftOut = [skipCount > 0 && `${skipCount} skipped`, problemCount > 0 && `${problemCount} not imported`].filter(Boolean)
 
   return (
     <Modal title="Import Column Setup" onClose={onCancel} width="max-w-2xl" icon={<FileJson />}>
@@ -79,8 +86,11 @@ export default function ColumnSetupImportModal({ fileScope, fileCompanyName, fil
             </thead>
             <tbody className="divide-y divide-line">
               {plan.map((p, i) => (
-                <tr key={i} className={p.action === 'skip' ? 'text-subtle' : 'text-fg'}>
-                  <td className="px-3 py-2">{p.name}</td>
+                <tr key={i} className={p.column ? 'text-fg' : 'text-subtle'}>
+                  <td className="px-3 py-2">
+                    {p.name}
+                    {p.problem && <span className="block text-xs text-warn">{p.problem}</span>}
+                  </td>
                   <td className="px-3 py-2">{getCategoryLabel(p.category)}</td>
                   <td className="px-3 py-2 capitalize">{p.type}</td>
                   <td className="px-3 py-2 font-mono text-xs">
@@ -103,7 +113,7 @@ export default function ColumnSetupImportModal({ fileScope, fileCompanyName, fil
 
         <p className="text-xs text-muted">
           {importCount} column{importCount === 1 ? '' : 's'} will be added
-          {skipCount > 0 ? `, ${skipCount} skipped.` : '.'}
+          {leftOut.length > 0 ? `, ${leftOut.join(', ')}.` : '.'}
         </p>
 
         <div className="flex justify-end gap-2 border-t border-line pt-4">
@@ -111,7 +121,7 @@ export default function ColumnSetupImportModal({ fileScope, fileCompanyName, fil
             Cancel
           </button>
           <button
-            onClick={() => onConfirm(plan.filter((p) => p.action !== 'skip').map((p) => p.column))}
+            onClick={() => onConfirm(plan.filter((p) => p.column).map((p) => p.column))}
             disabled={importCount === 0}
             className="btn btn-primary"
           >
