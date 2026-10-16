@@ -45,7 +45,8 @@ const monthNotes = () => {
 function browserMonths(companyId) {
   return browserStore.listPeriods(companyId).map((period) => {
     const { year, month } = parsePeriodKey(period)
-    return { period, employees: browserStore.loadPeriod(companyId, year, month).employees }
+    const saved = browserStore.loadPeriod(companyId, year, month)
+    return { period, employees: saved.employees, unreadable: saved.blocked?.code === 'unreadable' }
   })
 }
 
@@ -98,7 +99,8 @@ export function figureDifferences(employees, browserColumns, dashboardColumns) {
 //   { ok: true, companies: [{ browserId, name, brn, dashboardName, reason, months }] }
 //     reason   null when its months can be imported; otherwise why not
 //     months   [{ period, label, employees, count, existing, differences, state }]
-//              state: 'new' | 'conflict' | 'differs' | 'imported' | 'empty'
+//              state: 'new' | 'conflict' | 'differs' | 'imported' | 'empty' | 'unreadable'
+//              ('unreadable': its saved text cannot be read; never imported)
 export async function planMonthImport() {
   if (!monthsSupported()) return fail('unavailable', 'This dashboard does not keep months yet.')
   if (!dashboardCompany()) return fail('unavailable', 'The dashboard is not connected.')
@@ -139,9 +141,10 @@ export async function planMonthImport() {
     // here (an earlier import whose answer was lost) from one that differs.
     const theirs = await readMonths(note.brn, [...existing.keys()])
     if (!theirs.ok) return theirs
-    for (const { period, employees } of browserMonths(company.id)) {
+    for (const { period, employees, unreadable } of browserMonths(company.id)) {
       const month = { period, label: label(period), employees, count: employees.length, existing: existing.get(period) ?? null, differences: [] }
       if (done[company.id]?.[period]) month.state = 'imported'
+      else if (unreadable) month.state = 'unreadable'
       else if (employees.length === 0) month.state = 'empty'
       else {
         month.differences = figureDifferences(employees, browserColumns, dashboardColumns)

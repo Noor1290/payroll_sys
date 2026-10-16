@@ -230,6 +230,17 @@ const MATH_FUNCTIONS = {
   'Math.pow': 'POWER',
 }
 
+// Written so that Excel gives exactly what the app gives, negative figures
+// included. Excel's INT rounds down (towards minus infinity), like
+// Math.floor. Math.round takes a half up (Math.round(-2.5) is -2), which is
+// INT(x + 0.5); Excel's ROUND would take it away from zero. Math.ceil is
+// -INT(-x); ROUNDUP and ROUNDDOWN go away from and towards zero instead.
+const ROUNDING_FUNCTIONS = {
+  'Math.round': (x) => `INT((${x})+0.5)`,
+  'Math.floor': (x) => `INT(${x})`,
+  'Math.ceil': (x) => `(-INT(-(${x})))`,
+}
+
 function translateNode(node, resolveCellRef) {
   switch (node.type) {
     case 'Number':
@@ -283,6 +294,11 @@ function translateNode(node, resolveCellRef) {
     }
     case 'Call': {
       const args = node.args.map((a) => translateNode(a, resolveCellRef))
+      const rounding = ROUNDING_FUNCTIONS[node.callee]
+      if (rounding) {
+        if (args.length !== 1) throw new Error(`${node.callee} takes one value here`)
+        return rounding(args[0])
+      }
       const excelFn = MATH_FUNCTIONS[node.callee]
       if (!excelFn) throw new Error(`Unsupported function: ${node.callee}`)
       return `${excelFn}(${args.join(',')})`

@@ -102,6 +102,20 @@ export function resolveCompanyFieldHeaders(selectedCompanyFields, employeeColumn
   }))
 }
 
+// The headers that more than one exported field would have, e.g. two
+// custom company details both labelled "Ref". Rows are keyed by header, so
+// one of them would overwrite the other: such an export is refused.
+export function findClashingHeaders(headers) {
+  const seen = new Set()
+  const clashing = new Set()
+  for (const h of headers) (seen.has(h) ? clashing : seen).add(h)
+  return [...clashing]
+}
+
+export function pdfFillHeaders(columns, resolvedCompanyFields) {
+  return [...columns.map((c) => c.name), ...resolvedCompanyFields.map((cf) => cf.header)]
+}
+
 function cellDisplayValue(col, emp, computedGrid) {
   if (col.kind === 'identity') return emp.values?.[col.key] ?? ''
   const cell = computedGrid[emp.id]?.[col.key]
@@ -173,8 +187,10 @@ export function buildPdfFillFilename(format, companyName, year, month) {
 // (from resolveCompanyFieldHeaders) are appended after them, identically on
 // every row.
 export function downloadPdfFillExport(format, columns, employees, computedGrid, resolvedCompanyFields, { companyName, year, month }) {
+  const headers = pdfFillHeaders(columns, resolvedCompanyFields)
+  const clashing = findClashingHeaders(headers)
+  if (clashing.length > 0) throw new Error(`Two exported fields share a header: ${clashing.join(', ')}`)
   const rows = buildPdfFillRows(columns, employees, computedGrid, resolvedCompanyFields)
-  const headers = [...columns.map((c) => c.name), ...resolvedCompanyFields.map((cf) => cf.header)]
   const filename = buildPdfFillFilename(format, companyName, year, month)
   if (format === 'csv') {
     downloadTextFile(buildCsvContent(headers, rows), filename, 'text/csv;charset=utf-8')

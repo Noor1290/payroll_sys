@@ -23,12 +23,14 @@ import DashboardStart from './components/DashboardStart'
 import ImportToDashboardModal from './components/ImportToDashboardModal'
 import ImportMonthsModal from './components/ImportMonthsModal'
 import { MonthHistoryModal, SetupHistoryModal } from './components/HistoryModal'
+import UnreadableSetup from './components/UnreadableSetup'
 import { dataStore, renameValueKey, resetDataStore, setDataStore } from './lib/dataStore'
 import { brnOf, connectDashboard, dashboardCompany, dashboardStore, onSetupReplaced, readImported, sharedAccess } from './lib/dashboardSetup'
 import { formatLoadedAt, listOfflineCopies, offlineStore } from './lib/offlineCopy'
 import { hasSomethingToImport } from './lib/dashboardImport'
 import { askToUnlock, gateChanged, monthStatus, onMonthsChanged } from './lib/dashboardMonths'
 import { hasMonthsToImport } from './lib/monthImport'
+import { setupIsUnreadable } from './lib/backup'
 import { findErrorCells } from './lib/exportErrors'
 import { findFormulasUsingColumn, findScopeChangeBlockers, renameKeyInColumn, renameKeyInWidths } from './lib/columnUsage'
 import {
@@ -192,6 +194,25 @@ export default function App() {
           onOpenOffline={openOffline}
         />
         {importDialog}
+      </div>
+    )
+  }
+
+  // On its own, with saved data that cannot be read: never shown as empty,
+  // never saved over, until the user chooses what to do.
+  if (mode === 'browser' && setupIsUnreadable()) {
+    return (
+      <div className="relative isolate flex h-dvh overflow-hidden bg-canvas text-fg">
+        <UnreadableSetup
+          onRestored={handleRestored}
+          onStarted={(keptUnder) =>
+            handleRestored({
+              title: 'Started with an empty setup',
+              description: `What could not be read is kept in this browser, under "${keptUnder}".`,
+            })
+          }
+        />
+        {restoreMessage && <BackupMessage {...restoreMessage} onClose={() => setRestoreMessage(null)} />}
       </div>
     )
   }
@@ -407,7 +428,9 @@ function PayrollApp({ onRestored, inDashboard = false, offline = null, onReloadD
   // The month on screen is there to work on: read, and not covered. (In this
   // browser it always is: it is read at once.)
   const blocked = monthBlocked && monthBlocked.key === currentPeriodKey ? monthBlocked : null
-  const monthReady = !monthsInDashboard || (Boolean(currentPeriodKey) && loadedPeriodKey === currentPeriodKey && !covered)
+  // A month saved in this browser that cannot be read: covered, never shown as empty (see storage.js).
+  const unreadableMonth = blocked?.code === 'unreadable'
+  const monthReady = !unreadableMonth && (!monthsInDashboard || (Boolean(currentPeriodKey) && loadedPeriodKey === currentPeriodKey && !covered))
 
   // Whether "Copy from Previous Month" has anything to offer right now -
   // read fresh (not kept in React state) each time it's relevant, since
@@ -1007,7 +1030,7 @@ function PayrollApp({ onRestored, inDashboard = false, offline = null, onReloadD
                 />
               )}
 
-              {(activeTab === 'employees' || activeTab === 'totals') && (covered || blocked || !monthReady) && monthsInDashboard ? (
+              {(activeTab === 'employees' || activeTab === 'totals') && (covered || blocked || !monthReady) && (monthsInDashboard || unreadableMonth) ? (
                 <MonthCover
                   covered={covered}
                   blocked={blocked}
@@ -1016,7 +1039,7 @@ function PayrollApp({ onRestored, inDashboard = false, offline = null, onReloadD
                 />
               ) : null}
 
-              {activeTab === 'employees' && (!monthsInDashboard || monthReady) && (
+              {activeTab === 'employees' && monthReady && (
                 <EmployeeTable
                   employees={periodEmployees}
                   identityFields={identityFields}
@@ -1032,7 +1055,7 @@ function PayrollApp({ onRestored, inDashboard = false, offline = null, onReloadD
                 />
               )}
 
-              {activeTab === 'totals' && selectedYear && selectedMonth && (!monthsInDashboard || monthReady) && (
+              {activeTab === 'totals' && selectedYear && selectedMonth && monthReady && (
                 <TotalsView
                   company={activeCompany}
                   identityFields={identityFields}
@@ -1201,6 +1224,19 @@ function MonthCover({ covered, blocked, unsaved, onRetry }) {
         </span>
         <p className="text-base font-semibold text-fg">The months are not in this offline copy</p>
         <p className="max-w-md text-sm text-muted">{blocked.error} Only the column setup is kept in this browser for when the dashboard cannot be reached.</p>
+      </div>
+    )
+  }
+  if (blocked?.code === 'unreadable') {
+    return (
+      <div role="alert" className="flex min-h-64 flex-col items-center justify-center gap-3 text-center">
+        <span className="icon-tile icon-tile-danger" aria-hidden="true">
+          <CircleAlert />
+        </span>
+        <p className="text-base font-semibold text-fg">This month could not be read</p>
+        <p className="max-w-md text-sm text-muted">
+          {blocked.error} A backup ("Back up", at the foot of the company list) keeps it exactly as it is.
+        </p>
       </div>
     )
   }

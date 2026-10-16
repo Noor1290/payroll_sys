@@ -1,6 +1,13 @@
 import { useState } from 'react'
 import { CircleAlert, CircleCheck, Send, X } from 'lucide-react'
-import { buildPdfFillColumns, buildCompanyDetailFields, resolveCompanyFieldHeaders, buildPdfFillRows } from '../lib/pdfFillExport'
+import {
+  buildPdfFillColumns,
+  buildCompanyDetailFields,
+  resolveCompanyFieldHeaders,
+  buildPdfFillRows,
+  findClashingHeaders,
+  pdfFillHeaders,
+} from '../lib/pdfFillExport'
 import { periodKey } from '../lib/periods'
 import { findErrorCells } from '../lib/exportErrors'
 
@@ -28,6 +35,13 @@ export default function SendToDashboardButton({
   // figures only - so nothing is sent until it is fixed.
   const errors = findErrorCells(employees, buildPdfFillColumns(identityFields, effectiveColumns), computedGrid, identityFields)
 
+  // Rows are keyed by name: two company details with one label would
+  // overwrite each other in what is sent (as in "Export for PDF fill").
+  const allColumns = buildPdfFillColumns(identityFields, effectiveColumns)
+  const clashingLabels = findClashingHeaders(
+    pdfFillHeaders(allColumns, resolveCompanyFieldHeaders(buildCompanyDetailFields(companyName, companyDetails), allColumns.map((c) => c.name)))
+  )
+
   const blockedReason =
     employees.length === 0
       ? 'Nothing to send: there are no employees for this month.'
@@ -37,7 +51,9 @@ export default function SendToDashboardButton({
           ? `Can't send yet: ${errors.length} figure${errors.length === 1 ? ' is' : 's are'} in error (${errors[0].employee} — ${errors[0].column}${
               errors.length > 1 ? ', …' : ''
             }). Fix ${errors.length === 1 ? 'it' : 'them'} first.`
-          : null
+          : clashingLabels.length > 0
+            ? `Can't send yet: ${clashingLabels.map((label) => `more than one company detail is called "${label}".`).join(' ')} Each would overwrite the other in what is sent. Rename them in Company Details first.`
+            : null
 
   async function handleSend() {
     const columns = buildPdfFillColumns(identityFields, effectiveColumns)

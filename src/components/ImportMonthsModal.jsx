@@ -242,6 +242,7 @@ function MonthRow({ company, month, choice, onChoose }) {
       )}
       {month.state === 'imported' && <span className="text-muted">Already imported from this browser.</span>}
       {month.state === 'empty' && <span className="text-muted">No employees: nothing to import.</span>}
+      {month.state === 'unreadable' && <span className="text-warn">The data saved in this browser for this month could not be read: not imported.</span>}
     </li>
   )
 }

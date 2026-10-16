@@ -255,6 +255,27 @@ function buildLiveFormulaCellValue(formula, columnKeyToLetter, excelRowNum, valu
   }
 }
 
+// The names of the formula columns a Live-Formulas file writes as fixed
+// figures, because their formula cannot be written in Excel's terms: shown
+// in the export preview, so that nobody takes them for live formulas.
+// Empty for a Values export. Uses the same columns and translation as
+// buildWorkbookBuffer.
+export function columnsWrittenAsFigures(plan) {
+  if (plan.exportMode !== 'formulas') return []
+  const onSheet = new Set([...plan.columns, ...plan.hiddenColumns].map((c) => c.key))
+  return plan.columns
+    .filter((col) => col.kind === 'formula')
+    .filter((col) => {
+      try {
+        translateFormulaToExcel(col.formula, (key) => (onSheet.has(key) ? 'A1' : null))
+        return false
+      } catch {
+        return true
+      }
+    })
+    .map((col) => col.name)
+}
+
 // Columns whose cells hold text (not a summable/formattable number) once
 // written to the sheet - identity fields, Text columns, and Checkbox
 // columns (written as "Yes"/"No"). Shared by the data rows, the totals

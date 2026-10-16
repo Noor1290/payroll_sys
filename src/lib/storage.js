@@ -86,12 +86,66 @@ function migrateCompany(company) {
   })
 }
 
+// ---- Saved data that cannot be read --------------------------------------
+// Text stored under one of this app's keys that is not a JSON object is not
+// "nothing saved": it is never shown as empty and never saved over. The
+// setup and companies: the app opens on a page that says so (see
+// setupIsUnreadable and startWithEmptySetup). A month: loadPeriod answers
+// that it cannot be read, so it is not shown, and savePeriod refuses it.
+
+function readsAsObject(text) {
+  try {
+    const value = JSON.parse(text)
+    return value !== null && typeof value === 'object' && !Array.isArray(value)
+  } catch {
+    return false
+  }
+}
+
+const unreadableAt = (key) => {
+  const raw = localStorage.getItem(key)
+  return raw !== null && raw !== '' && !readsAsObject(raw)
+}
+
+// Whether the saved setup and companies are there but cannot be read.
+export function setupIsUnreadable() {
+  try {
+    return unreadableAt(STORAGE_KEY)
+  } catch {
+    return false
+  }
+}
+
+// Only when asked on the page that says the setup cannot be read: keeps the
+// unreadable text under a key of its own, which nothing in the app writes,
+// then lets the app start with an empty setup.
+//   { ok: true, keptUnder }   kept; the app can start empty
+//   { ok: false }             the browser refused the copy: nothing was changed
+export function startWithEmptySetup(now = new Date()) {
+  const raw = localStorage.getItem(STORAGE_KEY)
+  const keptUnder = `${STORAGE_KEY}_unreadable_${now.toISOString()}`
+  try {
+    localStorage.setItem(keptUnder, raw ?? '')
+  } catch (e) {
+    console.error('Failed to keep the unreadable payroll state:', e)
+    return { ok: false }
+  }
+  localStorage.removeItem(STORAGE_KEY)
+  return { ok: true, keptUnder }
+}
+
+export const UNREADABLE_MONTH = {
+  code: 'unreadable',
+  error: 'The data saved in this browser for this month could not be read. It is not shown, and nothing will be saved over it.',
+}
+
 export function loadState() {
   try {
     const raw = localStorage.getItem(STORAGE_KEY)
     if (!raw) return null
+    // Not "nothing saved": the app shows that it cannot be read (setupIsUnreadable).
+    if (!readsAsObject(raw)) return null
     const parsed = JSON.parse(raw)
-    if (!parsed || typeof parsed !== 'object') return null
 
     const hasIdentityFields = Array.isArray(parsed.identityFields)
     const identityFields = hasIdentityFields
@@ -122,6 +176,8 @@ export function loadState() {
 // the browser refused it (most often because storage is full). The caller
 // must tell the user: a refused save means the change is NOT kept.
 export function saveState(state) {
+  // Never over saved data that cannot be read: see startWithEmptySetup.
+  if (setupIsUnreadable()) return false
   try {
     localStorage.setItem(STORAGE_KEY, JSON.stringify(state))
     return true
@@ -134,21 +190,27 @@ export function saveState(state) {
 // One month's employee data for one company - stored separately from the
 // core app state so viewing/editing one month never touches another
 // month's (or company's) data on disk.
+//
+// A month whose saved text cannot be read answers
+// { employees: [], blocked: UNREADABLE_MONTH }: nothing to show, nothing to save.
 export function loadPeriod(companyId, year, month) {
   try {
     const raw = localStorage.getItem(periodStorageKey(companyId, year, month))
     if (!raw) return { employees: [] }
+    if (!readsAsObject(raw)) return { employees: [], blocked: { ...UNREADABLE_MONTH } }
     const parsed = JSON.parse(raw)
     return { employees: Array.isArray(parsed.employees) ? parsed.employees.map(migrateEmployee) : [] }
   } catch (e) {
     console.error('Failed to load payroll period from localStorage:', e)
-    return { employees: [] }
+    return { employees: [], blocked: { ...UNREADABLE_MONTH } }
   }
 }
 
 // Returns true when saved, false when the browser refused the write - see saveState.
+// A month whose saved text cannot be read is never saved over.
 export function savePeriod(companyId, year, month, periodData) {
   try {
+    if (unreadableAt(periodStorageKey(companyId, year, month))) return false
     localStorage.setItem(periodStorageKey(companyId, year, month), JSON.stringify(periodData))
     return true
   } catch (e) {

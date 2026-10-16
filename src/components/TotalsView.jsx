@@ -102,7 +102,12 @@ export default function TotalsView({ company, identityFields, idFieldKey, effect
       ) : range.blocked ? (
         <div role="alert" className="panel panel-danger text-sm">
           <CircleAlert aria-hidden="true" />
-          <span>No totals: a month of this range could not be loaded from the dashboard. {range.blocked.error}</span>
+          <span>
+            {range.blocked.code === 'unreadable'
+              ? 'No totals: a month of this range could not be read in this browser.'
+              : 'No totals: a month of this range could not be loaded from the dashboard.'}{' '}
+            {range.blocked.error}
+          </span>
         </div>
       ) : !idFieldKey ? (
         <div className="panel text-sm [--panel:var(--warn)]">

@@ -3,7 +3,7 @@
 // Formulas" file contains, so they can be compared with the app's figures
 // without opening Excel.
 //
-// It reads Excel syntax (IF, AND, OR, NOT, MIN, MAX, ABS, SQRT, POWER, MOD,
+// It reads Excel syntax (IF, AND, OR, NOT, MIN, MAX, ABS, INT, SQRT, POWER, MOD,
 // SUM, cell references, ranges) and is written independently of the app's
 // own translator. It follows Excel's rules where they matter here:
 //   - a text cell is never equal to a number ("Yes" = 1 is FALSE)
@@ -309,6 +309,8 @@ export function evaluateExcelFormula(formula, getCell) {
         const bad = numeric.find(isError)
         if (bad) return bad
         if (name === 'ABS') return Math.abs(numeric[0])
+        // Excel's INT rounds down, towards minus infinity: INT(-2.5) is -3.
+        if (name === 'INT') return Math.floor(numeric[0])
         if (name === 'SQRT') return numeric[0] < 0 ? ERROR('#NUM!') : Math.sqrt(numeric[0])
         if (name === 'POWER') return numeric[0] ** numeric[1]
         if (name === 'MOD') return numeric[1] === 0 ? ERROR('#DIV/0!') : numeric[0] - numeric[1] * Math.floor(numeric[0] / numeric[1])

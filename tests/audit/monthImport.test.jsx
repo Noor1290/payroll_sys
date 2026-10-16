@@ -125,6 +125,21 @@ describe('the preview', () => {
     expect(october.differences[0]).toEqual({ employee: 1, column: formula.name })
     expect(defaultMonthChoices(plan)['company-fake']).not.toHaveProperty('2026-10')
   })
+
+  // Audit R4 (backlog batch D): a month that cannot be read is not an empty month.
+  test('a month saved in this browser that cannot be read is listed as such, never offered, and left as it is', async () => {
+    localStorage.setItem('payroll_period_company-fake_2026-10', '{"employees": [{"id": "e1"')
+    await open()
+    const plan = await planMonthImport()
+    expect(plan.companies[0].months.map((m) => [m.period, m.state])).toEqual([
+      ['2026-09', 'new'],
+      ['2026-10', 'unreadable'],
+      ['2026-11', 'empty'],
+    ])
+    expect(defaultMonthChoices(plan)['company-fake']).toEqual({ '2026-09': 'import' })
+    expect(localStorage.getItem('payroll_period_company-fake_2026-10')).toBe('{"employees": [{"id": "e1"')
+    expect(writes()).toEqual([])
+  })
 })
 
 describe('importing', () => {

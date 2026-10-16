@@ -8,6 +8,8 @@ import {
   buildCompanyDetailFields,
   resolveCompanyFieldHeaders,
   downloadPdfFillExport,
+  findClashingHeaders,
+  pdfFillHeaders,
 } from '../lib/pdfFillExport'
 
 const FORMAT_LABEL = { csv: 'CSV', json: 'JSON' }
@@ -65,6 +67,14 @@ export default function PdfFillExportModal({
   }
 
   const selectedCount = selected.size
+
+  // Company details ticked for export that share a label: one would
+  // overwrite the other in the file, so the export waits until they don't.
+  const clashingLabels = useMemo(() => {
+    const chosenColumns = groups.flatMap((g) => g.columns).filter((c) => selected.has(c.key))
+    const chosenCompanyFields = companyFields.filter((f) => selectedCompanyFields.has(f.key))
+    return findClashingHeaders(pdfFillHeaders(chosenColumns, resolveCompanyFieldHeaders(chosenCompanyFields, chosenColumns.map((c) => c.name))))
+  }, [groups, selected, companyFields, selectedCompanyFields])
 
   // Figures in error among the chosen columns, waiting for the user's answer.
   const [pendingErrors, setPendingErrors] = useState(null)
@@ -146,11 +156,18 @@ export default function PdfFillExportModal({
           · {employees.length} employee{employees.length === 1 ? '' : 's'} will be exported.
         </p>
 
+        {clashingLabels.length > 0 && (
+          <div role="alert" className="note note-warn text-sm">
+            {clashingLabels.map((label) => `More than one company detail is called "${label}".`).join(' ')} Each would overwrite
+            the other in the file. Untick all but one, or rename them in Company Details, to export.
+          </div>
+        )}
+
         <div className="flex justify-end gap-2 border-t border-line pt-4">
           <button onClick={onClose} className="btn btn-secondary">
             Cancel
           </button>
-          <button onClick={handleExportClick} disabled={selectedCount === 0} className="btn btn-primary">
+          <button onClick={handleExportClick} disabled={selectedCount === 0 || clashingLabels.length > 0} className="btn btn-primary">
             Export {FORMAT_LABEL[format]}
           </button>
         </div>

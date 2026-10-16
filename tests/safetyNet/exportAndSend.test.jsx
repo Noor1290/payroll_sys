@@ -219,3 +219,20 @@ test('"Send to dashboard" conditions: disabled with a reason, and nothing is sen
   }
   expectRecorded('send-to-dashboard-conditions', states)
 })
+
+// Backlog batch D (audit M11): rows are keyed by name, so two company
+// details with one label would overwrite each other in what is sent.
+test('"Send to dashboard" is refused while two company details share a label, naming it, and nothing is sent', () => {
+  const customFields = [
+    { id: 'x1', label: 'Ref', value: 'TEST-REF-1' },
+    { id: 'x2', label: 'Ref', value: 'TEST-REF-2' },
+  ]
+  const scope = render(<SendToDashboardButton {...sendButtonProps({ companyDetails: { ...company.details, customFields } })} />)
+  const button = buttonByText(scope, 'Send to dashboard')
+  expect(button.disabled).toBe(true)
+  expect(button.parentElement.getAttribute('title')).toBe(
+    'Can\'t send yet: more than one company detail is called "Ref". Each would overwrite the other in what is sent. Rename them in Company Details first.'
+  )
+  act(() => button.click())
+  expect(posted).toHaveLength(0)
+})

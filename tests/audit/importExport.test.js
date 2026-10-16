@@ -10,7 +10,7 @@ import * as XLSX from 'xlsx'
 import { beforeAll, describe, expect, test } from 'vitest'
 import { getColumnsByKey, makeId } from '../../src/lib/model'
 import { computeGridForEmployees } from '../../src/lib/formulaEngine'
-import { buildExportPlan, buildWorkbookBuffer, formatCompanyDetailsLine } from '../../src/lib/excelExport'
+import { buildExportPlan, buildWorkbookBuffer, columnsWrittenAsFigures, formatCompanyDetailsLine } from '../../src/lib/excelExport'
 import {
   parseWorkbookFile,
   getImportableSystemFields,
@@ -33,6 +33,9 @@ import {
   buildCsvContent,
   buildJsonContent,
   buildPdfFillFilename,
+  downloadPdfFillExport,
+  findClashingHeaders,
+  pdfFillHeaders,
 } from '../../src/lib/pdfFillExport'
 import { computeTotals } from '../../src/lib/totals'
 import { evaluateExcelFormula, isExcelError } from './excelEval'
@@ -310,10 +313,11 @@ describe('Excel export with live formulas', () => {
     expect([7, 8, 9].map((r) => values.getCell(r, columnOf('age60')).value)).toEqual(['No', 'Yes', 'No'])
   })
 
-  // BUG: Math.round / Math.floor / Math.ceil work in the app and are accepted
-  // on save, but cannot be written as a formula, so that one column silently
-  // becomes a fixed number in a file that is meant to recalculate.
-  test.fails('BUG: a column using Math.round is exported as a live formula', async () => {
+  // Was an audit bug (report M4): Math.round / Math.floor / Math.ceil work in
+  // the app and are accepted on save, but could not be written as a formula,
+  // so that one column silently became a fixed number in a file that is
+  // meant to recalculate.
+  test('a column using Math.round is exported as a live formula', async () => {
     const rounded = [input('Basic Salary', 'basicSalary'), simple('Rounded', 'rounded', 'Math.round(basicSalary * 0.015)')]
     const people = [{ id: 'e1', values: { id: 'TST001', basicSalary: '18115' } }]
     const g = computeGridForEmployees(people, rounded, getColumnsByKey(rounded))
@@ -321,6 +325,49 @@ describe('Excel export with live formulas', () => {
     const plan = buildExportPlan({ title: 'TEST Co A', companyId: COMPANY_ID, exportMode: 'formulas', employees: people, identityFields, effectiveColumns: rounded, computedGrid: g })
     const ws = (await openWorkbook(await buildWorkbookBuffer(plan))).getWorksheet('Payroll')
     expect(ws.getCell(7, 5).formula).toBeTruthy()
+  })
+
+  test('Math.round, Math.floor and Math.ceil give in Excel exactly what they give in the app, halves and minus figures included', async () => {
+    const cols = [
+      input('Basic Salary', 'basicSalary'),
+      simple('Rounded', 'rounded', 'Math.round(basicSalary / 2)'),
+      simple('Floored', 'floored', 'Math.floor(basicSalary / 2)'),
+      simple('Ceiled', 'ceiled', 'Math.ceil(basicSalary / 2) + 1'),
+    ]
+    const people = [5, -5, 4, -7, 18115, 0.4].map((v, i) => ({ id: `e${i}`, values: { id: `TST00${i}`, basicSalary: String(v) } }))
+    const g = computeGridForEmployees(people, cols, getColumnsByKey(cols))
+    const plan = buildExportPlan({ title: 'TEST Co A', companyId: COMPANY_ID, exportMode: 'formulas', employees: people, identityFields, effectiveColumns: cols, computedGrid: g })
+    const ws = (await openWorkbook(await buildWorkbookBuffer(plan))).getWorksheet('Payroll')
+    const header = ws.getRow(6).values
+    const at = (name) => header.indexOf(name)
+    people.forEach((person, i) => {
+      const row = 7 + i
+      const cellAt = (ref) => ws.getCell(ref).value
+      for (const key of ['rounded', 'floored', 'ceiled']) {
+        const name = cols.find((c) => c.key === key).name
+        const cell = ws.getCell(row, at(`${name} (calc)`))
+        expect(cell.formula, `${person.values.basicSalary} ${key}`).toMatch(/INT\(/)
+        expect(evaluateExcelFormula(cell.formula, cellAt), `${person.values.basicSalary} ${key}`).toBe(g[person.id][key].value)
+      }
+    })
+    // The half-way cases that tell the ways of rounding apart: 2.5 → 3, -2.5 → -2.
+    expect([g.e0.rounded.value, g.e1.rounded.value]).toEqual([3, -2])
+  })
+
+  test('the preview names exactly the formula columns that the file writes as fixed figures', async () => {
+    const cols = [input('Basic Salary', 'basicSalary'), simple('Rounded', 'rounded', 'Math.round(basicSalary * 0.015)'), simple('Logged', 'logged', 'Math.log(basicSalary)')]
+    const people = [{ id: 'e1', values: { id: 'TST001', basicSalary: '18115' } }]
+    const g = computeGridForEmployees(people, cols, getColumnsByKey(cols))
+    const planIn = (exportMode) => buildExportPlan({ title: 'TEST Co A', companyId: COMPANY_ID, exportMode, employees: people, identityFields, effectiveColumns: cols, computedGrid: g })
+    expect(columnsWrittenAsFigures(planIn('formulas'))).toEqual(['Logged'])
+    expect(columnsWrittenAsFigures(planIn('values'))).toEqual([])
+    // The same columns in the file itself.
+    const ws = (await openWorkbook(await buildWorkbookBuffer(planIn('formulas')))).getWorksheet('Payroll')
+    const header = ws.getRow(6).values
+    expect(ws.getCell(7, header.indexOf('Rounded (calc)')).formula).toBeTruthy()
+    expect(ws.getCell(7, header.indexOf('Logged (calc)')).formula).toBeUndefined()
+    // The app's own test columns are all written as formulas.
+    expect(columnsWrittenAsFigures(planFor('formulas'))).toEqual([])
   })
 })
 
@@ -813,10 +860,17 @@ describe('Export for PDF fill', () => {
     expect(resolveCompanyFieldHeaders(fields, bothCsg.map((c) => c.name)).map((f) => f.header)).toEqual(['Company: CSG (Employee Contribution)', 'CSG'])
   })
 
-  // BUG: two custom company fields with the same label overwrite each other.
-  test.fails('BUG: two company fields with the same label are both exported', () => {
+  // Was an audit bug (report M11): two custom company fields with the same
+  // label overwrote each other. As decided, such an export is refused, and
+  // the label is named; nothing is written with one value lost.
+  test('two company fields with the same label are never exported over each other: the export is refused, naming the label', () => {
     const fields = buildCompanyDetailFields('TEST Co A', { address: '', brn: '', customFields: [{ id: 'c1', label: 'Ref', value: 'one' }, { id: 'c2', label: 'Ref', value: 'two' }] }).slice(3)
-    const rows = buildPdfFillRows(pick('ID'), employees, grid, resolveCompanyFieldHeaders(fields, ['ID']))
-    expect(Object.values(rows[0])).toContain('one')
+    const resolved = resolveCompanyFieldHeaders(fields, ['ID'])
+    expect(findClashingHeaders(pdfFillHeaders(pick('ID'), resolved))).toEqual(['Ref'])
+    expect(() => downloadPdfFillExport('json', pick('ID'), employees, grid, resolved, { companyName: 'TEST Co A', year: 2026, month: 9 })).toThrow(
+      'Two exported fields share a header: Ref'
+    )
+    // With one of them left out, nothing clashes.
+    expect(findClashingHeaders(pdfFillHeaders(pick('ID'), resolved.slice(0, 1)))).toEqual([])
   })
 })

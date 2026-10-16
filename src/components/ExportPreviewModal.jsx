@@ -1,7 +1,7 @@
-import { useState } from 'react'
+import { useMemo, useState } from 'react'
 import { CircleAlert, Download, FileSpreadsheet } from 'lucide-react'
 import Modal from './Modal'
-import { downloadExportPlan, formatCompanyDetailsLine } from '../lib/excelExport'
+import { columnsWrittenAsFigures, downloadExportPlan, formatCompanyDetailsLine } from '../lib/excelExport'
 import { formatDecimal } from '../lib/format'
 import { ERROR_TEXT } from '../lib/exportErrors'
 
@@ -21,6 +21,8 @@ export default function ExportPreviewModal({ plan, onClose }) {
   const [error, setError] = useState(null)
   const detailsLine = formatCompanyDetailsLine(plan.companyDetails)
   const [includeDetails, setIncludeDetails] = useState(Boolean(detailsLine))
+  // In a Live-Formulas file, the formula columns that are written as figures.
+  const asFigures = useMemo(() => columnsWrittenAsFigures(plan), [plan])
 
   async function handleDownload() {
     setDownloading(true)
@@ -55,6 +57,13 @@ export default function ExportPreviewModal({ plan, onClose }) {
           Include company details in header
           {!detailsLine && <span className="text-xs">(add an address or BRN in Company Details first)</span>}
         </label>
+
+        {asFigures.length > 0 && (
+          <div className="note note-warn text-sm">
+            Written as fixed figures, not formulas: {asFigures.join(', ')}. These cells will not recalculate if the
+            sheet is changed.
+          </div>
+        )}
 
         {/* The sheet itself is a picture of the Excel file, so it keeps the
             file's own white paper, serif font and header colours in both themes. */}

@@ -11,6 +11,10 @@
 // file holds what is stored, and a restore stores what the file holds.
 
 import { BROWSER_PERIOD_KEY_PREFIX, BROWSER_STATE_KEY, readBrowserData, replaceBrowserData } from './storage'
+
+// Saved setup in this browser that cannot be read (see storage.js): like the
+// backup, about the browser's own copy, so the screens reach it from here.
+export { setupIsUnreadable, startWithEmptySetup } from './storage'
 import { formatPeriodLabel } from './periods'
 
 export const BACKUP_APP_ID = 'payroll-sys-backup'
