@@ -370,6 +370,8 @@ test('collect every visible string (inside the dashboard)', async () => {
     snapWording('85 embedded: History of the Global columns, restore asked')
     await click('Restore', topDialog())
     await vi.waitFor(() => expect(topDialog().textContent).toContain('Restored.'))
+    // The list of versions is read again after the restore, a moment after "Restored." shows.
+    await vi.waitFor(() => expect(topDialog().textContent).toContain('Revision 3 (current)'))
     snapWording('86 embedded: History of the Global columns, restored')
 
     hub = revised()
