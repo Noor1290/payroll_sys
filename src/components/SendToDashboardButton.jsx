@@ -11,6 +11,8 @@ import {
 import { periodKey } from '../lib/periods'
 import { findErrorCells } from '../lib/exportErrors'
 import { checkRequiredNames } from '../lib/requiredNames'
+import { employmentDateHeader, withIsoEmploymentDates } from '../lib/employmentDate'
+import { describeEmployee } from '../lib/excelImport'
 import Modal from './Modal'
 import RequiredNamesNote from './RequiredNamesNote'
 
@@ -60,25 +62,33 @@ export default function SendToDashboardButton({
             ? `Can't send yet: ${clashingLabels.map((label) => `more than one company detail is called "${label}".`).join(' ')} Each would overwrite the other in what is sent. Rename them in Company Details first.`
             : null
 
-  // Warns, never blocks: the dashboard still decides what it accepts.
-  function handleClick() {
-    const problems = checkRequiredNames(buildPdfFillColumns(identityFields, effectiveColumns).map((c) => c.name))
-    if (problems.length > 0) setAskFirst(problems)
-    else void handleSend()
-  }
-
-  async function handleSend() {
-    setAskFirst(null)
+  // Exactly what is sent: the PDF fill rows, with the date of employment written "YYYY-MM-DD"
+  // (rehearsal fix F6). A date that cannot be read is left out for that employee.
+  function rowsToSend() {
     const columns = buildPdfFillColumns(identityFields, effectiveColumns)
     const companyFields = resolveCompanyFieldHeaders(
       buildCompanyDetailFields(companyName, companyDetails),
       columns.map((c) => c.name)
     )
+    const rows = buildPdfFillRows(columns, employees, computedGrid, companyFields)
+    return withIsoEmploymentDates(rows, employmentDateHeader(columns.map((c) => c.name)))
+  }
+
+  // Warns, never blocks: the dashboard still decides what it accepts.
+  function handleClick() {
+    const names = checkRequiredNames(buildPdfFillColumns(identityFields, effectiveColumns).map((c) => c.name))
+    const dates = rowsToSend().unreadable.map((u) => ({ ...u, who: describeEmployee(employees[u.index]?.values, identityFields) || `Row ${u.index + 1}` }))
+    if (names.length > 0 || dates.length > 0) setAskFirst({ names, dates })
+    else void handleSend()
+  }
+
+  async function handleSend() {
+    setAskFirst(null)
     setSending(true)
     setReply(null)
     const result = await window.PayrollHubBridge.sendToDashboard('send-data', {
       dataType: 'payroll-result',
-      rows: buildPdfFillRows(columns, employees, computedGrid, companyFields),
+      rows: rowsToSend().rows,
       meta: { period: periodKey(year, month) },
     })
     setSending(false)
@@ -108,9 +118,16 @@ export default function SendToDashboardButton({
         <Modal title="Send to the dashboard?" onClose={() => setAskFirst(null)} icon={<Send />}>
           <div className="space-y-4">
             <RequiredNamesNote
-              problems={askFirst}
+              problems={askFirst.names}
               closing="The dashboard refuses a month without the names it needs, and the payslip app needs its own. Add or rename the columns under Global Columns or Company Columns, or send anyway."
             />
+            {askFirst.dates.length > 0 && (
+              <div data-testid="unreadable-dates" role="note" className="note note-warn space-y-1 text-sm">
+                <p className="font-medium">Dates of employment that can&rsquo;t be read</p>
+                <p>{askFirst.dates.map((d) => `${d.who} (“${d.raw}”)`).join(', ')}.</p>
+                <p>These are not sent. Write the date as DD/MM/YYYY, for example 01/08/2026, or send anyway without them.</p>
+              </div>
+            )}
             <div className="flex justify-end gap-2">
               <button onClick={() => setAskFirst(null)} className="btn btn-secondary">
                 Cancel
