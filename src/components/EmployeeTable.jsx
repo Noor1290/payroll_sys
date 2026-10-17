@@ -112,6 +112,18 @@ export default function EmployeeTable({
   const nameField = identityFields[0]
   const secondField = identityFields[1]
 
+  // When an ID is in the month more than once, the delete question says which copy this is: its
+  // row in the table and its first figure (rehearsal fix F2), e.g. " (row 9, Basic Salary 19,000.00)".
+  function whichCopy(emp) {
+    const id = idFieldKey ? String(emp.values?.[idFieldKey] ?? '').trim() : ''
+    if (id === '' || !duplicateIdValues.has(id)) return ''
+    const row = employees.findIndex((e) => e.id === emp.id) + 1
+    const figure = getOrderedEffectiveColumns(effectiveColumns).find((c) => c.type === 'input' && (c.valueType ?? 'number') === 'number')
+    const raw = figure ? emp.values?.[figure.key] : undefined
+    const shown = figure && raw !== undefined && raw !== '' && !Number.isNaN(Number(raw)) ? `, ${figure.name} ${formatDecimal(Number(raw), figure.decimals ?? 2)}` : ''
+    return ` (row ${row}${shown})`
+  }
+
   // Columns grouped and ordered by category (Identifiers are handled
   // separately below - they're always leftmost regardless of these groups).
   const orderedColumns = useMemo(() => getOrderedEffectiveColumns(effectiveColumns), [effectiveColumns])
@@ -389,7 +401,7 @@ export default function EmployeeTable({
               .filter(Boolean)
               .join(' ')
               .trim() || 'this employee'
-          }?`}
+          }${whichCopy(deleting)}?`}
           onCancel={() => setDeleting(null)}
           onConfirm={() => {
             onDeleteEmployee(deleting.id)

@@ -371,3 +371,85 @@ export function buildImportedEmployees({ rows, systemFields, mapping, makeId, me
     return { id: makeId(), values }
   })
 }
+
+const isFilled = (value) => value !== undefined && value !== null && String(value).trim() !== ''
+
+// The first filled cell of a file row says "TOTAL" (any capitals): a totals line, never a person.
+function isTotalsRow(fileRow) {
+  const first = (fileRow ?? []).find(isFilled)
+  return first !== undefined && String(first).trim().toUpperCase() === 'TOTAL'
+}
+
+// How a person is named in the import summary: their first two identity fields, e.g. "E2E001 Test Employee One".
+export function describeEmployee(values, identityFields) {
+  return identityFields
+    .slice(0, 2)
+    .map((f) => values?.[f.key])
+    .filter(isFilled)
+    .map((v) => String(v).trim())
+    .join(' ')
+}
+
+// "Import from Excel" into a month that may already hold employees (rehearsal fix F2). Works out,
+// without changing anything:
+//   - updates: people already in the month, matched by the ID field (`idFieldKey`), whose MAPPED
+//     fields take the file's values (unmapped fields keep the month's values);
+//   - additions: people with an ID the month does not have;
+//   - removals: people of the month whose ID is not in the file (removed only if the user ticks it);
+//   - skipped: file rows never imported - a totals line ("TOTAL" as first filled cell), a row with
+//     no ID, or a second row with an ID used earlier in the file;
+//   - notUpdated: IDs that are in the month twice already, so it is not clear which to update.
+// Without an ID field nobody can be matched: every row is an addition (totals lines still skipped).
+// Row numbers are the file rows' positions among the rows read (1 = first row under the headers).
+export function planMonthImport({ rows, systemFields, mapping, meta, existing, idFieldKey, identityFields, makeId }) {
+  const projected = projectRows(rows, systemFields, mapping)
+  const imported = buildImportedEmployees({ rows, systemFields, mapping, makeId, meta })
+  const mappedKeys = systemFields
+    .filter((f) => (mapping[f.key] !== null && mapping[f.key] !== undefined) || meta?.excludedValues?.[f.key])
+    .map((f) => f.key)
+  const idOf = (values) => (idFieldKey && isFilled(values?.[idFieldKey]) ? String(values[idFieldKey]).trim() : '')
+  const name = (values) => describeEmployee(values, identityFields)
+
+  const monthById = new Map()
+  for (const employee of existing) {
+    const id = idOf(employee.values)
+    if (id) monthById.set(id, [...(monthById.get(id) ?? []), employee])
+  }
+
+  const plan = { updates: [], additions: [], removals: [], skipped: [], notUpdated: [], mappedKeys }
+  const seenInFile = new Map()
+  imported.forEach((employee, rowIndex) => {
+    const row = rowIndex + 1
+    if (isTotalsRow(rows[rowIndex])) return plan.skipped.push({ row, reason: 'total', label: 'TOTAL' })
+    if (!idFieldKey) return plan.additions.push({ row, employee, label: name(employee.values) || `Row ${row}` })
+    const id = idOf(projected[rowIndex])
+    if (!id) return plan.skipped.push({ row, reason: 'no-id', label: name(employee.values) || `Row ${row}` })
+    if (seenInFile.has(id)) return plan.skipped.push({ row, reason: 'repeated', label: name(employee.values), firstRow: seenInFile.get(id) })
+    seenInFile.set(id, row)
+    const matches = monthById.get(id) ?? []
+    if (matches.length === 0) return plan.additions.push({ row, employee, label: name(employee.values) })
+    if (matches.length > 1) return plan.notUpdated.push({ row, id, label: name(matches[0].values), copies: matches.length })
+    const patch = Object.fromEntries(mappedKeys.map((key) => [key, employee.values[key]]))
+    plan.updates.push({ row, employeeId: matches[0].id, patch, label: name(matches[0].values) })
+  })
+  if (idFieldKey) {
+    for (const employee of existing) {
+      const id = idOf(employee.values)
+      if (!id || !seenInFile.has(id)) plan.removals.push({ employeeId: employee.id, label: name(employee.values) || 'an employee with no ID' })
+    }
+  }
+  return plan
+}
+
+// Applies a plan from planMonthImport to the month's employees: updates in place (same people, same
+// order), the removals only when `removeMissing`, the additions at the end.
+export function applyMonthImport(existing, plan, { removeMissing = false } = {}) {
+  const patches = new Map(plan.updates.map((u) => [u.employeeId, u.patch]))
+  const removed = new Set(removeMissing ? plan.removals.map((r) => r.employeeId) : [])
+  return [
+    ...existing
+      .filter((e) => !removed.has(e.id))
+      .map((e) => (patches.has(e.id) ? { ...e, values: { ...e.values, ...patches.get(e.id) } } : e)),
+    ...plan.additions.map((a) => a.employee),
+  ]
+}

@@ -52,7 +52,8 @@ import { buildExportPlan } from './lib/excelExport'
 import {
   parseWorkbookFile,
   getImportableSystemFields,
-  buildImportedEmployees,
+  planMonthImport,
+  applyMonthImport,
   isRecognizedExport,
   describeUnrecognizedMeta,
   resolveImportMapping,
@@ -703,15 +704,23 @@ function PayrollApp({ onRestored, inDashboard = false, offline = null, onReloadD
     }
   }
 
-  function handleConfirmImport(mapping) {
+  // The file goes into the month: people matched by the ID field are updated, new ones added, and
+  // those not in the file removed only when asked (rehearsal fix F2). The plan is worked out again
+  // here, against the month as it is now, exactly as the dialog showed it.
+  function handleConfirmImport(mapping, { removeMissing = false } = {}) {
     if (!importData || !activeCompanyId) return
-    const imported = buildImportedEmployees({
-      rows: importData.rows,
-      systemFields: importData.systemFields,
-      mapping,
-      makeId,
-      meta: importData.meta,
-    })
+    const planFor = (existing) =>
+      planMonthImport({
+        rows: importData.rows,
+        systemFields: importData.systemFields,
+        mapping,
+        meta: importData.meta,
+        existing,
+        idFieldKey,
+        identityFields,
+        makeId,
+      })
+    const preview = planFor(periodEmployees)
     // Number cells that could not be read were left blank, not written as
     // 0 - the same list the preview showed, repeated here after the import.
     const unreadable = findUnreadableValues({
@@ -720,8 +729,8 @@ function PayrollApp({ onRestored, inDashboard = false, offline = null, onReloadD
       mapping,
       meta: importData.meta,
     })
-    setImportSummary(unreadable.length > 0 ? { count: imported.length, unreadable } : null)
-    setPeriodEmployees((prev) => [...prev, ...imported])
+    setImportSummary(unreadable.length > 0 ? { count: preview.updates.length + preview.additions.length, unreadable } : null)
+    setPeriodEmployees((prev) => applyMonthImport(prev, planFor(prev), { removeMissing }))
     setImportData(null)
     setActiveTab('employees')
   }
@@ -1093,6 +1102,9 @@ function PayrollApp({ onRestored, inDashboard = false, offline = null, onReloadD
           recognized={importData.recognized}
           autoNote={importData.autoNote}
           meta={importData.meta}
+          existingEmployees={periodEmployees}
+          idFieldKey={idFieldKey}
+          identityFields={identityFields}
           onConfirm={handleConfirmImport}
           onClose={() => setImportData(null)}
         />

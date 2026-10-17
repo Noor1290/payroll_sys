@@ -1,9 +1,56 @@
 import { useMemo, useState } from 'react'
 import { Upload } from 'lucide-react'
 import Modal from './Modal'
-import { guessMapping, projectRows, convertImportValue, findUnreadableValues } from '../lib/excelImport'
+import { guessMapping, projectRows, convertImportValue, findUnreadableValues, planMonthImport } from '../lib/excelImport'
 
 const PREVIEW_ROW_COUNT = 5
+
+const names = (items) => items.map((item) => item.label).join(', ')
+
+// What the import will do to the month (rehearsal fix F2), and what it leaves out.
+function ImportSummary({ plan, monthCount, idFieldName, removeMissing, onRemoveMissingChange }) {
+  const skipText = (s) =>
+    s.reason === 'total'
+      ? `row ${s.row} (“TOTAL”, a totals line)`
+      : s.reason === 'no-id'
+        ? `row ${s.row} (no ${idFieldName})`
+        : `row ${s.row}, ${s.label} (same ${idFieldName} as row ${s.firstRow})`
+  return (
+    <div data-testid="import-summary" className="space-y-2 rounded-xl border border-line bg-surface p-3 text-sm">
+      {monthCount > 0 && (
+        <p className="font-medium text-fg">
+          This month already has {monthCount} employee{monthCount === 1 ? '' : 's'}. People are matched by {idFieldName}.
+        </p>
+      )}
+      {plan.updates.length > 0 && (
+        <p>
+          Update {plan.updates.length} existing: {names(plan.updates)}.
+        </p>
+      )}
+      {plan.additions.length > 0 && (
+        <p>
+          Add {plan.additions.length} new: {names(plan.additions)}.
+        </p>
+      )}
+      {plan.removals.length > 0 && (
+        <label className="flex items-start gap-2">
+          <input type="checkbox" className="mt-1" checked={removeMissing} onChange={(e) => onRemoveMissingChange(e.target.checked)} />
+          <span>
+            Also remove {plan.removals.length} not in the file: {names(plan.removals)}.
+          </span>
+        </label>
+      )}
+      {plan.notUpdated.map((n) => (
+        <p key={n.id} className="text-warn">
+          {n.id} is in this month {n.copies} times, so no copy is updated. Delete the extra copy first.
+        </p>
+      ))}
+      {plan.skipped.length > 0 && (
+        <p className="text-muted">Not imported: {plan.skipped.map(skipText).join('; ')}.</p>
+      )}
+    </div>
+  )
+}
 
 // Lets the user map uploaded file columns onto the company's identity
 // fields + input columns before anything is imported, with a live preview.
@@ -17,8 +64,44 @@ const PREVIEW_ROW_COUNT = 5
 // autoNote: an explanatory message shown above the mapping UI when the
 //   file looked like a system export but couldn't be fully auto-applied
 //   (wrong company, or a column since removed).
-export default function ImportMappingModal({ headers, rows, systemFields, initialMapping, recognized, autoNote, meta, onConfirm, onClose }) {
+//
+// existingEmployees, idFieldKey, identityFields: the month the file goes into. People are matched
+//   by the ID field and updated rather than added again (rehearsal fix F2).
+export default function ImportMappingModal({
+  headers,
+  rows,
+  systemFields,
+  initialMapping,
+  recognized,
+  autoNote,
+  meta,
+  existingEmployees = [],
+  idFieldKey = null,
+  identityFields = [],
+  onConfirm,
+  onClose,
+}) {
   const [mapping, setMapping] = useState(() => initialMapping ?? guessMapping(systemFields, headers))
+  const [removeMissing, setRemoveMissing] = useState(false)
+  const plan = useMemo(() => {
+    let n = 0
+    const makeId = () => `preview-${++n}`
+    return planMonthImport({ rows, systemFields, mapping, meta, existing: existingEmployees, idFieldKey, identityFields, makeId })
+  }, [rows, systemFields, mapping, meta, existingEmployees, idFieldKey, identityFields])
+  const idFieldName = identityFields.find((f) => f.key === idFieldKey)?.name ?? 'ID'
+  const removing = removeMissing ? plan.removals.length : 0
+  const changes = plan.updates.length + plan.additions.length + removing
+  const parts = [
+    plan.updates.length > 0 && `update ${plan.updates.length}`,
+    plan.additions.length > 0 && `add ${plan.additions.length}`,
+    removing > 0 && `remove ${removing}`,
+  ].filter(Boolean)
+  const confirmLabel =
+    existingEmployees.length === 0
+      ? `Import ${plan.additions.length} row${plan.additions.length === 1 ? '' : 's'}`
+      : parts.length > 0
+        ? parts.join(', ').replace(/^./, (c) => c.toUpperCase())
+        : 'Nothing to import'
 
   const previewRows = useMemo(
     () => projectRows(rows.slice(0, PREVIEW_ROW_COUNT), systemFields, mapping),
@@ -150,12 +233,20 @@ export default function ImportMappingModal({ headers, rows, systemFields, initia
           </div>
         </div>
 
+        <ImportSummary
+          plan={plan}
+          monthCount={existingEmployees.length}
+          idFieldName={idFieldName}
+          removeMissing={removeMissing}
+          onRemoveMissingChange={setRemoveMissing}
+        />
+
         <div className="flex justify-end gap-2 border-t border-line pt-4">
           <button onClick={onClose} className="btn btn-secondary">
             Cancel
           </button>
-          <button onClick={() => onConfirm(mapping)} disabled={rows.length === 0} className="btn btn-primary">
-            Import {rows.length} row{rows.length === 1 ? '' : 's'}
+          <button onClick={() => onConfirm(mapping, { removeMissing })} disabled={changes === 0} className="btn btn-primary">
+            {confirmLabel}
           </button>
         </div>
       </div>
