@@ -2,6 +2,8 @@ import { useMemo, useState } from 'react'
 import { FileOutput } from 'lucide-react'
 import Modal from './Modal'
 import ExportErrorsDialog from './ExportErrorsDialog'
+import RequiredNamesNote from './RequiredNamesNote'
+import { checkRequiredNames } from '../lib/requiredNames'
 import { findErrorCells } from '../lib/exportErrors'
 import {
   buildPdfFillColumnGroups,
@@ -67,6 +69,11 @@ export default function PdfFillExportModal({
   }
 
   const selectedCount = selected.size
+  // The names the dashboard and the payslip app look for, among the columns ticked (rehearsal fix F4).
+  const nameProblems = useMemo(
+    () => checkRequiredNames(groups.flatMap((g) => g.columns).filter((c) => selected.has(c.key)).map((c) => c.name)),
+    [groups, selected]
+  )
 
   // Company details ticked for export that share a label: one would
   // overwrite the other in the file, so the export waits until they don't.
@@ -155,6 +162,11 @@ export default function PdfFillExportModal({
           {selectedCompanyFields.size > 0 ? ` + ${selectedCompanyFields.size} company detail field${selectedCompanyFields.size === 1 ? '' : 's'}` : ''} selected
           · {employees.length} employee{employees.length === 1 ? '' : 's'} will be exported.
         </p>
+
+        <RequiredNamesNote
+          problems={nameProblems}
+          closing="This only matters if the file goes to the dashboard or the payslip app. You can still export."
+        />
 
         {clashingLabels.length > 0 && (
           <div role="alert" className="note note-warn text-sm">

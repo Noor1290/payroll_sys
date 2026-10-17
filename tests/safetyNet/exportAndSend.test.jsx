@@ -161,6 +161,13 @@ async function clickSend(scope) {
   await act(async () => {
     buttonByText(scope, 'Send to dashboard').click()
   })
+  // The fake setup lacks names the dashboard looks for, so it is asked first (rehearsal fix F4);
+  // "Send anyway" sends exactly what was sent before.
+  expect(posted).toHaveLength(0)
+  expect(document.body.textContent).toContain('Names the dashboard and the payslip app look for')
+  await act(async () => {
+    buttonByText(document.body, 'Send anyway').click()
+  })
   expect(posted).toHaveLength(1)
   return posted[0]
 }

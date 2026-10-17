@@ -367,6 +367,8 @@ describe('the same as from this browser', () => {
     await startInDashboard()
     await tableShown()
     await click(button('Send to dashboard'))
+    // Asked first: the fake setup lacks names the dashboard looks for (rehearsal fix F4).
+    await click(button('Send anyway'))
     const message = sent.find((m) => m.type === 'send-data' && m.payload.dataType === 'payroll-result')
     expect(message.payload).toEqual(recorded('send-to-dashboard-message').message.payload)
   })

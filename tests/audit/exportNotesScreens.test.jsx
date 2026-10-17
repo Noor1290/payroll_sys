@@ -36,7 +36,9 @@ const columns = [input('Basic Salary', 'basicSalary'), simple('Rounded', 'rounde
 const employees = [{ id: 'e1', values: { id: 'TST001', name: 'Uno', surname: 'Tester', basicSalary: '18115' } }]
 const grid = computeGridForEmployees(employees, columns, getColumnsByKey(columns))
 const planIn = (exportMode) => buildExportPlan({ title: 'TEST Co A', companyId: 'test-co-a', exportMode, employees, identityFields, effectiveColumns: columns, computedGrid: grid })
-const noteText = () => [...document.querySelectorAll('.note-warn')].map((n) => n.textContent.replace(/\s+/g, ' ').trim())
+// The note on required names (rehearsal fix F4) is tested on its own, in requiredNames.test.jsx.
+const noteText = () =>
+  [...document.querySelectorAll('.note-warn:not([data-testid="required-names"])')].map((n) => n.textContent.replace(/\s+/g, ' ').trim())
 
 test('a Live-Formulas preview names the columns written as fixed figures; a Values preview says nothing', async () => {
   await show(<ExportPreviewModal plan={planIn('formulas')} onClose={vi.fn()} />)

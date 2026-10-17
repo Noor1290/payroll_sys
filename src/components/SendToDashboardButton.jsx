@@ -10,6 +10,9 @@ import {
 } from '../lib/pdfFillExport'
 import { periodKey } from '../lib/periods'
 import { findErrorCells } from '../lib/exportErrors'
+import { checkRequiredNames } from '../lib/requiredNames'
+import Modal from './Modal'
+import RequiredNamesNote from './RequiredNamesNote'
 
 // Sends the month currently shown to the Payroll Hub dashboard: the same
 // rows "Export for PDF fill (JSON)" writes with every column and every
@@ -28,6 +31,8 @@ export default function SendToDashboardButton({
 }) {
   const [sending, setSending] = useState(false)
   const [reply, setReply] = useState(null) // { ok, text } | null
+  // The names the other apps look for that this month lacks, shown before sending (rehearsal fix F4).
+  const [askFirst, setAskFirst] = useState(null)
 
   if (!window.PayrollHubBridge.isEmbedded()) return null
 
@@ -55,7 +60,15 @@ export default function SendToDashboardButton({
             ? `Can't send yet: ${clashingLabels.map((label) => `more than one company detail is called "${label}".`).join(' ')} Each would overwrite the other in what is sent. Rename them in Company Details first.`
             : null
 
+  // Warns, never blocks: the dashboard still decides what it accepts.
+  function handleClick() {
+    const problems = checkRequiredNames(buildPdfFillColumns(identityFields, effectiveColumns).map((c) => c.name))
+    if (problems.length > 0) setAskFirst(problems)
+    else void handleSend()
+  }
+
   async function handleSend() {
+    setAskFirst(null)
     const columns = buildPdfFillColumns(identityFields, effectiveColumns)
     const companyFields = resolveCompanyFieldHeaders(
       buildCompanyDetailFields(companyName, companyDetails),
@@ -77,7 +90,7 @@ export default function SendToDashboardButton({
     // reliably show its own tooltip.
     <div className="relative" title={blockedReason ?? undefined}>
       <button
-        onClick={handleSend}
+        onClick={handleClick}
         disabled={Boolean(blockedReason) || sending}
         aria-describedby={blockedReason ? 'send-to-dashboard-reason' : undefined}
         className="btn btn-secondary"
@@ -89,6 +102,25 @@ export default function SendToDashboardButton({
         <span id="send-to-dashboard-reason" className="sr-only">
           {blockedReason}
         </span>
+      )}
+
+      {askFirst && (
+        <Modal title="Send to the dashboard?" onClose={() => setAskFirst(null)} icon={<Send />}>
+          <div className="space-y-4">
+            <RequiredNamesNote
+              problems={askFirst}
+              closing="The dashboard refuses a month without the names it needs, and the payslip app needs its own. Add or rename the columns under Global Columns or Company Columns, or send anyway."
+            />
+            <div className="flex justify-end gap-2">
+              <button onClick={() => setAskFirst(null)} className="btn btn-secondary">
+                Cancel
+              </button>
+              <button onClick={() => void handleSend()} className="btn btn-primary">
+                Send anyway
+              </button>
+            </div>
+          </div>
+        </Modal>
       )}
 
       {reply && (
