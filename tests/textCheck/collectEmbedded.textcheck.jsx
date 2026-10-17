@@ -140,9 +140,16 @@ async function click(label, within) {
 }
 const sendButton = () => button('Send to dashboard')
 
-async function sendAndReply(payload) {
+async function sendAndReply(payload, askedFirst = null) {
   posted.length = 0
   await act(async () => sendButton().click())
+  // Since rehearsal fix F4 the app asks first when the month lacks names the dashboard or the
+  // payslip app look for (the fake setup does). The base version sends at once.
+  const asked = [...document.querySelectorAll('[role="dialog"]')].find((d) => d.textContent.includes('Send to the dashboard?'))
+  if (asked) {
+    if (askedFirst) snapDialog(askedFirst)
+    await click('Send anyway', asked)
+  }
   const sent = posted.find((m) => m.type === 'send-data')
   expect(sent, 'send-data message').toBeTruthy()
   await reply('received', sent.id, payload)
@@ -190,7 +197,7 @@ test('collect every visible string (inside the dashboard)', async () => {
   await start()
   snap('60 embedded: employee table with Send to dashboard')
 
-  await sendAndReply({ ok: true })
+  await sendAndReply({ ok: true }, '60b embedded: send, asked first')
   snap('61 embedded: sent')
 
   await sendAndReply({ ok: false, error: 'Dashboard is locked.' })

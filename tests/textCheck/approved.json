@@ -286,13 +286,13 @@
     },
     {
       "text": "text: Cancel",
-      "why": "existing wording, not new: the Cancel button of the new \"Change this field's key?\" question, which the base version does not have; and the same button in the new backup dialogs (migration plan step 0a), which the base version does not have; also on the Phase 2 dashboard screens, where it is the same control or the company's name; also on the Phase 3 screens (months kept in the dashboard), where it is the same control or wording; also on the Phase 3 follow-up screens (History, the read-only offline copy), where it is the same control or wording",
-      "onlyOn": ["57 change identity field key confirm (the ID field, values in saved months)", "58 change identity field key confirm (no saved values)", "59 restore a backup, what is in the file and in the browser", "59b restore a backup, a file that does not say when it was saved", "66 embedded: company details from the dashboard", "72 embedded: import, backup first", "73 embedded: import, what it will do", "80 embedded: import months, backup first", "81 embedded: import months, what it will do", "85 embedded: History of the Global columns, restore asked", "90 embedded: History of a month, restore asked"]
+      "why": "existing wording, not new: the Cancel button of the new \"Change this field's key?\" question, which the base version does not have; and the same button in the new backup dialogs (migration plan step 0a), which the base version does not have; also on the Phase 2 dashboard screens, where it is the same control or the company's name; also on the Phase 3 screens (months kept in the dashboard), where it is the same control or wording; also on the Phase 3 follow-up screens (History, the read-only offline copy), where it is the same control or wording; also on the \"Send to the dashboard?\" question (rehearsal fix F4), where it is the same control",
+      "onlyOn": ["57 change identity field key confirm (the ID field, values in saved months)", "58 change identity field key confirm (no saved values)", "59 restore a backup, what is in the file and in the browser", "59b restore a backup, a file that does not say when it was saved", "66 embedded: company details from the dashboard", "72 embedded: import, backup first", "73 embedded: import, what it will do", "80 embedded: import months, backup first", "81 embedded: import months, what it will do", "85 embedded: History of the Global columns, restore asked", "90 embedded: History of a month, restore asked", "60b embedded: send, asked first"]
     },
     {
       "text": "aria-label: Close",
-      "why": "existing wording, not new: the close button of the new \"Change this field's key?\" question, which the base version does not have; and the same button in the new backup dialogs (migration plan step 0a), which the base version does not have; also on the Phase 2 dashboard screens, where it is the same control or the company's name; also on the Phase 3 screens (months kept in the dashboard), where it is the same control or wording; also on the Phase 3 follow-up screens (History, the read-only offline copy), where it is the same control or wording",
-      "onlyOn": ["57 change identity field key confirm (the ID field, values in saved months)", "58 change identity field key confirm (no saved values)", "59 restore a backup, what is in the file and in the browser", "59b restore a backup, a file that does not say when it was saved", "60 backup restored", "61 restore, not a backup file", "61b restore, a backup of another version", "61c restore, a damaged backup", "61d restore, an empty backup", "62 backup not restored, storage full", "62b backup not restored, earlier data could not be put back", "63 this change was NOT saved (storage full)", "66 embedded: company details from the dashboard", "72 embedded: import, backup first", "73 embedded: import, what it will do", "74 embedded: import, done", "80 embedded: import months, backup first", "81 embedded: import months, what it will do", "82 embedded: import months, done", "84 embedded: History of the Global columns, an earlier version", "85 embedded: History of the Global columns, restore asked", "86 embedded: History of the Global columns, restored", "87 embedded: History of the Global columns, the months could not be checked (locked)", "88 embedded: History of a company's columns, the version in use, not an admin", "89 embedded: History of a month, an earlier version", "90 embedded: History of a month, restore asked", "91 embedded: History of a month, only the record of a save kept", "92 embedded: History of a month, the dashboard locked"]
+      "why": "existing wording, not new: the close button of the new \"Change this field's key?\" question, which the base version does not have; and the same button in the new backup dialogs (migration plan step 0a), which the base version does not have; also on the Phase 2 dashboard screens, where it is the same control or the company's name; also on the Phase 3 screens (months kept in the dashboard), where it is the same control or wording; also on the Phase 3 follow-up screens (History, the read-only offline copy), where it is the same control or wording; also on the \"Send to the dashboard?\" question (rehearsal fix F4), where it is the same control",
+      "onlyOn": ["57 change identity field key confirm (the ID field, values in saved months)", "58 change identity field key confirm (no saved values)", "59 restore a backup, what is in the file and in the browser", "59b restore a backup, a file that does not say when it was saved", "60 backup restored", "61 restore, not a backup file", "61b restore, a backup of another version", "61c restore, a damaged backup", "61d restore, an empty backup", "62 backup not restored, storage full", "62b backup not restored, earlier data could not be put back", "63 this change was NOT saved (storage full)", "66 embedded: company details from the dashboard", "72 embedded: import, backup first", "73 embedded: import, what it will do", "74 embedded: import, done", "80 embedded: import months, backup first", "81 embedded: import months, what it will do", "82 embedded: import months, done", "84 embedded: History of the Global columns, an earlier version", "85 embedded: History of the Global columns, restore asked", "86 embedded: History of the Global columns, restored", "87 embedded: History of the Global columns, the months could not be checked (locked)", "88 embedded: History of a company's columns, the version in use, not an admin", "89 embedded: History of a month, an earlier version", "90 embedded: History of a month, restore asked", "91 embedded: History of a month, only the record of a save kept", "92 embedded: History of a month, the dashboard locked", "60b embedded: send, asked first"]
     },
     {
       "text": "text: 1 item that could not be read, kept as it is",
@@ -1135,6 +1135,58 @@
     {
       "text": "title: Tick or untick Age 60+ for every employee this month",
       "why": "approved (backlog batch E, audit M13): the tooltip of the \"Tick all\" box in the header of a checkbox column, here Age 60+"
+    },
+    {
+      "text": "text: This month already has 6 employees. People are matched by ID.",
+      "why": "approved (rehearsal fix F2, 17 Oct 2026): the import summary when the month already has employees; the counts and names are the fake data's"
+    },
+    {
+      "text": "text: Update 6 existing: F001 Testeur, F002 Exemple, Jr, F003 Specimen, F004 Dummy, F005 Placeholder, F006 Blank.",
+      "why": "approved (rehearsal fix F2, 17 Oct 2026): the import summary when the month already has employees; the counts and names are the fake data's"
+    },
+    {
+      "text": "text: Add 2 new: F101 Importee, F102 Importee, Jr.",
+      "why": "approved (rehearsal fix F2, 17 Oct 2026): the import summary when the month already has employees; the counts and names are the fake data's"
+    },
+    {
+      "text": "text: Also remove 6 not in the file: F001 Testeur, F002 Exemple, Jr, F003 Specimen, F004 Dummy, F005 Placeholder, F006 Blank.",
+      "why": "approved (rehearsal fix F2, 17 Oct 2026): the import summary when the month already has employees; the counts and names are the fake data's (the checkbox)"
+    },
+    {
+      "text": "text: Update 6",
+      "why": "approved (rehearsal fix F2, 17 Oct 2026): the import button, \"Update N, add N, remove N\" with only the parts that apply, or \"Import N rows\" for an empty month"
+    },
+    {
+      "text": "text: Add 2",
+      "why": "approved (rehearsal fix F2, 17 Oct 2026): the import button, \"Update N, add N, remove N\" with only the parts that apply, or \"Import N rows\" for an empty month"
+    },
+    {
+      "text": "text: Names the dashboard and the payslip app look for",
+      "why": "approved (rehearsal fix F4, 17 Oct 2026): the note on the names the dashboard and the payslip app look for"
+    },
+    {
+      "text": "text: Missing: Employee CSG (the payslip app), Employee NSF (the payslip app).",
+      "why": "approved (rehearsal fix F4, 17 Oct 2026): the note on the names the dashboard and the payslip app look for"
+    },
+    {
+      "text": "text: Missing: ID (both), Surname (both), Basic Salary (the dashboard), Govt Increment (the dashboard), New Basic Salary (the dashboard), Allowances (the dashboard), Emoluments (the dashboard), Travelling (the dashboard), Gross Pay (both), Age 60+ (the dashboard), CSG (the dashboard), NSF (the dashboard), PAYE (the dashboard), Employee CSG (the payslip app), Employee NSF (the payslip app), Total deductions (both), Net Pay (both), Levy (the dashboard), PRGF (the dashboard), Total MRA contributions (the dashboard), EDF (the dashboard), EDF (monthly) (the dashboard), Total (the dashboard).",
+      "why": "approved (rehearsal fix F4, 17 Oct 2026): the note on the names the dashboard and the payslip app look for (an export with nothing selected)"
+    },
+    {
+      "text": "text: This only matters if the file goes to the dashboard or the payslip app. You can still export.",
+      "why": "approved (rehearsal fix F4, 17 Oct 2026): the note on the names the dashboard and the payslip app look for, in the \"Export for PDF fill\" dialog"
+    },
+    {
+      "text": "text: The dashboard refuses a month without the names it needs, and the payslip app needs its own. Add or rename the columns under Global Columns or Company Columns, or send anyway.",
+      "why": "approved (rehearsal fix F4, 17 Oct 2026): the question before \"Send to dashboard\" when names are missing"
+    },
+    {
+      "text": "text: Send to the dashboard?",
+      "why": "approved (rehearsal fix F4, 17 Oct 2026): the question before \"Send to dashboard\" when names are missing"
+    },
+    {
+      "text": "text: Send anyway",
+      "why": "approved (rehearsal fix F4, 17 Oct 2026): the question before \"Send to dashboard\" when names are missing"
     }
   ],
   "removed": [
@@ -1702,6 +1754,16 @@
       "text": "text: + Add Employee",
       "why": "approved: Phase 3, D5: inside a dashboard that keeps the months, the month's table is not shown while the dashboard is locked (77, 83), nor to someone who is not an admin of the company (79); the base version shows its own page there",
       "onlyOn": ["77 embedded: locked, the month covered, what was typed NOT saved", "79 embedded: months of a company you are not an admin of", "83 embedded: opened while the dashboard is locked"]
+    },
+    {
+      "text": "text: Import 2 rows",
+      "why": "replaced (rehearsal fix F2, 17 Oct 2026): when the month already has employees, the import button says what it does (\"Update 6\", \"Add 2\", \"Update 2, add 1\"); an empty month still says \"Import N rows\"",
+      "onlyOn": ["11 import mapping (external file)", "11b import mapping (own export, recognised)", "11c import mapping (export from another company)"]
+    },
+    {
+      "text": "text: Import 6 rows",
+      "why": "replaced (rehearsal fix F2, 17 Oct 2026): when the month already has employees, the import button says what it does (\"Update 6\", \"Add 2\", \"Update 2, add 1\"); an empty month still says \"Import N rows\"",
+      "onlyOn": ["11 import mapping (external file)", "11b import mapping (own export, recognised)", "11c import mapping (export from another company)"]
     }
   ]
 }
