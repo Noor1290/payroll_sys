@@ -188,7 +188,9 @@ describe('Import from Excel', () => {
     return XLSX.write(workbook, { type: 'array', bookType: 'xlsx' })
   }
 
-  test('the app\'s own export is recognised: no mapping step, rows are added, duplicate IDs are flagged', async () => {
+  // Rehearsal fix F2 (17 Oct 2026, problem H4): until then the same employees were added again,
+  // each flagged "Duplicate ID", and a second import added a third copy.
+  test('the app\'s own export is recognised: no mapping step, the same employees are updated, not added again', async () => {
     const { context, page } = await openSeeded(app)
     const before = await readEmployeeTable(page)
     const file = await downloadExcel(page, 'values')
@@ -201,22 +203,20 @@ describe('Import from Excel', () => {
     // The preview shows the employees, not the title, header or TOTAL rows.
     const previewIds = await box.locator('tbody tr td:first-child').allTextContents()
     expect(previewIds).toEqual(['TST001', 'TST002', 'TST003'])
-    await box.getByRole('button', { name: 'Import 3 rows' }).click()
+    expect(await box.textContent()).toContain('This month already has 3 employees. People are matched by ID.')
+    await box.getByRole('button', { name: 'Update 3', exact: true }).click()
     await box.waitFor({ state: 'hidden' })
 
-    const after = await readEmployeeTable(page)
-    expect(after).toHaveLength(6)
-    // Each imported row shows exactly the figures of the row it came from.
-    expect(after.slice(3)).toEqual(before)
-    expect(after.slice(0, 3)).toEqual(before)
-    expect(await page.getByLabel('Duplicate ID').count()).toBe(6)
+    // Each employee is updated from their own row: the same figures, no copy, no duplicate.
+    expect(await readEmployeeTable(page)).toEqual(before)
+    expect(await page.getByLabel('Duplicate ID').count()).toBe(0)
 
-    // A second import adds again; nothing is replaced.
+    // A second import updates again; nothing is added.
     await chooseExcel(page, file.bytes, file.name)
-    await box.getByRole('button', { name: 'Import 3 rows' }).click()
+    await box.getByRole('button', { name: 'Update 3', exact: true }).click()
     await box.waitFor({ state: 'hidden' })
-    expect(await readEmployeeTable(page)).toHaveLength(9)
-    expect((await storedPeriod(page, A, '2026-09')).map((e) => e.values.id)).toEqual(['TST001', 'TST002', 'TST003', 'TST001', 'TST002', 'TST003', 'TST001', 'TST002', 'TST003'])
+    expect(await readEmployeeTable(page)).toEqual(before)
+    expect((await storedPeriod(page, A, '2026-09')).map((e) => e.values.id)).toEqual(['TST001', 'TST002', 'TST003'])
     await context.close()
   })
 
@@ -254,7 +254,8 @@ describe('Import from Excel', () => {
     expect(await chosen('Basic Salary')).toBe('— Skip —')
     await box.getByLabel('Basic Salary', { exact: true }).selectOption({ label: 'Salary' })
 
-    await box.getByRole('button', { name: 'Import 3 rows' }).click()
+    // New IDs in a month that has employees: added (since rehearsal fix F2 the button says so).
+    await box.getByRole('button', { name: 'Add 3', exact: true }).click()
     await box.waitFor({ state: 'hidden' })
 
     const rows = await readEmployeeTable(page)
@@ -298,11 +299,12 @@ describe('Import from Excel', () => {
     expect(await chosen('Basic Salary')).toBe('Basic Salary')
     expect(await chosen('Allowances')).toBe('Allowances')
     expect(await chosen('EDF')).toBe('EDF')
-    await box.getByRole('button', { name: 'Import 3 rows' }).click()
+    // The same IDs: the employees are updated, not added again (rehearsal fix F2).
+    await box.getByRole('button', { name: 'Update 3', exact: true }).click()
     await box.waitFor({ state: 'hidden' })
     const rows = await readEmployeeTable(page)
-    expect(rows).toHaveLength(6)
-    expect(rows[3]['New Basic']).toBe('18,750.00')
+    expect(rows).toHaveLength(3)
+    expect(rows[0]['New Basic']).toBe('18,750.00')
     await context.close()
   })
 
@@ -356,7 +358,7 @@ describe('Import from Excel', () => {
     const previewRow = await box.locator('tbody tr').first().locator('td').allTextContents()
     expect(previewRow.slice(0, 5)).toEqual(['TST201', 'Texty', 'empty', '18115', '635'])
     expect(await box.getByRole('alert').count()).toBe(0)
-    await box.getByRole('button', { name: 'Import 1 row' }).click()
+    await box.getByRole('button', { name: 'Add 1', exact: true }).click()
     await box.waitFor({ state: 'hidden' })
 
     const row = (await readEmployeeTable(page))[3]
@@ -381,7 +383,7 @@ describe('Import from Excel', () => {
     expect(previewRow[3]).toBe('n/a (not a number)')
     expect(previewRow[4]).toBe('100')
 
-    await box.getByRole('button', { name: 'Import 2 rows' }).click()
+    await box.getByRole('button', { name: 'Add 2', exact: true }).click()
     await box.waitFor({ state: 'hidden' })
 
     // Left blank - not 0 - and the rest of the row is imported normally.
