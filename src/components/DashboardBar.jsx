@@ -74,8 +74,10 @@ export default function DashboardBar({ company, access, onReload, onImport, mont
         ? 'saving'
         : 'saved'
 
-  // Closing or reloading with something not saved yet: the browser asks first.
+  // Closing or reloading with something not saved yet: the browser asks first. The dashboard is
+  // told too, so it asks before it reloads this app on a change of company (rehearsal fix F1).
   useEffect(() => {
+    window.PayrollHubBridge?.setUnsaved?.(state !== 'saved')
     if (state === 'saved') return
     const hold = (event) => event.preventDefault()
     window.addEventListener('beforeunload', hold)
