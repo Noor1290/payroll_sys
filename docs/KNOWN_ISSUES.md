@@ -1,7 +1,10 @@
 # Known issues
 
-Found during the visual redesign (October 2026) and deliberately **not fixed** on the
-`redesign` branch, which changes appearance only. Each one needs its own decision.
+Items 1 to 6 were found during the visual redesign (October 2026) and left unfixed on
+the `redesign` branch, which changed appearance only; later items were found during the
+migration and the backlog fixes. Each item says whether it is still open, fixed (with the
+date and the proving test) or obsolete. As of 17 October 2026: open are 1, 2, 8 and 9 (and
+the grand-total idea); 3, 4, 5 and 6 are fixed; 7 is obsolete.
 All evidence below uses the fake data in `tests/safetyNet/fixture.js`.
 
 ## 1. A total can differ by 0.01 from the sum of the figures shown beside it
