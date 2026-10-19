@@ -1,4 +1,4 @@
-import { describeTieredRule } from '../lib/tieredFormula'
+import { describeTieredRule, describeTierStop, tierStopsBeforeCap } from '../lib/tieredFormula'
 
 // Visual, no-code builder for tiered/conditional deduction rules: a base
 // column, any number of threshold tiers, and an optional cap. Generic by
@@ -36,6 +36,8 @@ export default function TieredFormulaBuilder({ availableColumns, baseKey, tiers,
   }
 
   const summary = baseColumn ? describeTieredRule(baseName, tiers, cap) : 'Pick a base value column to get started.'
+  // A cap that cuts off the tier: said, not refused (it may be meant).
+  const stop = baseColumn ? tierStopsBeforeCap({ tiers, cap }) : null
 
   return (
     <div className="space-y-4">
@@ -128,6 +130,11 @@ export default function TieredFormulaBuilder({ availableColumns, baseKey, tiers,
             placeholder="maximum amount"
             className="field num mt-2 w-40 text-right"
           />
+        )}
+        {stop && (
+          <p role="note" className="note note-warn mt-2">
+            {describeTierStop(baseName, stop)} {stop.tierCount === 1 ? "Did you mean 'From 0'?" : "Did you mean the last tier to start with 'From'?"}
+          </p>
         )}
       </div>
     </div>

@@ -7,6 +7,14 @@ import { SELECTABLE_CATEGORIES, DEFAULT_CATEGORY, labelColumnsForHelper } from '
 import { buildColumnSetupExport, buildColumnSetupFilename, downloadColumnSetup, parseColumnSetupFile } from '../lib/columnSetup'
 import { formatFormulaForDisplay } from '../lib/formulaEngine'
 import { OUTDATED_RULE_NOTES, outdatedTieredRule } from '../lib/outdatedRules'
+import { describeTierStop, tierStopsBeforeCap } from '../lib/tieredFormula'
+
+// A saved Tiered column whose cap cuts off the tier (see tierStopsBeforeCap).
+// Not one still on the old rule: its figures do not follow this yet.
+function tierStopOf(col) {
+  if (col.type !== 'formula' || col.builderMode !== 'tiered' || col.tieredKind === 'compare' || !col.tiered) return null
+  return outdatedTieredRule(col) ? null : tierStopsBeforeCap(col.tiered)
+}
 
 function CategorySection({ category, ownColumns, otherColumns, onEdit, onDelete, onDragStart, onDrop, draggingId, formulaLabels, readOnly }) {
   return (
@@ -62,6 +70,11 @@ function CategorySection({ category, ownColumns, otherColumns, onEdit, onDelete,
                   {col.name}
                   {outdatedTieredRule(col) && (
                     <span className="block max-w-72 text-xs font-normal text-warn">{OUTDATED_RULE_NOTES[outdatedTieredRule(col)]}</span>
+                  )}
+                  {tierStopOf(col) && (
+                    <span className="block max-w-72 text-xs font-normal text-warn">
+                      {describeTierStop(formulaLabels[col.tiered.baseKey] ?? 'the base value', tierStopOf(col))}
+                    </span>
                   )}
                 </td>
                 <td className="num px-4 py-2.5 text-xs text-muted">{col.key}</td>

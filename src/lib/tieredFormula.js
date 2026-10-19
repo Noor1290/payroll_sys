@@ -181,6 +181,38 @@ function uncoveredThresholds(tiers) {
   )
 }
 
+// A cap that cuts off the tier: with a cap, the tiers give 0% to every figure
+// from some point up, though a lower figure gets a rate, so the cap never
+// limits anything. Most often "Below X" meant "From 0" with the cap at X:
+// "Below 29,710 at 1%" + a cap of 29,710 gives 0 to anyone on 29,710 or more.
+// Returns { at, inclusive, tierCount } (0% for every figure from `at` up, `at`
+// itself included or not), or null. Not blocked on save: it may be meant.
+export function tierStopsBeforeCap({ tiers, cap }) {
+  if (!hasCapValue(cap) || tiers.length === 0 || isFlatRateWithCap(tiers, cap)) return null
+  const rateAt = (value) => Number(resolveMatchedTier(tiers, value)?.rate) || 0
+  const thresholds = [...new Set(tiers.map((t) => Number(t.threshold) || 0))].sort((a, b) => b - a)
+
+  // From the top down: the stretch above each threshold, then the threshold itself.
+  let from = null
+  for (let i = 0; i < thresholds.length; i++) {
+    const t = thresholds[i]
+    const above = i === 0 ? t + 1 : (t + thresholds[i - 1]) / 2
+    if (rateAt(above) !== 0) break
+    from = { at: t, inclusive: false }
+    if (rateAt(t) !== 0) break
+    from = { at: t, inclusive: true }
+    if (i === thresholds.length - 1 && rateAt(t - 1) === 0) return null // 0% everywhere
+  }
+  // Only when some figure from 0 up, below that point, gets a rate.
+  return from && from.at > 0 ? { ...from, tierCount: tiers.length } : null
+}
+
+// "Anyone with Gross Pay of 29,710 or more gets 0%, because the tier stops at 29,710."
+export function describeTierStop(baseName, stop) {
+  const who = stop.inclusive ? `of ${formatNum(stop.at)} or more` : `above ${formatNum(stop.at)}`
+  return `Anyone with ${baseName} ${who} gets 0%, because the ${stop.tierCount === 1 ? 'tier stops' : 'tiers stop'} at ${formatNum(stop.at)}.`
+}
+
 // Live, rule-level plain-language summary shown above the builder as the
 // user fills it in, e.g.
 // "If Basic Salary is below 50,000, apply 3%. If Basic Salary is equal to

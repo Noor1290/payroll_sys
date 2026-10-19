@@ -323,6 +323,25 @@ test('collect every visible string', async () => {
   await clickButton('+ Add Tier')
   await click(all('label').find((l) => /Cap \/ Ceiling/.test(textOf(l))).querySelector('input'))
   snap('24b add column (tiered, two tiers and a cap)')
+  {
+    // A cap that cuts off the tiers: "Below 10,000 at 1%" + "Below 29,710 at 2%", capped at 29,710.
+    // Found by their visible labels: the base version has no aria-labels here.
+    const section = (label) => all('label').find((l) => textOf(l).startsWith(label)).parentElement
+    const base = section('Base value column').querySelector('select')
+    await setValue(base, [...base.options].find((o) => o.textContent === 'Emoluments').value)
+    const [op1, op2] = section('Tiers').querySelectorAll('select')
+    const [amount1, rate1, amount2, rate2] = section('Tiers').querySelectorAll('input[type="number"]')
+    await setValue(op1, 'below')
+    await setValue(amount1, '10000')
+    await setValue(rate1, '1')
+    await setValue(op2, 'below')
+    await setValue(amount2, '29710')
+    await setValue(rate2, '2')
+    await setValue(section('Cap / Ceiling').querySelector('input[type="number"]'), '29710')
+    snap('24c add column (tiered, a cap that cuts off the tiers)')
+    await click(button('Remove'))
+    snap('24d add column (tiered, a cap that cuts off the tier)')
+  }
   await clickButton('Compare Two Columns')
   snap('25 add column (compare two columns)')
   await clickButton('Progressive Brackets')
@@ -482,6 +501,22 @@ test('collect every visible string', async () => {
     quiet.mockRestore()
     snapTopDialog(step)
   }
+
+  // ---------- A Tiered column saved with a cap that cuts off the tier ----------
+  seed()
+  {
+    const nsfTrap = globalColumns.map((c) =>
+      c.key === 'nsf'
+        ? { ...c, tiered: { ...c.tiered, tiers: [{ operator: 'below', threshold: '29710', rate: '1' }] }, formula: '(Math.min(emoluments, 29710)) * (emoluments < 29710 ? 0.01 : 0)', exemption: undefined }
+        : c
+    )
+    const stored = JSON.parse(localStorage.getItem('payroll_app_state_v1'))
+    localStorage.setItem('payroll_app_state_v1', JSON.stringify({ ...stored, globalColumns: nsfTrap }))
+  }
+  await start()
+  await vi.waitFor(() => expect(document.body.textContent).toContain('October 2026'))
+  await tab('Global Columns')
+  snap('20b global columns, NSF saved with a cap that cuts off the tier')
 
   // ---------- Clear this browser's data ----------
   // Only the dialogs: the base version has no such button, and there these steps record nothing.

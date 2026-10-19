@@ -1279,6 +1279,23 @@
     {
       "text": "text: The browser refused the change. This browser holds what it held before.",
       "why": "approved (Clear this browser's data): when the browser refuses the change"
+    },
+    {
+      "text": "text: Anyone with Emoluments of 29,710 or more gets 0%, because the tier stops at 29,710. Did you mean 'From 0'?",
+      "why": "approved (the NSF trap): the Tiered form, when a cap cuts off a single tier"
+    },
+    {
+      "text": "text: Anyone with Emoluments of 29,710 or more gets 0%, because the tiers stop at 29,710. Did you mean the last tier to start with 'From'?",
+      "why": "approved (the NSF trap): the Tiered form, when a cap cuts off several tiers"
+    },
+    {
+      "text": "text: Anyone with Emoluments of 29,710 or more gets 0%, because the tier stops at 29,710.",
+      "why": "approved (the NSF trap): the note in the column list for a column already saved that way"
+    },
+    {
+      "text": "text: If Emoluments is below 29,710, apply 2%. Capped at a maximum Emoluments value of 29,710.",
+      "why": "existing wording, not new: the tier summary as fixed in October 2026 (audit M2), on the step that builds the NSF trap; the base version described a single tier with a cap as a flat rate",
+      "onlyOn": ["24d add column (tiered, a cap that cuts off the tier)"]
     }
   ],
   "removed": [
@@ -1856,6 +1873,11 @@
       "text": "text: Import 6 rows",
       "why": "replaced (rehearsal fix F2, 17 Oct 2026): when the month already has employees, the import button says what it does (\"Update 6\", \"Add 2\", \"Update 2, add 1\"); an empty month still says \"Import N rows\"",
       "onlyOn": ["11 import mapping (external file)", "11b import mapping (own export, recognised)", "11c import mapping (export from another company)"]
+    },
+    {
+      "text": "text: 2% of Emoluments, up to a maximum of 29,710.",
+      "why": "not removed from the app: the base version's summary of a single tier with a cap, corrected in October 2026 (audit M2); only on the step that builds the NSF trap",
+      "onlyOn": ["24d add column (tiered, a cap that cuts off the tier)"]
     }
   ]
 }
