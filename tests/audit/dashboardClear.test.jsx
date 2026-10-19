@@ -2,8 +2,8 @@
 
 // "Clear the column setup…" inside a stand-in for the dashboard
 // (tests/helpers/fakeSetupHub.js): the column setup is exported first, CLEAR
-// is typed, and the identity fields, the Global columns and this company's
-// columns are saved in ONE save, one new revision of each with no columns.
+// is typed, and the Global columns and this company's columns (never the
+// identity fields) are saved in ONE save, one new revision of each with no columns.
 // Nothing is deleted: no month, no earlier revision, and Restore brings back
 // the identical setup. Not for someone who may not change the shared setup.
 // On its own, the app keeps its own "Clear this browser's data…". TEST data only.
@@ -141,7 +141,7 @@ describe('inside the dashboard, for an admin of every company using the Global c
     expect(saves().slice(savesBefore).map((m) => m.action)).toEqual(['save-shared'])
     expect(sharedNow().revision).toBe(2)
     expect(ownNow().revision).toBe(2)
-    expect(sharedNow().body).toEqual({ identityFields: [], idFieldKey: null, globalColumns: [] })
+    expect(sharedNow().body).toEqual({ identityFields: SHARED_1.identityFields, idFieldKey: SHARED_1.idFieldKey, globalColumns: [] })
     expect(ownNow().body).toEqual({ columns: [], customFields: OWN_1.customFields })
     // Nothing deleted: every earlier revision kept, every month still there.
     expect(hub.state.history.length).toBe(historyBefore + 2)
@@ -169,6 +169,22 @@ describe('inside the dashboard, for an admin of every company using the Global c
     expect(saves().length).toBe(savesBefore)
     expect(sharedNow().revision).toBe(1)
   })
+})
+
+test('the identity fields and their keys, and the ID field, are unchanged after Clear', async () => {
+  await startInDashboard()
+  catchDownloads()
+  await click(button('Clear the column setup…'))
+  await type(topDialog().querySelector('input'), 'CLEAR')
+  await click(button('Clear the column setup', topDialog()))
+  await vi.waitFor(() => expect(topDialog().textContent).toContain('Column setup cleared'))
+  expect(sharedNow().body.identityFields).toEqual(SHARED_1.identityFields)
+  expect(sharedNow().body.identityFields.map((f) => f.key)).toEqual(identityFields.map((f) => f.key))
+  expect(sharedNow().body.idFieldKey).toBe(idFieldKey)
+  // And on screen: the identity fields are still listed.
+  await click(button('OK', topDialog()))
+  await click(button('Global Columns'))
+  for (const f of identityFields) expect(text()).toContain(f.name)
 })
 
 describe('for someone who may not change the shared setup', () => {

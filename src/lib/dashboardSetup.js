@@ -625,12 +625,13 @@ export async function restoreSetupRevision(target, body) {
   return { ok: true, revision: item.revision }
 }
 
-// "Clear the column setup": the identity fields, the Global columns and the
-// selected company's own columns, all removed in ONE save (the shared setup
+// "Clear the column setup": the Global columns and the selected company's own
+// columns, removed in ONE save (the shared setup
 // with this company's setup in the same step, all or nothing): each gets one
 // new revision with no columns. Nothing is deleted from the database: every
 // earlier revision is kept, so History > Restore brings them back. No month
-// is touched. Only for someone who may change the shared setup (an admin of
+// is touched. The identity fields and the ID field are kept: they are not in
+// an "Export Column Setup" file, so they could not be imported back. Only for someone who may change the shared setup (an admin of
 // every company using it). The screen then shows it (read it with loadState).
 //   { ok: true }  |  { ok: false, code, error }
 export async function clearDashboardColumns() {
@@ -648,8 +649,6 @@ export async function clearDashboardColumns() {
   const clearedApp = { ...app, columns: [] }
   const next = {
     ...current,
-    identityFields: [],
-    idFieldKey: null,
     globalColumns: [],
     companies: current.companies.map((c) => (c.id === app.id ? clearedApp : c)),
   }

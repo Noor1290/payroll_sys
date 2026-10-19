@@ -1314,7 +1314,7 @@
       "why": "approved (Clear the column setup, inside the dashboard): the dialog's title and its button"
     },
     {
-      "text": "text: Removes the identity fields, the Global columns and the columns of Fake Co Ltd, in one save to the dashboard.",
+      "text": "text: Removes the Global columns and the columns of Fake Co Ltd, in one save to the dashboard. The identity fields are kept.",
       "why": "approved (Clear the column setup, inside the dashboard): the line under the title (the company's name)"
     },
     {

@@ -4,8 +4,8 @@ import Modal from './Modal'
 import { exportColumnSetupNow } from '../lib/columnSetup'
 import { clearDashboardColumns } from '../lib/dashboardSetup'
 
-// "Clear the column setup…", inside the dashboard only: the identity fields,
-// the Global columns and this company's columns, saved as one new revision of
+// "Clear the column setup…", inside the dashboard only: the Global columns and
+// this company's columns (the identity fields are kept), saved as one new revision of
 // each with no columns (clearDashboardColumns). Nothing is deleted: History >
 // Restore brings them back. No month is touched. "Clear everything" is not
 // offered here: a company is deleted in the dashboard (Settings > Danger zone).
@@ -41,7 +41,7 @@ export default function ClearColumnSetupModal({ firstExport, setup, companyName,
   return (
     <Modal
       title="Clear the column setup"
-      description={`Removes the identity fields, the Global columns and the columns of ${companyName}, in one save to the dashboard.`}
+      description={`Removes the Global columns and the columns of ${companyName}, in one save to the dashboard. The identity fields are kept.`}
       onClose={onClose}
       width="max-w-xl"
       icon={<Eraser />}
