@@ -1,7 +1,9 @@
 import { useRef, useState } from 'react'
-import { Info, Trash2, WalletCards, X } from 'lucide-react'
+import { Eraser, Info, Trash2, WalletCards, X } from 'lucide-react'
 import { useBackupControls } from './BackupControls'
+import ClearColumnSetupModal from './ClearColumnSetupModal'
 import ConfirmDialog from './ConfirmDialog'
+import { exportColumnSetupNow } from '../lib/columnSetup'
 import ThemeToggle from './ThemeToggle'
 import { useFocusScope } from '../hooks/useFocusScope'
 
@@ -26,7 +28,11 @@ export default function Sidebar({
   inDashboard = false,
   // Opened on its own after an import: what is here is not the dashboard's.
   browserOnly = false,
+  // Inside the dashboard (not the offline copy): "Clear the column setup…".
+  // { canChange, setup: { globalColumns, companyColumns, companyName, companyDetails } }, or null.
+  columnClear = null,
 }) {
+  const [clearing, setClearing] = useState(null) // { firstExport } | null
   const [renamingId, setRenamingId] = useState(null)
   const [renameValue, setRenameValue] = useState('')
   const [deletingCompany, setDeletingCompany] = useState(null)
@@ -149,6 +155,24 @@ export default function Sidebar({
 
         {backup.controls}
 
+        {columnClear && (
+          <div className="px-3 pt-1">
+            <button
+              // The column setup is exported by this click, before the dialog opens.
+              onClick={() => setClearing({ firstExport: exportColumnSetupNow(columnClear.setup) })}
+              disabled={!columnClear.canChange}
+              className="btn btn-ghost btn-sm w-full text-danger"
+              title="Save the column setup as a new revision with no columns, after exporting it"
+            >
+              <Eraser aria-hidden="true" />
+              Clear the column setup…
+            </button>
+            {!columnClear.canChange && (
+              <p className="mt-1 text-xs text-muted">Only someone who is an admin of every company using these Global columns can clear them.</p>
+            )}
+          </div>
+        )}
+
         <div className="flex items-center gap-2 p-3">
           {inDashboard ? (
             <span className="flex-1" />
@@ -162,6 +186,19 @@ export default function Sidebar({
       </aside>
 
       {backup.dialogs}
+
+      {clearing && columnClear && (
+        <ClearColumnSetupModal
+          firstExport={clearing.firstExport}
+          setup={columnClear.setup}
+          companyName={columnClear.setup.companyName}
+          onClose={() => setClearing(null)}
+          onCleared={(message) => {
+            setClearing(null)
+            onRestored(message)
+          }}
+        />
+      )}
 
       {deletingCompany && (
         <ConfirmDialog

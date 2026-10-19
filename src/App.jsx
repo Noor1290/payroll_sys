@@ -816,6 +816,14 @@ function PayrollApp({ onRestored, inDashboard = false, offline = null, onReloadD
         onDeleteCompany={handleDeleteCompany}
         onOpenDetails={setDetailsCompanyId}
         onRestored={onRestored}
+        columnClear={
+          inDashboard && activeCompany
+            ? {
+                canChange: Boolean(access?.canChange),
+                setup: { globalColumns, companyColumns: activeCompany.columns ?? [], companyName: activeCompany.name, companyDetails: activeCompany.details },
+              }
+            : null
+        }
         open={sidebarOpen}
         onClose={() => setSidebarOpen(false)}
       />

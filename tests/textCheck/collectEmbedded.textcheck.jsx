@@ -452,6 +452,42 @@ test('collect every visible string (inside the dashboard)', async () => {
     snapWording('95 embedded: the read-only copy, Employee Table (the cover)', cover)
   }
 
+  // ---------- Clear the column setup ----------
+  // Only the dialogs: the base version has no such button.
+  const KNOWS_CLEAR = fs.existsSync(path.join(SRC, 'components/ClearColumnSetupModal.jsx'))
+  if (KNOWS_CLEAR) {
+    // The exported files are named by the day: always the same day here.
+    vi.useFakeTimers({ toFake: ['Date'] })
+    vi.setSystemTime(new Date('2026-10-13T08:05:00.000Z'))
+    URL.createObjectURL = () => 'blob:fake'
+    URL.revokeObjectURL = () => {}
+    const anchorClick = vi.spyOn(HTMLAnchorElement.prototype, 'click').mockImplementation(() => {})
+    const openClear = async () => {
+      await startDashboard(attachedHub(), 'kept in the dashboard')
+      await click('Clear the column setup…')
+      const dialog = topDialog()
+      const input = dialog.querySelector('input')
+      await act(async () => {
+        Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, 'value').set.call(input, 'CLEAR')
+        input.dispatchEvent(new Event('input', { bubbles: true }))
+      })
+      return dialog
+    }
+    await openClear()
+    snapDialog('96 embedded: clear the column setup, exported and CLEAR typed')
+    await click('Clear the column setup', topDialog())
+    await vi.waitFor(() => expect(topDialog().textContent).toContain('Column setup cleared'))
+    snapDialog('96b embedded: column setup cleared')
+    await openClear()
+    setupHub.state.down = true
+    await click('Clear the column setup', topDialog())
+    await vi.waitFor(() => expect(topDialog().textContent).toContain('Nothing was cleared'), { timeout: 15000 })
+    snapDialog('96c embedded: column setup NOT cleared')
+    setupHub.state.down = false
+    anchorClick.mockRestore()
+    vi.useRealTimers()
+  }
+
   expect(OUT, 'TEXT_CHECK_OUT_EMBEDDED').toBeTruthy()
   fs.writeFileSync(OUT, JSON.stringify(collected, null, 2))
 }, 120000)

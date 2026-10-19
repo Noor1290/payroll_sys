@@ -625,6 +625,61 @@ export async function restoreSetupRevision(target, body) {
   return { ok: true, revision: item.revision }
 }
 
+// "Clear the column setup": the identity fields, the Global columns and the
+// selected company's own columns, all removed in ONE save (the shared setup
+// with this company's setup in the same step, all or nothing): each gets one
+// new revision with no columns. Nothing is deleted from the database: every
+// earlier revision is kept, so History > Restore brings them back. No month
+// is touched. Only for someone who may change the shared setup (an admin of
+// every company using it). The screen then shows it (read it with loadState).
+//   { ok: true }  |  { ok: false, code, error }
+export async function clearDashboardColumns() {
+  if (!company || !shared || !current) return fail('unavailable', 'The dashboard is not connected.')
+  if (status.state !== 'saved' || pendingKeyMoves().length > 0) {
+    return fail('busy', 'Changes on this screen are not saved yet. Wait until the bar says Saved, then clear.')
+  }
+  if (!shared.canChange) {
+    return fail('forbidden', 'Only someone who is an admin of every company using these Global columns can clear them.')
+  }
+  const item = selectedItem()
+  const app = selectedApp()
+  if (!item || !app) return fail('unavailable', 'The dashboard is not connected.')
+
+  const clearedApp = { ...app, columns: [] }
+  const next = {
+    ...current,
+    identityFields: [],
+    idFieldKey: null,
+    globalColumns: [],
+    companies: current.companies.map((c) => (c.id === app.id ? clearedApp : c)),
+  }
+  const sharedBody = sharedBodyOf(next)
+  const companyBody = companyBodyOf(clearedApp)
+  const changes = { sharedChanged: true, sharedBody, companies: [{ item, body: companyBody }] }
+  const sent = await sendHub({
+    action: 'save-shared',
+    brn: company.brn,
+    shared_setup_id: shared.id,
+    name: shared.name,
+    body: sharedBody,
+    expected_revision: shared.revision,
+    companies: [{ company_brn: item.brn, body: companyBody, expected_revision: item.revision }],
+  })
+  let outcome
+  if (sent.ok) {
+    confirmShared(sharedBody, sent.result.revision)
+    const saved = (sent.result.companies ?? []).find((c) => normaliseBrn(c.brn) === normaliseBrn(item.brn))
+    if (saved) confirmCompany(item, companyBody, saved.revision)
+    outcome = { ok: true }
+  } else {
+    outcome = uncertain(sent) ? await settle(sent, changes) : sent
+  }
+  if (!outcome.ok) return outcome
+  current = structuredClone(next)
+  publish()
+  return { ok: true }
+}
+
 // ---------- starting a company's setup in the dashboard ----------
 
 // For a dashboard company with no setup yet: the shared setups it could use,

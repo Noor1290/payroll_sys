@@ -77,6 +77,31 @@ export function downloadColumnSetup(exportObj, filename) {
   URL.revokeObjectURL(url)
 }
 
+// "Export Column Setup", downloaded now: the file's name, or null when the
+// download could not be started. What "Clear the column setup" does first.
+export function downloadColumnSetupNow(columns, scope, companyName, companyDetails) {
+  const filename = buildColumnSetupFilename(scope, companyName)
+  try {
+    downloadColumnSetup(buildColumnSetupExport(columns, scope, companyName, companyDetails), filename)
+    return filename
+  } catch (e) {
+    console.error('Failed to download the column setup:', e)
+    return null
+  }
+}
+
+// The two "Export Column Setup" files of the setup in use: the Global columns
+// and the selected company's own. What "Clear the column setup" downloads
+// first. Returns the names of the files downloaded, or null if either failed.
+export function exportColumnSetupNow({ globalColumns, companyColumns, companyName, companyDetails }) {
+  const files = [
+    downloadColumnSetupNow(globalColumns, 'global', companyName),
+    downloadColumnSetupNow(companyColumns, 'company', companyName, companyDetails),
+  ]
+  return files.every(Boolean) ? files : null
+}
+
+
 // Reads and validates a selected file as a column-setup export. Returns
 // { valid: true, scope, companyName, columns } or { valid: false, error }.
 export async function parseColumnSetupFile(file) {
