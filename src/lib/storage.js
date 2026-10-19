@@ -356,6 +356,54 @@ export function replaceBrowserData(entries) {
   }
 }
 
+// ---- Clearing this browser's copy ----------------------------------------
+// "Clear this browser's data…" (see BackupControls). Other apps can share this
+// browser's storage, so only these keys of this app's are ever removed, never
+// localStorage.clear():
+//   payroll_app_state_v1                 the setup and companies (columns only: just its columns)
+//   payroll_period_*                     every saved month, as the backup reads them (isOwnKey)
+//   payroll_dashboard_offline_v1         the offline copy of the dashboard's columns
+// Kept: payroll_app_state_v1_unreadable_* (what could not be read, kept by
+// startWithEmptySetup), the theme, and the dashboard's notes on this browser
+// (payroll_dashboard_prefs_v1, payroll_dashboard_imported_v1).
+
+export const OFFLINE_COPY_KEY = 'payroll_dashboard_offline_v1'
+
+const isRecord = (value) => value !== null && typeof value === 'object' && !Array.isArray(value)
+
+// Removes every column: the identity fields, the Global columns and each
+// company's own columns. Everything else in the setup (the companies, their
+// details) and every month stay exactly as stored.
+// Returns false when nothing was changed: the setup cannot be read, or the browser refused.
+export function clearColumns() {
+  const raw = localStorage.getItem(STORAGE_KEY)
+  if (!raw) return true
+  if (!readsAsObject(raw)) return false
+  const state = JSON.parse(raw)
+  const cleared = {
+    ...state,
+    identityFields: [],
+    idFieldKey: null,
+    globalColumns: [],
+    companies: Array.isArray(state.companies) ? state.companies.map((c) => (isRecord(c) ? { ...c, columns: [] } : c)) : state.companies,
+  }
+  try {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(cleared))
+    return true
+  } catch (e) {
+    console.error('Failed to clear the columns in localStorage:', e)
+    return false
+  }
+}
+
+// Removes the setup, every company, every month (everything the backup holds)
+// and the offline copy. The copies of what could not be read are kept.
+export function clearEverything() {
+  for (const key of ownKeys()) localStorage.removeItem(key)
+  localStorage.removeItem(OFFLINE_COPY_KEY)
+  return true
+}
+
 // ---- Notes kept next to this browser's copy -----------------------------
 // Small JSON objects the dashboard store keeps in this browser (its display
 // preferences, and what was imported where). No payroll value, and not part

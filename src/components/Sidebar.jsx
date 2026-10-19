@@ -30,7 +30,7 @@ export default function Sidebar({
   const [renamingId, setRenamingId] = useState(null)
   const [renameValue, setRenameValue] = useState('')
   const [deletingCompany, setDeletingCompany] = useState(null)
-  const backup = useBackupControls(onRestored, { allowRestore: !inDashboard })
+  const backup = useBackupControls(onRestored, { allowRestore: !inDashboard, allowClear: !inDashboard })
 
   // Keyboard, only while it is open as a drawer at narrow widths: focus
   // moves in, Tab stays inside, Escape closes it, focus returns to the menu button.

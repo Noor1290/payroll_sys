@@ -29,6 +29,8 @@ Everything the app holds is in this browser only. At the foot of the company lis
 - **Back up** saves one file, `payroll-backup-YYYY-MM-DD.json`, with the setup (identity fields, Global columns), every company with its columns and details, and every saved month of every company, exactly as stored. The theme is not in it.
 - **Restore** puts such a file back. It first shows what is in the file and what is in the browser now, and replaces nothing until "Replace with this backup" is chosen. Restoring replaces everything the app keeps in this browser; it is all or nothing, so a restore the browser refuses (storage full) leaves what was there.
 
+- **Clear this browser's data…** starts afresh. It is there only when the app is opened on its own, never inside the dashboard. It first downloads a Back up file; nothing can be cleared until it has. Then "Clear columns only" (the identity fields, the Global columns and every company's columns; companies, their details and the months stay) or "Clear everything" (also every company and every month, and the dashboard's offline copy, which the dashboard makes again), confirmed by typing CLEAR. Only this app's keys are removed (listed in `src/lib/storage.js`); the copies of data that could not be read (`payroll_app_state_v1_unreadable_*`), the theme and other apps' data are always kept. "Restore" with the downloaded file brings back what was cleared.
+
 A backup file holds real payroll figures: keep it where the payroll itself is kept, and never in this repository.
 
 ## Where the data is read and saved

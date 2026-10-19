@@ -65,7 +65,7 @@ const STALE = fail('stale', 'Someone else changed the column setup in the dashbo
 // BRN), for when the dashboard cannot be reached: offered read-only
 // (offlineCopy.js). The shared setup and the company's own columns only; NEVER
 // a month, a salary or a national ID.
-export const OFFLINE_KEY = 'payroll_dashboard_offline_v1'
+export const OFFLINE_KEY = browserStore.OFFLINE_COPY_KEY
 export const readOfflineNote = () => browserStore.readNote(OFFLINE_KEY)
 export const writeOfflineNote = (copies) => browserStore.writeNote(OFFLINE_KEY, copies)
 

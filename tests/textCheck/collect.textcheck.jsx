@@ -483,6 +483,90 @@ test('collect every visible string', async () => {
     snapTopDialog(step)
   }
 
+  // ---------- Clear this browser's data ----------
+  // Only the dialogs: the base version has no such button, and there these steps record nothing.
+  // The backup file is named by the day it is saved on: always the same day here.
+  vi.useFakeTimers({ toFake: ['Date'] })
+  vi.setSystemTime(new Date('2026-10-13T08:05:00.000Z'))
+  const realCreateObjectURL = URL.createObjectURL
+  const realRevokeObjectURL = URL.revokeObjectURL
+  const anchorClick = vi.spyOn(HTMLAnchorElement.prototype, 'click').mockImplementation(() => {})
+  URL.revokeObjectURL = () => {}
+  async function openClear({ downloads = true } = {}) {
+    URL.createObjectURL = downloads
+      ? () => 'blob:fake'
+      : () => {
+          throw new Error('No room for the file.')
+        }
+    await start()
+    await vi.waitFor(() => expect(document.body.textContent).toContain('October 2026'))
+    const opener = all('button').find((b) => textOf(b) === "Clear this browser's data…")
+    if (!opener) return null
+    await click(opener)
+    return all('[role="dialog"]').pop()
+  }
+  async function chooseAndType(dialogEl, choice) {
+    await click([...dialogEl.querySelectorAll('label')].find((l) => textOf(l).startsWith(choice)).querySelector('input'))
+    await setValue(dialogEl.querySelector('input:not([type="radio"])'), 'CLEAR')
+  }
+
+  seed()
+  await openClear()
+  snapTopDialog("66 clear this browser's data, backup downloaded")
+  seed()
+  {
+    const box = await openClear()
+    if (box) await chooseAndType(box, 'Clear columns only')
+  }
+  snapTopDialog("66b clear this browser's data, columns only chosen and CLEAR typed")
+  seed()
+  {
+    const box = await openClear()
+    if (box) await chooseAndType(box, 'Clear everything')
+  }
+  snapTopDialog("66c clear this browser's data, everything chosen and CLEAR typed")
+  seed()
+  {
+    const quiet = vi.spyOn(console, 'error').mockImplementation(() => {})
+    await openClear({ downloads: false })
+    quiet.mockRestore()
+  }
+  snapTopDialog("66d clear this browser's data, the backup could not be downloaded")
+  for (const [step, choice, button] of [
+    ['67 columns cleared', 'Clear columns only', 'Clear columns'],
+    ['67b everything cleared', 'Clear everything', 'Clear everything'],
+  ]) {
+    seed()
+    const box = await openClear()
+    if (box) {
+      await chooseAndType(box, choice)
+      await click([...box.querySelectorAll('button')].find((b) => textOf(b) === button))
+    }
+    snapTopDialog(step)
+  }
+  // The browser refuses to store the setup without its columns.
+  seed()
+  {
+    const box = await openClear()
+    if (box) {
+      await chooseAndType(box, 'Clear columns only')
+      const realSetItem = Storage.prototype.setItem
+      const refusing = vi.spyOn(Storage.prototype, 'setItem').mockImplementation(function (key, value) {
+        if (String(key).startsWith('payroll_')) throw new DOMException('The quota has been exceeded.', 'QuotaExceededError')
+        return realSetItem.call(this, key, value)
+      })
+      const quiet = vi.spyOn(console, 'error').mockImplementation(() => {})
+      await click([...box.querySelectorAll('button')].find((b) => textOf(b) === 'Clear columns'))
+      refusing.mockRestore()
+      quiet.mockRestore()
+    }
+  }
+  snapTopDialog('67c nothing was cleared (storage full)')
+  anchorClick.mockRestore()
+  URL.createObjectURL = realCreateObjectURL
+  URL.revokeObjectURL = realRevokeObjectURL
+  vi.useRealTimers()
+
   // ---------- A save the browser refuses ----------
   // Only the dialog: the base version has none and says nothing.
   seed()

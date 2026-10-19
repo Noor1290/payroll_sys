@@ -10,7 +10,7 @@
 // Nothing is recalculated or tidied on the way out or on the way in: the
 // file holds what is stored, and a restore stores what the file holds.
 
-import { BROWSER_PERIOD_KEY_PREFIX, BROWSER_STATE_KEY, readBrowserData, replaceBrowserData } from './storage'
+import { BROWSER_PERIOD_KEY_PREFIX, BROWSER_STATE_KEY, clearColumns, clearEverything, readBrowserData, replaceBrowserData } from './storage'
 
 // Saved setup in this browser that cannot be read (see storage.js): like the
 // backup, about the browser's own copy, so the screens reach it from here.
@@ -73,6 +73,19 @@ export function downloadBackup(backup, filename) {
   a.click()
   document.body.removeChild(a)
   URL.revokeObjectURL(url)
+}
+
+// The backup, downloaded now: what "Clear this browser's data…" does first.
+// Returns the file's name, or null when the download could not be started.
+export function downloadBackupNow(now = new Date()) {
+  const name = buildBackupFilename(now)
+  try {
+    downloadBackup(buildBackup(now), name)
+    return name
+  } catch (e) {
+    console.error('Failed to download the backup:', e)
+    return null
+  }
 }
 
 function checkState(state) {
@@ -212,4 +225,16 @@ export function restoreBackup(backup) {
   if (backup.state !== null) entries[BROWSER_STATE_KEY] = JSON.stringify(backup.state)
   for (const [key, period] of Object.entries(backup.periods)) entries[key] = JSON.stringify(period)
   return replaceBrowserData(entries)
+}
+
+// "Clear this browser's data…": what = 'columns' (the columns only) or
+// 'everything'; see clearColumns and clearEverything in storage.js for the
+// keys each one removes. Only on its own: inside the dashboard the columns are
+// the dashboard's, so this refuses and touches nothing (it never reaches the
+// dashboard's database in any case). Returns true when cleared.
+export function clearBrowserData(what) {
+  if (globalThis.window?.PayrollHubBridge?.isEmbedded?.()) return false
+  if (what === 'columns') return clearColumns()
+  if (what === 'everything') return clearEverything()
+  return false
 }

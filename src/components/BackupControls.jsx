@@ -1,12 +1,14 @@
 import { useRef, useState } from 'react'
-import { Download, HardDriveDownload, TriangleAlert, Upload } from 'lucide-react'
+import { Download, Eraser, HardDriveDownload, TriangleAlert, Upload } from 'lucide-react'
 import BackupHoldings from './BackupHoldings'
 import BackupMessage from './BackupMessage'
+import ClearBrowserDataModal from './ClearBrowserDataModal'
 import Modal from './Modal'
 import {
   buildBackup,
   buildBackupFilename,
   downloadBackup,
+  downloadBackupNow,
   formatSavedAt,
   parseBackupFile,
   restoreBackup,
@@ -26,10 +28,14 @@ import {
 // Inside the dashboard there is no Restore (`allowRestore` false): the setup
 // on screen is the dashboard's, and a restore would only replace this
 // browser's own copy behind it. "Back up" stays: the import needs it first.
-export function useBackupControls(onRestored, { allowRestore = true } = {}) {
+//
+// "Clear this browser's data…" only where `allowClear` (the company list, on
+// its own): never inside the dashboard, where the columns are in its database.
+export function useBackupControls(onRestored, { allowRestore = true, allowClear = false } = {}) {
   const fileInputRef = useRef(null)
   const [pending, setPending] = useState(null) // { fileName, backup, inFile, inBrowser } | null
   const [message, setMessage] = useState(null) // { title, description, tone } | null
+  const [clearing, setClearing] = useState(null) // { firstBackup } | null
 
   function handleBackUp() {
     const now = new Date()
@@ -100,6 +106,17 @@ export function useBackupControls(onRestored, { allowRestore = true } = {}) {
           </button>
         )}
       </div>
+      {allowRestore && allowClear && (
+        <button
+          // The backup is downloaded by this click, before the dialog opens.
+          onClick={() => setClearing({ firstBackup: downloadBackupNow() })}
+          className="btn btn-ghost btn-sm mt-2 w-full text-danger"
+          title="Remove what Payroll keeps in this browser, after saving a backup"
+        >
+          <Eraser aria-hidden="true" />
+          Clear this browser's data…
+        </button>
+      )}
     </div>
   )
 
@@ -142,6 +159,25 @@ export function useBackupControls(onRestored, { allowRestore = true } = {}) {
             </button>
           </div>
         </Modal>
+      )}
+
+      {clearing && (
+        <ClearBrowserDataModal
+          firstBackup={clearing.firstBackup}
+          onClose={() => setClearing(null)}
+          onCleared={(done) => {
+            setClearing(null)
+            onRestored(done)
+          }}
+          onRefused={() => {
+            setClearing(null)
+            setMessage({
+              title: 'Nothing was cleared',
+              description: 'The browser refused the change. This browser holds what it held before.',
+              tone: 'danger',
+            })
+          }}
+        />
       )}
 
       {message && <BackupMessage {...message} onClose={() => setMessage(null)} />}

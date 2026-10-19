@@ -108,6 +108,9 @@ describe('inside a dashboard that keeps the column setup', () => {
     const inside = appFrame(page)
     expect(await readEmployeeTable(inside)).toEqual(figuresBefore)
     expect(await payrollStorage(inside)).toEqual(storedBefore)
+    // "Clear this browser's data…" is not offered here: the columns are the dashboard's.
+    await frame.getByRole('button', { name: 'Back up', exact: true }).waitFor()
+    expect(await frame.getByRole('button', { name: "Clear this browser's data…" }).count()).toBe(0)
 
     // A Global column added here...
     await frame.getByRole('button', { name: 'Global Columns', exact: true }).click()

@@ -212,3 +212,120 @@ describe('Restore', () => {
     }
   })
 })
+
+describe("Clear this browser's data", () => {
+  // Another app at the same address, the rescue copy of unreadable data, and the offline copy.
+  const OTHERS = {
+    'other-app_settings': '{"keep":true}',
+    'payroll_app_state_v1_unreadable_2026-10-16T09:00:00.000Z': '{"companies": [ damaged',
+  }
+  const OFFLINE_KEY = 'payroll_dashboard_offline_v1'
+  const allStorage = (page) =>
+    page.evaluate(() => Object.fromEntries(Object.keys(localStorage).sort().map((key) => [key, localStorage.getItem(key)])))
+  const notPayroll = (stored) => Object.fromEntries(Object.entries(stored).filter(([key]) => key !== STATE_KEY && !key.startsWith('payroll_period_')))
+
+  async function openWithOthers() {
+    const opened = await openSeeded(app, twoCompaniesThreeMonths())
+    await opened.page.evaluate(
+      ([others, offlineKey]) => {
+        for (const [key, text] of Object.entries(others)) localStorage.setItem(key, text)
+        localStorage.setItem(offlineKey, '{"TEST-BRN-A":{"brn":"TEST-BRN-A","label":"TEST Co A","loadedAt":"2026-10-15T18:22:00.000Z"}}')
+      },
+      [OTHERS, OFFLINE_KEY]
+    )
+    const errors = []
+    opened.page.on('pageerror', (e) => errors.push(e.message))
+    return { ...opened, errors }
+  }
+
+  // Opens the dialog (which downloads the backup), chooses, types CLEAR and clears.
+  async function clearThrough(page, choice) {
+    const file = await download(page, () => page.getByRole('button', { name: "Clear this browser's data…" }).click())
+    const box = dialog(page, "Clear this browser's data")
+    await box.waitFor()
+    expect(await box.innerText()).toContain(`A backup of everything here was downloaded: ${file.name}.`)
+    expect(await box.getByRole('button', { name: 'Clear', exact: true }).isDisabled()).toBe(true)
+    await box.getByRole('radio', { name: new RegExp(`^${choice}`) }).check()
+    const confirmBox = box.getByLabel('3. Type CLEAR to confirm')
+    await confirmBox.fill('clear')
+    const button = box.getByRole('button', { name: choice === 'Clear everything' ? 'Clear everything' : 'Clear columns', exact: true })
+    expect(await button.isDisabled()).toBe(true)
+    await confirmBox.fill('CLEAR')
+    await button.click()
+    return file
+  }
+
+  async function restoreFrom(page, file) {
+    await chooseBackup(page, file)
+    await dialog(page, 'Restore this backup?').getByRole('button', { name: 'Replace with this backup', exact: true }).click()
+    const done = dialog(page, 'Backup restored')
+    await done.waitFor()
+    await done.getByRole('button', { name: 'OK', exact: true }).click()
+  }
+
+  test('"Clear everything": the normal empty start, other keys untouched, and Restore from the downloaded file brings it all back', async () => {
+    const { context, page, errors, outsideRequests } = await openWithOthers()
+    try {
+      const original = await payrollStorage(page)
+      const before = await allStorage(page)
+
+      const file = await clearThrough(page, 'Clear everything')
+      const done = dialog(page, "This browser's data cleared")
+      await done.waitFor()
+      await done.getByRole('button', { name: 'OK', exact: true }).click()
+      await page.getByText('No companies yet.').waitFor()
+
+      // Only the app's empty start is stored (as on a first visit); the offline copy is gone; the rest is untouched.
+      const after = await allStorage(page)
+      expect(Object.keys(await payrollStorage(page))).toEqual([STATE_KEY])
+      expect(JSON.parse(after[STATE_KEY]).companies).toEqual([])
+      const { [OFFLINE_KEY]: offline, ...othersBefore } = notPayroll(before)
+      expect(offline).toBeTruthy()
+      expect(notPayroll(after)).toEqual(othersBefore)
+      expect(errors).toEqual([])
+
+      // The downloaded file is the whole backup, and Restore brings it back identically.
+      expect(JSON.parse(file.bytes.toString('utf8')).periods).toEqual(twoCompaniesThreeMonths().periods)
+      await restoreFrom(page, file)
+      expect(await payrollStorage(page)).toEqual(original)
+      expect(notPayroll(await allStorage(page))).toEqual(othersBefore)
+      await page.getByRole('button', { name: 'TEST Co B', exact: true }).waitFor()
+      expect(errors).toEqual([])
+      expect(outsideRequests).toEqual([])
+    } finally {
+      await context.close()
+    }
+  })
+
+  test('"Clear columns only": companies and months kept, columns gone, and Restore brings the columns back identically', async () => {
+    const { context, page, errors } = await openWithOthers()
+    try {
+      const original = await payrollStorage(page)
+      const before = await allStorage(page)
+
+      const file = await clearThrough(page, 'Clear columns only')
+      const done = dialog(page, 'Columns cleared')
+      await done.waitFor()
+      await done.getByRole('button', { name: 'OK', exact: true }).click()
+      await page.getByRole('button', { name: 'TEST Co B', exact: true }).waitFor()
+
+      const state = await storedState(page)
+      expect(state.identityFields).toEqual([])
+      expect(state.globalColumns).toEqual([])
+      expect(state.companies.map((c) => [c.name, c.columns, c.details])).toEqual(
+        JSON.parse(original[STATE_KEY]).companies.map((c) => [c.name, [], c.details])
+      )
+      const after = await allStorage(page)
+      expect(Object.keys(after)).toEqual(Object.keys(before))
+      for (const key of Object.keys(before).filter((k) => k !== STATE_KEY)) expect([key, after[key]]).toEqual([key, before[key]])
+      expect(errors).toEqual([])
+
+      await restoreFrom(page, file)
+      expect(await payrollStorage(page)).toEqual(original)
+      expect(notPayroll(await allStorage(page))).toEqual(notPayroll(before))
+      expect(errors).toEqual([])
+    } finally {
+      await context.close()
+    }
+  })
+})

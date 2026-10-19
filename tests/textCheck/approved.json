@@ -286,13 +286,13 @@
     },
     {
       "text": "text: Cancel",
-      "why": "existing wording, not new: the Cancel button of the new \"Change this field's key?\" question, which the base version does not have; and the same button in the new backup dialogs (migration plan step 0a), which the base version does not have; also on the Phase 2 dashboard screens, where it is the same control or the company's name; also on the Phase 3 screens (months kept in the dashboard), where it is the same control or wording; also on the Phase 3 follow-up screens (History, the read-only offline copy), where it is the same control or wording; also on the \"Send to the dashboard?\" question (rehearsal fix F4), where it is the same control",
-      "onlyOn": ["57 change identity field key confirm (the ID field, values in saved months)", "58 change identity field key confirm (no saved values)", "59 restore a backup, what is in the file and in the browser", "59b restore a backup, a file that does not say when it was saved", "66 embedded: company details from the dashboard", "72 embedded: import, backup first", "73 embedded: import, what it will do", "80 embedded: import months, backup first", "81 embedded: import months, what it will do", "85 embedded: History of the Global columns, restore asked", "90 embedded: History of a month, restore asked", "60b embedded: send, asked first"]
+      "why": "existing wording, not new: the Cancel button of the new \"Change this field's key?\" question, which the base version does not have; and the same button in the new backup dialogs (migration plan step 0a), which the base version does not have; also on the Phase 2 dashboard screens, where it is the same control or the company's name; also on the Phase 3 screens (months kept in the dashboard), where it is the same control or wording; also on the Phase 3 follow-up screens (History, the read-only offline copy), where it is the same control or wording; also on the \"Send to the dashboard?\" question (rehearsal fix F4), where it is the same control; also in the \"Clear this browser's data\" dialog, where it is the same control",
+      "onlyOn": ["57 change identity field key confirm (the ID field, values in saved months)", "58 change identity field key confirm (no saved values)", "59 restore a backup, what is in the file and in the browser", "59b restore a backup, a file that does not say when it was saved", "66 embedded: company details from the dashboard", "72 embedded: import, backup first", "73 embedded: import, what it will do", "80 embedded: import months, backup first", "81 embedded: import months, what it will do", "85 embedded: History of the Global columns, restore asked", "90 embedded: History of a month, restore asked", "60b embedded: send, asked first", "66 clear this browser's data, backup downloaded", "66b clear this browser's data, columns only chosen and CLEAR typed", "66c clear this browser's data, everything chosen and CLEAR typed", "66d clear this browser's data, the backup could not be downloaded"]
     },
     {
       "text": "aria-label: Close",
-      "why": "existing wording, not new: the close button of the new \"Change this field's key?\" question, which the base version does not have; and the same button in the new backup dialogs (migration plan step 0a), which the base version does not have; also on the Phase 2 dashboard screens, where it is the same control or the company's name; also on the Phase 3 screens (months kept in the dashboard), where it is the same control or wording; also on the Phase 3 follow-up screens (History, the read-only offline copy), where it is the same control or wording; also on the \"Send to the dashboard?\" question (rehearsal fix F4), where it is the same control",
-      "onlyOn": ["57 change identity field key confirm (the ID field, values in saved months)", "58 change identity field key confirm (no saved values)", "59 restore a backup, what is in the file and in the browser", "59b restore a backup, a file that does not say when it was saved", "60 backup restored", "61 restore, not a backup file", "61b restore, a backup of another version", "61c restore, a damaged backup", "61d restore, an empty backup", "62 backup not restored, storage full", "62b backup not restored, earlier data could not be put back", "63 this change was NOT saved (storage full)", "66 embedded: company details from the dashboard", "72 embedded: import, backup first", "73 embedded: import, what it will do", "74 embedded: import, done", "80 embedded: import months, backup first", "81 embedded: import months, what it will do", "82 embedded: import months, done", "84 embedded: History of the Global columns, an earlier version", "85 embedded: History of the Global columns, restore asked", "86 embedded: History of the Global columns, restored", "87 embedded: History of the Global columns, the months could not be checked (locked)", "88 embedded: History of a company's columns, the version in use, not an admin", "89 embedded: History of a month, an earlier version", "90 embedded: History of a month, restore asked", "91 embedded: History of a month, only the record of a save kept", "92 embedded: History of a month, the dashboard locked", "60b embedded: send, asked first"]
+      "why": "existing wording, not new: the close button of the new \"Change this field's key?\" question, which the base version does not have; and the same button in the new backup dialogs (migration plan step 0a), which the base version does not have; also on the Phase 2 dashboard screens, where it is the same control or the company's name; also on the Phase 3 screens (months kept in the dashboard), where it is the same control or wording; also on the Phase 3 follow-up screens (History, the read-only offline copy), where it is the same control or wording; also on the \"Send to the dashboard?\" question (rehearsal fix F4), where it is the same control; also in the \"Clear this browser's data\" dialog and its messages, where it is the same control",
+      "onlyOn": ["57 change identity field key confirm (the ID field, values in saved months)", "58 change identity field key confirm (no saved values)", "59 restore a backup, what is in the file and in the browser", "59b restore a backup, a file that does not say when it was saved", "60 backup restored", "61 restore, not a backup file", "61b restore, a backup of another version", "61c restore, a damaged backup", "61d restore, an empty backup", "62 backup not restored, storage full", "62b backup not restored, earlier data could not be put back", "63 this change was NOT saved (storage full)", "66 embedded: company details from the dashboard", "72 embedded: import, backup first", "73 embedded: import, what it will do", "74 embedded: import, done", "80 embedded: import months, backup first", "81 embedded: import months, what it will do", "82 embedded: import months, done", "84 embedded: History of the Global columns, an earlier version", "85 embedded: History of the Global columns, restore asked", "86 embedded: History of the Global columns, restored", "87 embedded: History of the Global columns, the months could not be checked (locked)", "88 embedded: History of a company's columns, the version in use, not an admin", "89 embedded: History of a month, an earlier version", "90 embedded: History of a month, restore asked", "91 embedded: History of a month, only the record of a save kept", "92 embedded: History of a month, the dashboard locked", "60b embedded: send, asked first", "66 clear this browser's data, backup downloaded", "66b clear this browser's data, columns only chosen and CLEAR typed", "66c clear this browser's data, everything chosen and CLEAR typed", "66d clear this browser's data, the backup could not be downloaded", "67 columns cleared", "67b everything cleared", "67c nothing was cleared (storage full)"]
     },
     {
       "text": "text: 1 item that could not be read, kept as it is",
@@ -360,8 +360,8 @@
     },
     {
       "text": "text: OK",
-      "why": "existing wording, not new: a button of the new backup dialogs (migration plan step 0a), which the base version does not have",
-      "onlyOn": ["60 backup restored", "61 restore, not a backup file", "61b restore, a backup of another version", "61c restore, a damaged backup", "61d restore, an empty backup", "62 backup not restored, storage full", "62b backup not restored, earlier data could not be put back", "63 this change was NOT saved (storage full)"]
+      "why": "existing wording, not new: a button of the new backup dialogs (migration plan step 0a), which the base version does not have; also in the messages after \"Clear this browser's data\", where it is the same control",
+      "onlyOn": ["60 backup restored", "61 restore, not a backup file", "61b restore, a backup of another version", "61c restore, a damaged backup", "61d restore, an empty backup", "62 backup not restored, storage full", "62b backup not restored, earlier data could not be put back", "63 this change was NOT saved (storage full)", "67 columns cleared", "67b everything cleared", "67c nothing was cleared (storage full)"]
     },
     {
       "text": "text: Replace with this backup",
@@ -1187,6 +1187,98 @@
     {
       "text": "text: Send anyway",
       "why": "approved (rehearsal fix F4, 17 Oct 2026): the question before \"Send to dashboard\" when names are missing"
+    },
+    {
+      "text": "text: Clear this browser's data…",
+      "why": "approved (Clear this browser's data): the button under Back up and Restore, on its own only"
+    },
+    {
+      "text": "title: Remove what Payroll keeps in this browser, after saving a backup",
+      "why": "approved (Clear this browser's data): the tooltip of that button"
+    },
+    {
+      "text": "text: Clear this browser's data",
+      "why": "approved (Clear this browser's data): the title of its dialog"
+    },
+    {
+      "text": "text: Removes what Payroll keeps in this browser, and nothing else.",
+      "why": "approved (Clear this browser's data): the line under the dialog's title"
+    },
+    {
+      "text": "text: 1. A backup first",
+      "why": "approved (Clear this browser's data): the dialog's first step"
+    },
+    {
+      "text": "text: A backup of everything here was downloaded: payroll-backup-2026-10-13.json. \"Restore\" with that file brings it all back.",
+      "why": "approved (Clear this browser's data): after the backup the dialog downloads first (the date is the day it is saved; fixed in the text check)"
+    },
+    {
+      "text": "text: Download again",
+      "why": "approved (Clear this browser's data): button, the same backup downloaded again"
+    },
+    {
+      "text": "text: The backup could not be downloaded, so nothing can be cleared.",
+      "why": "approved (Clear this browser's data): when the first backup could not be downloaded"
+    },
+    {
+      "text": "text: 2. What to clear",
+      "why": "approved (Clear this browser's data): the dialog's second step"
+    },
+    {
+      "text": "aria-label: What to clear",
+      "why": "approved (Clear this browser's data): screen-reader name of the two choices"
+    },
+    {
+      "text": "text: Clear columns only",
+      "why": "approved (Clear this browser's data): choice (a)"
+    },
+    {
+      "text": "text: Removes the identity fields, the Global columns and every company's Company columns. Companies, company details and months are kept, but their calculated figures will be empty until columns exist again.",
+      "why": "approved (Clear this browser's data): what choice (a) removes and keeps"
+    },
+    {
+      "text": "text: Clear everything",
+      "why": "approved (Clear this browser's data): choice (b), and its button"
+    },
+    {
+      "text": "text: Removes the columns, every company with its details, and every month. The offline copy of the dashboard's columns is removed too; it is made again the next time the dashboard opens. Rescue copies of data that could not be read are kept.",
+      "why": "approved (Clear this browser's data): what choice (b) removes and keeps"
+    },
+    {
+      "text": "text: 3. Type CLEAR to confirm",
+      "why": "approved (Clear this browser's data): the dialog's third step, the label of its text box"
+    },
+    {
+      "text": "text: Clear",
+      "why": "approved (Clear this browser's data): the button before a choice is made (disabled)"
+    },
+    {
+      "text": "text: Clear columns",
+      "why": "approved (Clear this browser's data): the button for choice (a)"
+    },
+    {
+      "text": "text: Columns cleared",
+      "why": "approved (Clear this browser's data): the message after choice (a)"
+    },
+    {
+      "text": "text: Companies, company details and months are kept. \"Restore\" with the backup file brings the columns back.",
+      "why": "approved (Clear this browser's data): the message after choice (a)"
+    },
+    {
+      "text": "text: This browser's data cleared",
+      "why": "approved (Clear this browser's data): the message after choice (b)"
+    },
+    {
+      "text": "text: \"Restore\" with the backup file brings it all back.",
+      "why": "approved (Clear this browser's data): the message after choice (b)"
+    },
+    {
+      "text": "text: Nothing was cleared",
+      "why": "approved (Clear this browser's data): when the browser refuses the change"
+    },
+    {
+      "text": "text: The browser refused the change. This browser holds what it held before.",
+      "why": "approved (Clear this browser's data): when the browser refuses the change"
     }
   ],
   "removed": [
