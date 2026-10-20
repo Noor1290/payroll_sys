@@ -2,7 +2,7 @@ import { useState } from 'react'
 import IdentityFieldFormModal from './IdentityFieldFormModal'
 import ConfirmDialog from './ConfirmDialog'
 
-// Manages the global set of identity fields (always leftmost, text or a date,
+// Manages the global set of identity fields (always leftmost, plain text or a date,
 // shared by every company) and which one is designated the "ID field" used
 // for duplicate detection on import.
 export default function IdentityFieldsManager({
@@ -44,7 +44,7 @@ export default function IdentityFieldsManager({
         <div className="min-w-0">
           <h3 className="text-base font-semibold text-fg">Identity Fields</h3>
           <p className="mt-0.5 text-xs text-muted">
-            Always leftmost in the Employee Table, text or a date, shared by every company.
+            Always leftmost in the Employee Table, plain text or a date, shared by every company.
           </p>
         </div>
         {!readOnly && (

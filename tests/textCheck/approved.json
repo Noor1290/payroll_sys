@@ -287,12 +287,12 @@
     {
       "text": "text: Cancel",
       "why": "existing wording, not new: the Cancel button of the new \"Change this field's key?\" question, which the base version does not have; and the same button in the new backup dialogs (migration plan step 0a), which the base version does not have; also on the Phase 2 dashboard screens, where it is the same control or the company's name; also on the Phase 3 screens (months kept in the dashboard), where it is the same control or wording; also on the Phase 3 follow-up screens (History, the read-only offline copy), where it is the same control or wording; also on the \"Send to the dashboard?\" question (rehearsal fix F4), where it is the same control; also in the \"Clear this browser's data\" dialog, where it is the same control; also in the \"Clear the column setup\" dialog, where it is the same control",
-      "onlyOn": ["57 change identity field key confirm (the ID field, values in saved months)", "58 change identity field key confirm (no saved values)", "59 restore a backup, what is in the file and in the browser", "59b restore a backup, a file that does not say when it was saved", "66 embedded: company details from the dashboard", "72 embedded: import, backup first", "73 embedded: import, what it will do", "80 embedded: import months, backup first", "81 embedded: import months, what it will do", "85 embedded: History of the Global columns, restore asked", "90 embedded: History of a month, restore asked", "60b embedded: send, asked first", "66 clear this browser's data, backup downloaded", "66b clear this browser's data, columns only chosen and CLEAR typed", "66c clear this browser's data, everything chosen and CLEAR typed", "66d clear this browser's data, the backup could not be downloaded", "96 embedded: clear the column setup, exported and CLEAR typed", "96c embedded: column setup NOT cleared"]
+      "onlyOn": ["57 change identity field key confirm (the ID field, values in saved months)", "58 change identity field key confirm (no saved values)", "59 restore a backup, what is in the file and in the browser", "59b restore a backup, a file that does not say when it was saved", "66 embedded: company details from the dashboard", "72 embedded: import, backup first", "73 embedded: import, what it will do", "80 embedded: import months, backup first", "81 embedded: import months, what it will do", "85 embedded: History of the Global columns, restore asked", "90 embedded: History of a month, restore asked", "60b embedded: send, asked first", "66 clear this browser's data, backup downloaded", "66b clear this browser's data, columns only chosen and CLEAR typed", "66c clear this browser's data, everything chosen and CLEAR typed", "66d clear this browser's data, the backup could not be downloaded", "96 embedded: clear the column setup, exported and CLEAR typed", "96c embedded: column setup NOT cleared", "70c date fields, import mapping", "70e date fields, add identity field, Date", "70f date fields, edit the ID field", "70g date fields, add column, Date", "70h date fields, a formula using a Date column", "70i date fields, a column formulas use made a Date"]
     },
     {
       "text": "aria-label: Close",
       "why": "existing wording, not new: the close button of the new \"Change this field's key?\" question, which the base version does not have; and the same button in the new backup dialogs (migration plan step 0a), which the base version does not have; also on the Phase 2 dashboard screens, where it is the same control or the company's name; also on the Phase 3 screens (months kept in the dashboard), where it is the same control or wording; also on the Phase 3 follow-up screens (History, the read-only offline copy), where it is the same control or wording; also on the \"Send to the dashboard?\" question (rehearsal fix F4), where it is the same control; also in the \"Clear this browser's data\" dialog and its messages, where it is the same control; also in the \"Clear the column setup\" dialog and its message, where it is the same control",
-      "onlyOn": ["57 change identity field key confirm (the ID field, values in saved months)", "58 change identity field key confirm (no saved values)", "59 restore a backup, what is in the file and in the browser", "59b restore a backup, a file that does not say when it was saved", "60 backup restored", "61 restore, not a backup file", "61b restore, a backup of another version", "61c restore, a damaged backup", "61d restore, an empty backup", "62 backup not restored, storage full", "62b backup not restored, earlier data could not be put back", "63 this change was NOT saved (storage full)", "66 embedded: company details from the dashboard", "72 embedded: import, backup first", "73 embedded: import, what it will do", "74 embedded: import, done", "80 embedded: import months, backup first", "81 embedded: import months, what it will do", "82 embedded: import months, done", "84 embedded: History of the Global columns, an earlier version", "85 embedded: History of the Global columns, restore asked", "86 embedded: History of the Global columns, restored", "87 embedded: History of the Global columns, the months could not be checked (locked)", "88 embedded: History of a company's columns, the version in use, not an admin", "89 embedded: History of a month, an earlier version", "90 embedded: History of a month, restore asked", "91 embedded: History of a month, only the record of a save kept", "92 embedded: History of a month, the dashboard locked", "60b embedded: send, asked first", "66 clear this browser's data, backup downloaded", "66b clear this browser's data, columns only chosen and CLEAR typed", "66c clear this browser's data, everything chosen and CLEAR typed", "66d clear this browser's data, the backup could not be downloaded", "67 columns cleared", "67b everything cleared", "67c nothing was cleared (storage full)", "96 embedded: clear the column setup, exported and CLEAR typed", "96b embedded: column setup cleared", "96c embedded: column setup NOT cleared"]
+      "onlyOn": ["57 change identity field key confirm (the ID field, values in saved months)", "58 change identity field key confirm (no saved values)", "59 restore a backup, what is in the file and in the browser", "59b restore a backup, a file that does not say when it was saved", "60 backup restored", "61 restore, not a backup file", "61b restore, a backup of another version", "61c restore, a damaged backup", "61d restore, an empty backup", "62 backup not restored, storage full", "62b backup not restored, earlier data could not be put back", "63 this change was NOT saved (storage full)", "66 embedded: company details from the dashboard", "72 embedded: import, backup first", "73 embedded: import, what it will do", "74 embedded: import, done", "80 embedded: import months, backup first", "81 embedded: import months, what it will do", "82 embedded: import months, done", "84 embedded: History of the Global columns, an earlier version", "85 embedded: History of the Global columns, restore asked", "86 embedded: History of the Global columns, restored", "87 embedded: History of the Global columns, the months could not be checked (locked)", "88 embedded: History of a company's columns, the version in use, not an admin", "89 embedded: History of a month, an earlier version", "90 embedded: History of a month, restore asked", "91 embedded: History of a month, only the record of a save kept", "92 embedded: History of a month, the dashboard locked", "60b embedded: send, asked first", "66 clear this browser's data, backup downloaded", "66b clear this browser's data, columns only chosen and CLEAR typed", "66c clear this browser's data, everything chosen and CLEAR typed", "66d clear this browser's data, the backup could not be downloaded", "67 columns cleared", "67b everything cleared", "67c nothing was cleared (storage full)", "96 embedded: clear the column setup, exported and CLEAR typed", "96b embedded: column setup cleared", "96c embedded: column setup NOT cleared", "70c date fields, import mapping", "70e date fields, add identity field, Date", "70f date fields, edit the ID field", "70g date fields, add column, Date", "70h date fields, a formula using a Date column", "70i date fields, a column formulas use made a Date"]
     },
     {
       "text": "text: 1 item that could not be read, kept as it is",
@@ -662,7 +662,7 @@
     {
       "text": "text: Save",
       "why": "approved: Phase 2: the Company details dialog inside the dashboard (name, address and BRN are the dashboard's, shown read-only); the base version has no such screen",
-      "onlyOn": ["66 embedded: company details from the dashboard"]
+      "onlyOn": ["66 embedded: company details from the dashboard", "70e date fields, add identity field, Date", "70f date fields, edit the ID field", "70g date fields, add column, Date", "70h date fields, a formula using a Date column", "70i date fields, a column formulas use made a Date"]
     },
     {
       "text": "text: Saved",
@@ -1352,6 +1352,678 @@
     {
       "text": "text: Saved as a new revision with no columns. To undo it, restore the previous version from History.",
       "why": "approved (Clear the column setup, inside the dashboard): the message after"
+    },
+    {
+      "text": "aria-label: Date joined",
+      "why": "approved 20 Oct 2026: existing wording, recorded on the new date-field steps (the base version records nothing there)",
+      "onlyOn": ["70 date fields, employee table", "70b date fields, dates refused", "70c date fields, import mapping", "70d date fields, import summary"]
+    },
+    {
+      "text": "aria-label: Date of Employment",
+      "why": "approved 20 Oct 2026: existing wording, recorded on the new date-field steps (the base version records nothing there)",
+      "onlyOn": ["70 date fields, employee table", "70b date fields, dates refused", "70c date fields, import mapping", "70d date fields, import summary"]
+    },
+    {
+      "text": "aria-label: Pick a date: Date joined",
+      "why": "approved 20 Oct 2026: Date type (date-column, stage A)"
+    },
+    {
+      "text": "aria-label: Pick a date: Date of Employment",
+      "why": "approved 20 Oct 2026: Date type (date-column, stage A)"
+    },
+    {
+      "text": "placeholder: DD/MM/YYYY",
+      "why": "approved 20 Oct 2026: Date type (date-column, stage A)"
+    },
+    {
+      "text": "placeholder: basicSalary",
+      "why": "approved 20 Oct 2026: existing wording, recorded on the new date-field steps (the base version records nothing there)",
+      "onlyOn": ["70g date fields, add column, Date", "70h date fields, a formula using a Date column", "70i date fields, a column formulas use made a Date"]
+    },
+    {
+      "text": "placeholder: basicSalary * 0.03 + bonus - deductions",
+      "why": "approved 20 Oct 2026: existing wording, recorded on the new date-field steps (the base version records nothing there)",
+      "onlyOn": ["70h date fields, a formula using a Date column"]
+    },
+    {
+      "text": "placeholder: e.g. Basic Salary",
+      "why": "approved 20 Oct 2026: existing wording, recorded on the new date-field steps (the base version records nothing there)",
+      "onlyOn": ["70g date fields, add column, Date", "70h date fields, a formula using a Date column", "70i date fields, a column formulas use made a Date"]
+    },
+    {
+      "text": "placeholder: e.g. Employee Code",
+      "why": "approved 20 Oct 2026: existing wording, recorded on the new date-field steps (the base version records nothing there)",
+      "onlyOn": ["70e date fields, add identity field, Date", "70f date fields, edit the ID field"]
+    },
+    {
+      "text": "placeholder: employeeCode",
+      "why": "approved 20 Oct 2026: existing wording, recorded on the new date-field steps (the base version records nothing there)",
+      "onlyOn": ["70e date fields, add identity field, Date", "70f date fields, edit the ID field"]
+    },
+    {
+      "text": "text: (checkbox)",
+      "why": "approved 20 Oct 2026: existing wording, recorded on the new date-field steps (the base version records nothing there)",
+      "onlyOn": ["70h date fields, a formula using a Date column"]
+    },
+    {
+      "text": "text: (not a date)",
+      "why": "approved 20 Oct 2026: Date type (date-column, stage A)"
+    },
+    {
+      "text": "text: 0",
+      "why": "approved 20 Oct 2026: existing wording, recorded on the new date-field steps (the base version records nothing there)",
+      "onlyOn": ["70h date fields, a formula using a Date column"]
+    },
+    {
+      "text": "text: 01/08/2026",
+      "why": "approved 20 Oct 2026: existing wording, recorded on the new date-field steps (the base version records nothing there)",
+      "onlyOn": ["70c date fields, import mapping"]
+    },
+    {
+      "text": "text: 04/11/2019",
+      "why": "approved 20 Oct 2026: existing wording, recorded on the new date-field steps (the base version records nothing there)",
+      "onlyOn": ["70c date fields, import mapping"]
+    },
+    {
+      "text": "text: 1",
+      "why": "approved 20 Oct 2026: existing wording, recorded on the new date-field steps (the base version records nothing there)",
+      "onlyOn": ["70h date fields, a formula using a Date column"]
+    },
+    {
+      "text": "text: 15/03/2021",
+      "why": "approved 20 Oct 2026: existing wording, recorded on the new date-field steps (the base version records nothing there)",
+      "onlyOn": ["70c date fields, import mapping"]
+    },
+    {
+      "text": "text: 2",
+      "why": "approved 20 Oct 2026: existing wording, recorded on the new date-field steps (the base version records nothing there)",
+      "onlyOn": ["70h date fields, a formula using a Date column"]
+    },
+    {
+      "text": "text: 2 dates can't be read and will not be imported (a date already saved is kept):",
+      "why": "approved 20 Oct 2026: Date type (date-column, stage A)"
+    },
+    {
+      "text": "text: 2 dates could not be read and were not imported (a date already saved is kept):",
+      "why": "approved 20 Oct 2026: Date type (date-column, stage A)"
+    },
+    {
+      "text": "text: 3",
+      "why": "approved 20 Oct 2026: existing wording, recorded on the new date-field steps (the base version records nothing there)",
+      "onlyOn": ["70h date fields, a formula using a Date column"]
+    },
+    {
+      "text": "text: 31/02/2026",
+      "why": "approved 20 Oct 2026: existing wording, recorded on the new date-field steps (the base version records nothing there)",
+      "onlyOn": ["70c date fields, import mapping"]
+    },
+    {
+      "text": "text: 4",
+      "why": "approved 20 Oct 2026: existing wording, recorded on the new date-field steps (the base version records nothing there)",
+      "onlyOn": ["70h date fields, a formula using a Date column"]
+    },
+    {
+      "text": "text: A date can't be used in a formula's arithmetic: \"Date joined\" is a Date column. Remove it from the formula.",
+      "why": "approved 20 Oct 2026: Date type (date-column, stage A)"
+    },
+    {
+      "text": "text: A date is read from an Excel date cell, or from text written DD/MM/YYYY or YYYY-MM-DD.",
+      "why": "approved 20 Oct 2026: Date type (date-column, stage A)"
+    },
+    {
+      "text": "text: A single expression referencing column keys, e.g. basicSalary + bonus.",
+      "why": "approved 20 Oct 2026: existing wording, recorded on the new date-field steps (the base version records nothing there)",
+      "onlyOn": ["70h date fields, a formula using a Date column"]
+    },
+    {
+      "text": "text: Add an exemption / override condition",
+      "why": "approved 20 Oct 2026: existing wording, recorded on the new date-field steps (the base version records nothing there)",
+      "onlyOn": ["70h date fields, a formula using a Date column"]
+    },
+    {
+      "text": "text: Add column",
+      "why": "approved 20 Oct 2026: existing wording, recorded on the new date-field steps (the base version records nothing there)",
+      "onlyOn": ["70g date fields, add column, Date", "70h date fields, a formula using a Date column"]
+    },
+    {
+      "text": "text: Add identity field",
+      "why": "approved 20 Oct 2026: existing wording, recorded on the new date-field steps (the base version records nothing there)",
+      "onlyOn": ["70e date fields, add identity field, Date"]
+    },
+    {
+      "text": "text: Age 60+",
+      "why": "approved 20 Oct 2026: existing wording, recorded on the new date-field steps (the base version records nothing there)",
+      "onlyOn": ["70c date fields, import mapping"]
+    },
+    {
+      "text": "text: Age 60+ → aged60",
+      "why": "approved 20 Oct 2026: existing wording, recorded on the new date-field steps (the base version records nothing there)",
+      "onlyOn": ["70h date fields, a formula using a Date column"]
+    },
+    {
+      "text": "text: Allowances",
+      "why": "approved 20 Oct 2026: existing wording, recorded on the new date-field steps (the base version records nothing there)",
+      "onlyOn": ["70c date fields, import mapping"]
+    },
+    {
+      "text": "text: Allowances → allowances",
+      "why": "approved 20 Oct 2026: existing wording, recorded on the new date-field steps (the base version records nothing there)",
+      "onlyOn": ["70h date fields, a formula using a Date column"]
+    },
+    {
+      "text": "text: Also remove 3 not in the file: F004 Dummy, F005 Placeholder, F006 Blank.",
+      "why": "approved 20 Oct 2026: existing wording, recorded on the new date-field steps (the base version records nothing there)",
+      "onlyOn": ["70c date fields, import mapping"]
+    },
+    {
+      "text": "text: Always leftmost in the Employee Table, plain text or a date, shared by every company.",
+      "why": "approved 20 Oct 2026: Date type (date-column, stage A)"
+    },
+    {
+      "text": "text: Any text, for example a name or an employee code.",
+      "why": "approved 20 Oct 2026: Date type (date-column, stage A)"
+    },
+    {
+      "text": "text: Appears in the Export Preview and the downloaded file, like any other column.",
+      "why": "approved 20 Oct 2026: existing wording, recorded on the new date-field steps (the base version records nothing there)",
+      "onlyOn": ["70g date fields, add column, Date", "70h date fields, a formula using a Date column", "70i date fields, a column formulas use made a Date"]
+    },
+    {
+      "text": "text: Available columns (click to insert):",
+      "why": "approved 20 Oct 2026: existing wording, recorded on the new date-field steps (the base version records nothing there)",
+      "onlyOn": ["70h date fields, a formula using a Date column"]
+    },
+    {
+      "text": "text: Basic Salary",
+      "why": "approved 20 Oct 2026: existing wording, recorded on the new date-field steps (the base version records nothing there)",
+      "onlyOn": ["70c date fields, import mapping"]
+    },
+    {
+      "text": "text: Basic Salary → basicSalary",
+      "why": "approved 20 Oct 2026: existing wording, recorded on the new date-field steps (the base version records nothing there)",
+      "onlyOn": ["70h date fields, a formula using a Date column"]
+    },
+    {
+      "text": "text: CSG → csg",
+      "why": "approved 20 Oct 2026: existing wording, recorded on the new date-field steps (the base version records nothing there)",
+      "onlyOn": ["70h date fields, a formula using a Date column"]
+    },
+    {
+      "text": "text: Can't make this column a Date: these formulas use it, and a date can't be used in a formula's arithmetic: New Basic Salary, PRGF. Change those formulas first.",
+      "why": "approved 20 Oct 2026: Date type (date-column, stage A)"
+    },
+    {
+      "text": "text: Category",
+      "why": "approved 20 Oct 2026: existing wording, recorded on the new date-field steps (the base version records nothing there)",
+      "onlyOn": ["70g date fields, add column, Date", "70h date fields, a formula using a Date column", "70i date fields, a column formulas use made a Date"]
+    },
+    {
+      "text": "text: Checkbox (Yes/No)",
+      "why": "approved 20 Oct 2026: existing wording, recorded on the new date-field steps (the base version records nothing there)",
+      "onlyOn": ["70g date fields, add column, Date", "70i date fields, a column formulas use made a Date"]
+    },
+    {
+      "text": "text: Date",
+      "why": "approved 20 Oct 2026: Date type (date-column, stage A)"
+    },
+    {
+      "text": "text: Date joined",
+      "why": "approved 20 Oct 2026: existing wording, recorded on the new date-field steps (the base version records nothing there)",
+      "onlyOn": ["70c date fields, import mapping"]
+    },
+    {
+      "text": "text: Date of Employment",
+      "why": "approved 20 Oct 2026: existing wording, recorded on the new date-field steps (the base version records nothing there)",
+      "onlyOn": ["70c date fields, import mapping"]
+    },
+    {
+      "text": "text: Decimal places",
+      "why": "approved 20 Oct 2026: existing wording, recorded on the new date-field steps (the base version records nothing there)",
+      "onlyOn": ["70h date fields, a formula using a Date column"]
+    },
+    {
+      "text": "text: EDF",
+      "why": "approved 20 Oct 2026: existing wording, recorded on the new date-field steps (the base version records nothing there)",
+      "onlyOn": ["70c date fields, import mapping"]
+    },
+    {
+      "text": "text: Edit column",
+      "why": "approved 20 Oct 2026: existing wording, recorded on the new date-field steps (the base version records nothing there)",
+      "onlyOn": ["70i date fields, a column formulas use made a Date"]
+    },
+    {
+      "text": "text: Edit identity field",
+      "why": "approved 20 Oct 2026: existing wording, recorded on the new date-field steps (the base version records nothing there)",
+      "onlyOn": ["70f date fields, edit the ID field"]
+    },
+    {
+      "text": "text: Emoluments → emoluments",
+      "why": "approved 20 Oct 2026: existing wording, recorded on the new date-field steps (the base version records nothing there)",
+      "onlyOn": ["70h date fields, a formula using a Date column"]
+    },
+    {
+      "text": "text: Employee Contribution",
+      "why": "approved 20 Oct 2026: existing wording, recorded on the new date-field steps (the base version records nothing there)",
+      "onlyOn": ["70g date fields, add column, Date", "70h date fields, a formula using a Date column", "70i date fields, a column formulas use made a Date"]
+    },
+    {
+      "text": "text: Employer Contribution",
+      "why": "approved 20 Oct 2026: existing wording, recorded on the new date-field steps (the base version records nothing there)",
+      "onlyOn": ["70g date fields, add column, Date", "70h date fields, a formula using a Date column", "70i date fields, a column formulas use made a Date"]
+    },
+    {
+      "text": "text: Exemple, Jr",
+      "why": "approved 20 Oct 2026: existing wording, recorded on the new date-field steps (the base version records nothing there)",
+      "onlyOn": ["70c date fields, import mapping"]
+    },
+    {
+      "text": "text: F001",
+      "why": "approved 20 Oct 2026: existing wording, recorded on the new date-field steps (the base version records nothing there)",
+      "onlyOn": ["70c date fields, import mapping"]
+    },
+    {
+      "text": "text: F002",
+      "why": "approved 20 Oct 2026: existing wording, recorded on the new date-field steps (the base version records nothing there)",
+      "onlyOn": ["70c date fields, import mapping"]
+    },
+    {
+      "text": "text: F002 Exemple, Jr — Date joined: “31/02/2026”",
+      "why": "approved 20 Oct 2026: existing wording, recorded on the new date-field steps (the base version records nothing there)",
+      "onlyOn": ["70c date fields, import mapping", "70d date fields, import summary"]
+    },
+    {
+      "text": "text: F003",
+      "why": "approved 20 Oct 2026: existing wording, recorded on the new date-field steps (the base version records nothing there)",
+      "onlyOn": ["70c date fields, import mapping"]
+    },
+    {
+      "text": "text: F003 Specimen — Date of Employment: “abc”",
+      "why": "approved 20 Oct 2026: existing wording, recorded on the new date-field steps (the base version records nothing there)",
+      "onlyOn": ["70c date fields, import mapping", "70d date fields, import summary"]
+    },
+    {
+      "text": "text: Formula",
+      "why": "approved 20 Oct 2026: existing wording, recorded on the new date-field steps (the base version records nothing there)",
+      "onlyOn": ["70g date fields, add column, Date", "70h date fields, a formula using a Date column", "70i date fields, a column formulas use made a Date"]
+    },
+    {
+      "text": "text: Formula builder",
+      "why": "approved 20 Oct 2026: existing wording, recorded on the new date-field steps (the base version records nothing there)",
+      "onlyOn": ["70h date fields, a formula using a Date column"]
+    },
+    {
+      "text": "text: Formula expression",
+      "why": "approved 20 Oct 2026: existing wording, recorded on the new date-field steps (the base version records nothing there)",
+      "onlyOn": ["70h date fields, a formula using a Date column"]
+    },
+    {
+      "text": "text: Full time / Part time",
+      "why": "approved 20 Oct 2026: existing wording, recorded on the new date-field steps (the base version records nothing there)",
+      "onlyOn": ["70c date fields, import mapping"]
+    },
+    {
+      "text": "text: Full time / Part time → fullTimePartTime",
+      "why": "approved 20 Oct 2026: existing wording, recorded on the new date-field steps (the base version records nothing there)",
+      "onlyOn": ["70h date fields, a formula using a Date column"]
+    },
+    {
+      "text": "text: General",
+      "why": "approved 20 Oct 2026: existing wording, recorded on the new date-field steps (the base version records nothing there)",
+      "onlyOn": ["70g date fields, add column, Date", "70h date fields, a formula using a Date column", "70i date fields, a column formulas use made a Date"]
+    },
+    {
+      "text": "text: Global",
+      "why": "approved 20 Oct 2026: existing wording, recorded on the new date-field steps (the base version records nothing there)",
+      "onlyOn": ["70i date fields, a column formulas use made a Date"]
+    },
+    {
+      "text": "text: Govt Increment",
+      "why": "approved 20 Oct 2026: existing wording, recorded on the new date-field steps (the base version records nothing there)",
+      "onlyOn": ["70c date fields, import mapping"]
+    },
+    {
+      "text": "text: Govt Increment → govtIncrement",
+      "why": "approved 20 Oct 2026: existing wording, recorded on the new date-field steps (the base version records nothing there)",
+      "onlyOn": ["70h date fields, a formula using a Date column"]
+    },
+    {
+      "text": "text: Gross Pay → grossPay",
+      "why": "approved 20 Oct 2026: existing wording, recorded on the new date-field steps (the base version records nothing there)",
+      "onlyOn": ["70h date fields, a formula using a Date column"]
+    },
+    {
+      "text": "text: How this column's values are rounded for display in the table, breakdown, and export. Stored values keep full precision.",
+      "why": "approved 20 Oct 2026: existing wording, recorded on the new date-field steps (the base version records nothing there)",
+      "onlyOn": ["70h date fields, a formula using a Date column"]
+    },
+    {
+      "text": "text: ID",
+      "why": "approved 20 Oct 2026: existing wording, recorded on the new date-field steps (the base version records nothing there)",
+      "onlyOn": ["70c date fields, import mapping"]
+    },
+    {
+      "text": "text: Import from Excel",
+      "why": "approved 20 Oct 2026: existing wording, recorded on the new date-field steps (the base version records nothing there)",
+      "onlyOn": ["70c date fields, import mapping"]
+    },
+    {
+      "text": "text: Imported 3 rows.",
+      "why": "approved 20 Oct 2026: Date type (date-column, stage A)"
+    },
+    {
+      "text": "text: Include in Excel export",
+      "why": "approved 20 Oct 2026: existing wording, recorded on the new date-field steps (the base version records nothing there)",
+      "onlyOn": ["70g date fields, add column, Date", "70h date fields, a formula using a Date column", "70i date fields, a column formulas use made a Date"]
+    },
+    {
+      "text": "text: Input",
+      "why": "approved 20 Oct 2026: existing wording, recorded on the new date-field steps (the base version records nothing there)",
+      "onlyOn": ["70g date fields, add column, Date", "70h date fields, a formula using a Date column", "70i date fields, a column formulas use made a Date"]
+    },
+    {
+      "text": "text: Internal Note",
+      "why": "approved 20 Oct 2026: existing wording, recorded on the new date-field steps (the base version records nothing there)",
+      "onlyOn": ["70c date fields, import mapping"]
+    },
+    {
+      "text": "text: Key",
+      "why": "approved 20 Oct 2026: existing wording, recorded on the new date-field steps (the base version records nothing there)",
+      "onlyOn": ["70e date fields, add identity field, Date", "70f date fields, edit the ID field", "70g date fields, add column, Date", "70h date fields, a formula using a Date column", "70i date fields, a column formulas use made a Date"]
+    },
+    {
+      "text": "text: Map file columns to fields (3 rows found)",
+      "why": "approved 20 Oct 2026: existing wording, recorded on the new date-field steps (the base version records nothing there)",
+      "onlyOn": ["70c date fields, import mapping"]
+    },
+    {
+      "text": "text: NSF → nsf",
+      "why": "approved 20 Oct 2026: existing wording, recorded on the new date-field steps (the base version records nothing there)",
+      "onlyOn": ["70h date fields, a formula using a Date column"]
+    },
+    {
+      "text": "text: Name",
+      "why": "approved 20 Oct 2026: existing wording, recorded on the new date-field steps (the base version records nothing there)",
+      "onlyOn": ["70e date fields, add identity field, Date", "70f date fields, edit the ID field", "70g date fields, add column, Date", "70h date fields, a formula using a Date column", "70i date fields, a column formulas use made a Date"]
+    },
+    {
+      "text": "text: Net Pay → netPay",
+      "why": "approved 20 Oct 2026: existing wording, recorded on the new date-field steps (the base version records nothing there)",
+      "onlyOn": ["70h date fields, a formula using a Date column"]
+    },
+    {
+      "text": "text: New Basic Salary → newBasicSalary",
+      "why": "approved 20 Oct 2026: existing wording, recorded on the new date-field steps (the base version records nothing there)",
+      "onlyOn": ["70h date fields, a formula using a Date column"]
+    },
+    {
+      "text": "text: Number",
+      "why": "approved 20 Oct 2026: existing wording, recorded on the new date-field steps (the base version records nothing there)",
+      "onlyOn": ["70g date fields, add column, Date", "70i date fields, a column formulas use made a Date"]
+    },
+    {
+      "text": "text: Other Deductions",
+      "why": "approved 20 Oct 2026: existing wording, recorded on the new date-field steps (the base version records nothing there)",
+      "onlyOn": ["70g date fields, add column, Date", "70h date fields, a formula using a Date column", "70i date fields, a column formulas use made a Date"]
+    },
+    {
+      "text": "text: Other names",
+      "why": "approved 20 Oct 2026: existing wording, recorded on the new date-field steps (the base version records nothing there)",
+      "onlyOn": ["70c date fields, import mapping"]
+    },
+    {
+      "text": "text: PAYE → paye",
+      "why": "approved 20 Oct 2026: existing wording, recorded on the new date-field steps (the base version records nothing there)",
+      "onlyOn": ["70h date fields, a formula using a Date column"]
+    },
+    {
+      "text": "text: Preview (first 3 rows)",
+      "why": "approved 20 Oct 2026: existing wording, recorded on the new date-field steps (the base version records nothing there)",
+      "onlyOn": ["70c date fields, import mapping"]
+    },
+    {
+      "text": "text: Progressive Brackets",
+      "why": "approved 20 Oct 2026: existing wording, recorded on the new date-field steps (the base version records nothing there)",
+      "onlyOn": ["70h date fields, a formula using a Date column"]
+    },
+    {
+      "text": "text: Row 1, Date joined — not saved: \"abc\" is not a date. Type it as DD/MM/YYYY, for example 01/08/2026.",
+      "why": "approved 20 Oct 2026: Date type (date-column, stage A)"
+    },
+    {
+      "text": "text: Row 1, Date of Employment — not saved: \"31/02/2026\" is not a real date. Type it as DD/MM/YYYY, for example 01/08/2026.",
+      "why": "approved 20 Oct 2026: Date type (date-column, stage A)"
+    },
+    {
+      "text": "text: Scope",
+      "why": "approved 20 Oct 2026: existing wording, recorded on the new date-field steps (the base version records nothing there)",
+      "onlyOn": ["70i date fields, a column formulas use made a Date"]
+    },
+    {
+      "text": "text: Simple",
+      "why": "approved 20 Oct 2026: existing wording, recorded on the new date-field steps (the base version records nothing there)",
+      "onlyOn": ["70h date fields, a formula using a Date column"]
+    },
+    {
+      "text": "text: Specimen",
+      "why": "approved 20 Oct 2026: existing wording, recorded on the new date-field steps (the base version records nothing there)",
+      "onlyOn": ["70c date fields, import mapping"]
+    },
+    {
+      "text": "text: Surname",
+      "why": "approved 20 Oct 2026: existing wording, recorded on the new date-field steps (the base version records nothing there)",
+      "onlyOn": ["70c date fields, import mapping"]
+    },
+    {
+      "text": "text: Testeur",
+      "why": "approved 20 Oct 2026: existing wording, recorded on the new date-field steps (the base version records nothing there)",
+      "onlyOn": ["70c date fields, import mapping"]
+    },
+    {
+      "text": "text: Text",
+      "why": "approved 20 Oct 2026: Date type (date-column, stage A)"
+    },
+    {
+      "text": "text: The ID field is always text.",
+      "why": "approved 20 Oct 2026: Date type (date-column, stage A)"
+    },
+    {
+      "text": "text: This company only",
+      "why": "approved 20 Oct 2026: existing wording, recorded on the new date-field steps (the base version records nothing there)",
+      "onlyOn": ["70i date fields, a column formulas use made a Date"]
+    },
+    {
+      "text": "text: Tiered / Conditional",
+      "why": "approved 20 Oct 2026: existing wording, recorded on the new date-field steps (the base version records nothing there)",
+      "onlyOn": ["70h date fields, a formula using a Date column"]
+    },
+    {
+      "text": "text: Total deductions → totalDeductions",
+      "why": "approved 20 Oct 2026: existing wording, recorded on the new date-field steps (the base version records nothing there)",
+      "onlyOn": ["70h date fields, a formula using a Date column"]
+    },
+    {
+      "text": "text: Travelling",
+      "why": "approved 20 Oct 2026: existing wording, recorded on the new date-field steps (the base version records nothing there)",
+      "onlyOn": ["70c date fields, import mapping"]
+    },
+    {
+      "text": "text: Travelling → travelling",
+      "why": "approved 20 Oct 2026: existing wording, recorded on the new date-field steps (the base version records nothing there)",
+      "onlyOn": ["70h date fields, a formula using a Date column"]
+    },
+    {
+      "text": "text: Type",
+      "why": "approved 20 Oct 2026: Date type (date-column, stage A)"
+    },
+    {
+      "text": "text: Typed and shown as DD/MM/YYYY, with a calendar to pick from. Only real dates are accepted.",
+      "why": "approved 20 Oct 2026: Date type (date-column, stage A)"
+    },
+    {
+      "text": "text: Typed and shown as DD/MM/YYYY, with a calendar to pick from. Only real dates are accepted. Not added up in Totals, and not usable in formulas.",
+      "why": "approved 20 Oct 2026: Date type (date-column, stage A)"
+    },
+    {
+      "text": "text: Update 3",
+      "why": "approved 20 Oct 2026: existing wording, recorded on the new date-field steps (the base version records nothing there)",
+      "onlyOn": ["70c date fields, import mapping"]
+    },
+    {
+      "text": "text: Update 3 existing: F001 Testeur, F002 Exemple, Jr, F003 Specimen.",
+      "why": "approved 20 Oct 2026: existing wording, recorded on the new date-field steps (the base version records nothing there)",
+      "onlyOn": ["70c date fields, import mapping"]
+    },
+    {
+      "text": "text: Value type",
+      "why": "approved 20 Oct 2026: existing wording, recorded on the new date-field steps (the base version records nothing there)",
+      "onlyOn": ["70g date fields, add column, Date", "70i date fields, a column formulas use made a Date"]
+    },
+    {
+      "text": "text: abc",
+      "why": "approved 20 Oct 2026: existing wording, recorded on the new date-field steps (the base version records nothing there)",
+      "onlyOn": ["70c date fields, import mapping"]
+    },
+    {
+      "text": "text: basicSalary + dateJoined",
+      "why": "approved 20 Oct 2026: existing wording, recorded on the new date-field steps (the base version records nothing there)",
+      "onlyOn": ["70h date fields, a formula using a Date column"]
+    },
+    {
+      "text": "text: empty",
+      "why": "approved 20 Oct 2026: existing wording, recorded on the new date-field steps (the base version records nothing there)",
+      "onlyOn": ["70c date fields, import mapping"]
+    },
+    {
+      "text": "text: identity",
+      "why": "approved 20 Oct 2026: existing wording, recorded on the new date-field steps (the base version records nothing there)",
+      "onlyOn": ["70c date fields, import mapping"]
+    },
+    {
+      "text": "text: input",
+      "why": "approved 20 Oct 2026: existing wording, recorded on the new date-field steps (the base version records nothing there)",
+      "onlyOn": ["70c date fields, import mapping"]
+    },
+    {
+      "text": "text: — Skip —",
+      "why": "approved 20 Oct 2026: existing wording, recorded on the new date-field steps (the base version records nothing there)",
+      "onlyOn": ["70c date fields, import mapping"]
+    },
+    {
+      "text": "title: Age 60+",
+      "why": "approved 20 Oct 2026: existing wording, recorded on the new date-field steps (the base version records nothing there)",
+      "onlyOn": ["70c date fields, import mapping", "70h date fields, a formula using a Date column"]
+    },
+    {
+      "text": "title: Allowances",
+      "why": "approved 20 Oct 2026: existing wording, recorded on the new date-field steps (the base version records nothing there)",
+      "onlyOn": ["70c date fields, import mapping", "70h date fields, a formula using a Date column"]
+    },
+    {
+      "text": "title: Basic Salary",
+      "why": "approved 20 Oct 2026: existing wording, recorded on the new date-field steps (the base version records nothing there)",
+      "onlyOn": ["70c date fields, import mapping", "70h date fields, a formula using a Date column"]
+    },
+    {
+      "text": "title: CSG",
+      "why": "approved 20 Oct 2026: existing wording, recorded on the new date-field steps (the base version records nothing there)",
+      "onlyOn": ["70h date fields, a formula using a Date column"]
+    },
+    {
+      "text": "title: Date joined",
+      "why": "approved 20 Oct 2026: existing wording, recorded on the new date-field steps (the base version records nothing there)",
+      "onlyOn": ["70c date fields, import mapping"]
+    },
+    {
+      "text": "title: Date of Employment",
+      "why": "approved 20 Oct 2026: existing wording, recorded on the new date-field steps (the base version records nothing there)",
+      "onlyOn": ["70c date fields, import mapping"]
+    },
+    {
+      "text": "title: EDF",
+      "why": "approved 20 Oct 2026: existing wording, recorded on the new date-field steps (the base version records nothing there)",
+      "onlyOn": ["70c date fields, import mapping"]
+    },
+    {
+      "text": "title: Emoluments",
+      "why": "approved 20 Oct 2026: existing wording, recorded on the new date-field steps (the base version records nothing there)",
+      "onlyOn": ["70h date fields, a formula using a Date column"]
+    },
+    {
+      "text": "title: Full time / Part time",
+      "why": "approved 20 Oct 2026: existing wording, recorded on the new date-field steps (the base version records nothing there)",
+      "onlyOn": ["70c date fields, import mapping", "70h date fields, a formula using a Date column"]
+    },
+    {
+      "text": "title: Govt Increment",
+      "why": "approved 20 Oct 2026: existing wording, recorded on the new date-field steps (the base version records nothing there)",
+      "onlyOn": ["70c date fields, import mapping", "70h date fields, a formula using a Date column"]
+    },
+    {
+      "text": "title: Gross Pay",
+      "why": "approved 20 Oct 2026: existing wording, recorded on the new date-field steps (the base version records nothing there)",
+      "onlyOn": ["70h date fields, a formula using a Date column"]
+    },
+    {
+      "text": "title: ID",
+      "why": "approved 20 Oct 2026: existing wording, recorded on the new date-field steps (the base version records nothing there)",
+      "onlyOn": ["70c date fields, import mapping"]
+    },
+    {
+      "text": "title: Internal Note",
+      "why": "approved 20 Oct 2026: existing wording, recorded on the new date-field steps (the base version records nothing there)",
+      "onlyOn": ["70c date fields, import mapping"]
+    },
+    {
+      "text": "title: NSF",
+      "why": "approved 20 Oct 2026: existing wording, recorded on the new date-field steps (the base version records nothing there)",
+      "onlyOn": ["70h date fields, a formula using a Date column"]
+    },
+    {
+      "text": "title: Net Pay",
+      "why": "approved 20 Oct 2026: existing wording, recorded on the new date-field steps (the base version records nothing there)",
+      "onlyOn": ["70h date fields, a formula using a Date column"]
+    },
+    {
+      "text": "title: New Basic Salary",
+      "why": "approved 20 Oct 2026: existing wording, recorded on the new date-field steps (the base version records nothing there)",
+      "onlyOn": ["70h date fields, a formula using a Date column"]
+    },
+    {
+      "text": "title: Not a date: kept as it was saved. Type it as DD/MM/YYYY, for example 01/08/2026.",
+      "why": "approved 20 Oct 2026: Date type (date-column, stage A)"
+    },
+    {
+      "text": "title: Not a date: this cell will not be imported",
+      "why": "approved 20 Oct 2026: Date type (date-column, stage A)"
+    },
+    {
+      "text": "title: Other names",
+      "why": "approved 20 Oct 2026: existing wording, recorded on the new date-field steps (the base version records nothing there)",
+      "onlyOn": ["70c date fields, import mapping"]
+    },
+    {
+      "text": "title: PAYE",
+      "why": "approved 20 Oct 2026: existing wording, recorded on the new date-field steps (the base version records nothing there)",
+      "onlyOn": ["70h date fields, a formula using a Date column"]
+    },
+    {
+      "text": "title: Pick a date",
+      "why": "approved 20 Oct 2026: Date type (date-column, stage A)"
+    },
+    {
+      "text": "title: Surname",
+      "why": "approved 20 Oct 2026: existing wording, recorded on the new date-field steps (the base version records nothing there)",
+      "onlyOn": ["70c date fields, import mapping"]
+    },
+    {
+      "text": "title: Total deductions",
+      "why": "approved 20 Oct 2026: existing wording, recorded on the new date-field steps (the base version records nothing there)",
+      "onlyOn": ["70h date fields, a formula using a Date column"]
+    },
+    {
+      "text": "title: Travelling",
+      "why": "approved 20 Oct 2026: existing wording, recorded on the new date-field steps (the base version records nothing there)",
+      "onlyOn": ["70c date fields, import mapping", "70h date fields, a formula using a Date column"]
     }
   ],
   "removed": [
@@ -1528,7 +2200,7 @@
     {
       "text": "text: ID",
       "why": "approved: Phase 3, D5: inside a dashboard that keeps the months, the month's table is not shown while the dashboard is locked (77, 83), nor to someone who is not an admin of the company (79); the base version shows its own page there",
-      "onlyOn": ["77 embedded: locked, the month covered, what was typed NOT saved", "79 embedded: months of a company you are not an admin of", "83 embedded: opened while the dashboard is locked"]
+      "onlyOn": ["77 embedded: locked, the month covered, what was typed NOT saved", "79 embedded: months of a company you are not an admin of", "83 embedded: opened while the dashboard is locked", "70d date fields, import summary"]
     },
     {
       "text": "title: Drag to resize",
@@ -1538,22 +2210,22 @@
     {
       "text": "text: Surname",
       "why": "approved: Phase 3, D5: inside a dashboard that keeps the months, the month's table is not shown while the dashboard is locked (77, 83), nor to someone who is not an admin of the company (79); the base version shows its own page there",
-      "onlyOn": ["77 embedded: locked, the month covered, what was typed NOT saved", "79 embedded: months of a company you are not an admin of", "83 embedded: opened while the dashboard is locked"]
+      "onlyOn": ["77 embedded: locked, the month covered, what was typed NOT saved", "79 embedded: months of a company you are not an admin of", "83 embedded: opened while the dashboard is locked", "70d date fields, import summary"]
     },
     {
       "text": "text: Other names",
       "why": "approved: Phase 3, D5: inside a dashboard that keeps the months, the month's table is not shown while the dashboard is locked (77, 83), nor to someone who is not an admin of the company (79); the base version shows its own page there",
-      "onlyOn": ["77 embedded: locked, the month covered, what was typed NOT saved", "79 embedded: months of a company you are not an admin of", "83 embedded: opened while the dashboard is locked"]
+      "onlyOn": ["77 embedded: locked, the month covered, what was typed NOT saved", "79 embedded: months of a company you are not an admin of", "83 embedded: opened while the dashboard is locked", "70d date fields, import summary"]
     },
     {
       "text": "text: Basic Salary",
       "why": "approved: Phase 3, D5: inside a dashboard that keeps the months, the month's table is not shown while the dashboard is locked (77, 83), nor to someone who is not an admin of the company (79); the base version shows its own page there",
-      "onlyOn": ["77 embedded: locked, the month covered, what was typed NOT saved", "79 embedded: months of a company you are not an admin of", "83 embedded: opened while the dashboard is locked"]
+      "onlyOn": ["77 embedded: locked, the month covered, what was typed NOT saved", "79 embedded: months of a company you are not an admin of", "83 embedded: opened while the dashboard is locked", "70d date fields, import summary"]
     },
     {
       "text": "text: Govt Increment",
       "why": "approved: Phase 3, D5: inside a dashboard that keeps the months, the month's table is not shown while the dashboard is locked (77, 83), nor to someone who is not an admin of the company (79); the base version shows its own page there",
-      "onlyOn": ["77 embedded: locked, the month covered, what was typed NOT saved", "79 embedded: months of a company you are not an admin of", "83 embedded: opened while the dashboard is locked"]
+      "onlyOn": ["77 embedded: locked, the month covered, what was typed NOT saved", "79 embedded: months of a company you are not an admin of", "83 embedded: opened while the dashboard is locked", "70d date fields, import summary"]
     },
     {
       "text": "text: New Basic Salary",
@@ -1568,12 +2240,12 @@
     {
       "text": "text: Full time / Part time",
       "why": "approved: Phase 3, D5: inside a dashboard that keeps the months, the month's table is not shown while the dashboard is locked (77, 83), nor to someone who is not an admin of the company (79); the base version shows its own page there",
-      "onlyOn": ["77 embedded: locked, the month covered, what was typed NOT saved", "79 embedded: months of a company you are not an admin of", "83 embedded: opened while the dashboard is locked"]
+      "onlyOn": ["77 embedded: locked, the month covered, what was typed NOT saved", "79 embedded: months of a company you are not an admin of", "83 embedded: opened while the dashboard is locked", "70d date fields, import summary"]
     },
     {
       "text": "text: Allowances",
       "why": "approved: Phase 3, D5: inside a dashboard that keeps the months, the month's table is not shown while the dashboard is locked (77, 83), nor to someone who is not an admin of the company (79); the base version shows its own page there",
-      "onlyOn": ["77 embedded: locked, the month covered, what was typed NOT saved", "79 embedded: months of a company you are not an admin of", "83 embedded: opened while the dashboard is locked"]
+      "onlyOn": ["77 embedded: locked, the month covered, what was typed NOT saved", "79 embedded: months of a company you are not an admin of", "83 embedded: opened while the dashboard is locked", "70d date fields, import summary"]
     },
     {
       "text": "text: Emoluments",
@@ -1583,7 +2255,7 @@
     {
       "text": "text: Travelling",
       "why": "approved: Phase 3, D5: inside a dashboard that keeps the months, the month's table is not shown while the dashboard is locked (77, 83), nor to someone who is not an admin of the company (79); the base version shows its own page there",
-      "onlyOn": ["77 embedded: locked, the month covered, what was typed NOT saved", "79 embedded: months of a company you are not an admin of", "83 embedded: opened while the dashboard is locked"]
+      "onlyOn": ["77 embedded: locked, the month covered, what was typed NOT saved", "79 embedded: months of a company you are not an admin of", "83 embedded: opened while the dashboard is locked", "70d date fields, import summary"]
     },
     {
       "text": "text: Gross Pay",
@@ -1593,7 +2265,7 @@
     {
       "text": "text: Age 60+",
       "why": "approved: Phase 3, D5: inside a dashboard that keeps the months, the month's table is not shown while the dashboard is locked (77, 83), nor to someone who is not an admin of the company (79); the base version shows its own page there",
-      "onlyOn": ["77 embedded: locked, the month covered, what was typed NOT saved", "79 embedded: months of a company you are not an admin of", "83 embedded: opened while the dashboard is locked"]
+      "onlyOn": ["77 embedded: locked, the month covered, what was typed NOT saved", "79 embedded: months of a company you are not an admin of", "83 embedded: opened while the dashboard is locked", "70d date fields, import summary"]
     },
     {
       "text": "text: Net Pay",
@@ -1603,7 +2275,7 @@
     {
       "text": "text: Internal Note",
       "why": "approved: Phase 3, D5: inside a dashboard that keeps the months, the month's table is not shown while the dashboard is locked (77, 83), nor to someone who is not an admin of the company (79); the base version shows its own page there",
-      "onlyOn": ["77 embedded: locked, the month covered, what was typed NOT saved", "79 embedded: months of a company you are not an admin of", "83 embedded: opened while the dashboard is locked"]
+      "onlyOn": ["77 embedded: locked, the month covered, what was typed NOT saved", "79 embedded: months of a company you are not an admin of", "83 embedded: opened while the dashboard is locked", "70d date fields, import summary"]
     },
     {
       "text": "text: not exported",
@@ -1653,7 +2325,7 @@
     {
       "text": "text: EDF",
       "why": "approved: Phase 3, D5: inside a dashboard that keeps the months, the month's table is not shown while the dashboard is locked (77, 83), nor to someone who is not an admin of the company (79); the base version shows its own page there",
-      "onlyOn": ["77 embedded: locked, the month covered, what was typed NOT saved", "79 embedded: months of a company you are not an admin of", "83 embedded: opened while the dashboard is locked"]
+      "onlyOn": ["77 embedded: locked, the month covered, what was typed NOT saved", "79 embedded: months of a company you are not an admin of", "83 embedded: opened while the dashboard is locked", "70d date fields, import summary"]
     },
     {
       "text": "text: EDF (monthly)",
@@ -1934,6 +2606,190 @@
       "text": "text: 2% of Emoluments, up to a maximum of 29,710.",
       "why": "not removed from the app: the base version's summary of a single tier with a cap, corrected in October 2026 (audit M2); only on the step that builds the NSF trap",
       "onlyOn": ["24d add column (tiered, a cap that cuts off the tier)"]
+    },
+    {
+      "text": "aria-label: Close",
+      "why": "approved 20 Oct 2026: existing wording, recorded on the new date-field steps (the base version records nothing there)",
+      "onlyOn": ["70d date fields, import summary"]
+    },
+    {
+      "text": "text: 15/03/2021",
+      "why": "approved 20 Oct 2026: existing wording, recorded on the new date-field steps (the base version records nothing there)",
+      "onlyOn": ["70d date fields, import summary"]
+    },
+    {
+      "text": "text: 2019-11-04",
+      "why": "approved 20 Oct 2026: existing wording, recorded on the new date-field steps (the base version records nothing there)",
+      "onlyOn": ["70d date fields, import summary"]
+    },
+    {
+      "text": "text: 31/02/2026",
+      "why": "approved 20 Oct 2026: existing wording, recorded on the new date-field steps (the base version records nothing there)",
+      "onlyOn": ["70d date fields, import summary"]
+    },
+    {
+      "text": "text: 46235",
+      "why": "approved 20 Oct 2026: existing wording, recorded on the new date-field steps (the base version records nothing there)",
+      "onlyOn": ["70d date fields, import summary"]
+    },
+    {
+      "text": "text: Always leftmost in the Employee Table, plain text, shared by every company.",
+      "why": "approved 20 Oct 2026: Date type (date-column, stage A)"
+    },
+    {
+      "text": "text: Cancel",
+      "why": "approved 20 Oct 2026: existing wording, recorded on the new date-field steps (the base version records nothing there)",
+      "onlyOn": ["70d date fields, import summary"]
+    },
+    {
+      "text": "text: Date joined",
+      "why": "approved 20 Oct 2026: existing wording, recorded on the new date-field steps (the base version records nothing there)",
+      "onlyOn": ["70d date fields, import summary"]
+    },
+    {
+      "text": "text: Date of Employment",
+      "why": "approved 20 Oct 2026: existing wording, recorded on the new date-field steps (the base version records nothing there)",
+      "onlyOn": ["70d date fields, import summary"]
+    },
+    {
+      "text": "text: Exemple, Jr",
+      "why": "approved 20 Oct 2026: existing wording, recorded on the new date-field steps (the base version records nothing there)",
+      "onlyOn": ["70d date fields, import summary"]
+    },
+    {
+      "text": "text: F001",
+      "why": "approved 20 Oct 2026: existing wording, recorded on the new date-field steps (the base version records nothing there)",
+      "onlyOn": ["70d date fields, import summary"]
+    },
+    {
+      "text": "text: F002",
+      "why": "approved 20 Oct 2026: existing wording, recorded on the new date-field steps (the base version records nothing there)",
+      "onlyOn": ["70d date fields, import summary"]
+    },
+    {
+      "text": "text: F003",
+      "why": "approved 20 Oct 2026: existing wording, recorded on the new date-field steps (the base version records nothing there)",
+      "onlyOn": ["70d date fields, import summary"]
+    },
+    {
+      "text": "text: Import 3 rows",
+      "why": "approved 20 Oct 2026: existing wording, recorded on the new date-field steps (the base version records nothing there)",
+      "onlyOn": ["70d date fields, import summary"]
+    },
+    {
+      "text": "text: Import from Excel",
+      "why": "approved 20 Oct 2026: existing wording, recorded on the new date-field steps (the base version records nothing there)",
+      "onlyOn": ["70d date fields, import summary"]
+    },
+    {
+      "text": "text: Map file columns to fields (3 rows found)",
+      "why": "approved 20 Oct 2026: existing wording, recorded on the new date-field steps (the base version records nothing there)",
+      "onlyOn": ["70d date fields, import summary"]
+    },
+    {
+      "text": "text: Preview (first 3 rows)",
+      "why": "approved 20 Oct 2026: existing wording, recorded on the new date-field steps (the base version records nothing there)",
+      "onlyOn": ["70d date fields, import summary"]
+    },
+    {
+      "text": "text: Specimen",
+      "why": "approved 20 Oct 2026: existing wording, recorded on the new date-field steps (the base version records nothing there)",
+      "onlyOn": ["70d date fields, import summary"]
+    },
+    {
+      "text": "text: Testeur",
+      "why": "approved 20 Oct 2026: existing wording, recorded on the new date-field steps (the base version records nothing there)",
+      "onlyOn": ["70d date fields, import summary"]
+    },
+    {
+      "text": "text: abc",
+      "why": "approved 20 Oct 2026: existing wording, recorded on the new date-field steps (the base version records nothing there)",
+      "onlyOn": ["70d date fields, import summary"]
+    },
+    {
+      "text": "text: empty",
+      "why": "approved 20 Oct 2026: existing wording, recorded on the new date-field steps (the base version records nothing there)",
+      "onlyOn": ["70d date fields, import summary"]
+    },
+    {
+      "text": "text: identity",
+      "why": "approved 20 Oct 2026: existing wording, recorded on the new date-field steps (the base version records nothing there)",
+      "onlyOn": ["70d date fields, import summary"]
+    },
+    {
+      "text": "text: input",
+      "why": "approved 20 Oct 2026: existing wording, recorded on the new date-field steps (the base version records nothing there)",
+      "onlyOn": ["70d date fields, import summary"]
+    },
+    {
+      "text": "text: — Skip —",
+      "why": "approved 20 Oct 2026: existing wording, recorded on the new date-field steps (the base version records nothing there)",
+      "onlyOn": ["70d date fields, import summary"]
+    },
+    {
+      "text": "title: Age 60+",
+      "why": "approved 20 Oct 2026: existing wording, recorded on the new date-field steps (the base version records nothing there)",
+      "onlyOn": ["70d date fields, import summary"]
+    },
+    {
+      "text": "title: Allowances",
+      "why": "approved 20 Oct 2026: existing wording, recorded on the new date-field steps (the base version records nothing there)",
+      "onlyOn": ["70d date fields, import summary"]
+    },
+    {
+      "text": "title: Basic Salary",
+      "why": "approved 20 Oct 2026: existing wording, recorded on the new date-field steps (the base version records nothing there)",
+      "onlyOn": ["70d date fields, import summary"]
+    },
+    {
+      "text": "title: Date joined",
+      "why": "approved 20 Oct 2026: existing wording, recorded on the new date-field steps (the base version records nothing there)",
+      "onlyOn": ["70d date fields, import summary"]
+    },
+    {
+      "text": "title: Date of Employment",
+      "why": "approved 20 Oct 2026: existing wording, recorded on the new date-field steps (the base version records nothing there)",
+      "onlyOn": ["70d date fields, import summary"]
+    },
+    {
+      "text": "title: EDF",
+      "why": "approved 20 Oct 2026: existing wording, recorded on the new date-field steps (the base version records nothing there)",
+      "onlyOn": ["70d date fields, import summary"]
+    },
+    {
+      "text": "title: Full time / Part time",
+      "why": "approved 20 Oct 2026: existing wording, recorded on the new date-field steps (the base version records nothing there)",
+      "onlyOn": ["70d date fields, import summary"]
+    },
+    {
+      "text": "title: Govt Increment",
+      "why": "approved 20 Oct 2026: existing wording, recorded on the new date-field steps (the base version records nothing there)",
+      "onlyOn": ["70d date fields, import summary"]
+    },
+    {
+      "text": "title: ID",
+      "why": "approved 20 Oct 2026: existing wording, recorded on the new date-field steps (the base version records nothing there)",
+      "onlyOn": ["70d date fields, import summary"]
+    },
+    {
+      "text": "title: Internal Note",
+      "why": "approved 20 Oct 2026: existing wording, recorded on the new date-field steps (the base version records nothing there)",
+      "onlyOn": ["70d date fields, import summary"]
+    },
+    {
+      "text": "title: Other names",
+      "why": "approved 20 Oct 2026: existing wording, recorded on the new date-field steps (the base version records nothing there)",
+      "onlyOn": ["70d date fields, import summary"]
+    },
+    {
+      "text": "title: Surname",
+      "why": "approved 20 Oct 2026: existing wording, recorded on the new date-field steps (the base version records nothing there)",
+      "onlyOn": ["70d date fields, import summary"]
+    },
+    {
+      "text": "title: Travelling",
+      "why": "approved 20 Oct 2026: existing wording, recorded on the new date-field steps (the base version records nothing there)",
+      "onlyOn": ["70d date fields, import summary"]
     }
   ]
 }
