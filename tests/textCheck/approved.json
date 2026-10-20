@@ -2080,6 +2080,39 @@
     {
       "text": "text: Make it a Date",
       "why": "approved 20 Oct 2026: a field becoming a Date checks its saved months (date-column, stage B)"
+    },
+    {
+      "text": "text: Move to identity fields",
+      "why": "approved 20 Oct 2026: Move to identity fields (date-column)"
+    },
+    {
+      "text": "text: Move \"Date joined\" to the identity fields?",
+      "why": "approved 20 Oct 2026: Move to identity fields (date-column)"
+    },
+    {
+      "text": "text: It becomes an identity field with the same key, : leftmost in the Employee Table, and always in the Excel exports (an identity field has no “Include in Excel export” setting).",
+      "why": "approved 20 Oct 2026: Move to identity fields (date-column)"
+    },
+    {
+      "text": "text: dateJoined",
+      "why": "approved 20 Oct 2026: Move to identity fields (date-column); the key of the column moved",
+      "onlyOn": ["70k date fields, move a column to the identity fields"]
+    },
+    {
+      "text": "text: Its saved values stay where they are: 1 month holds one, in 1 company.",
+      "why": "approved 20 Oct 2026: Move to identity fields (date-column)"
+    },
+    {
+      "text": "text: 1 saved value is a date: shown DD/MM/YYYY from now on.",
+      "why": "approved 20 Oct 2026: Move to identity fields (date-column)"
+    },
+    {
+      "text": "text: One save of the column setup: inside the dashboard, one new revision, which History > Restore undoes.",
+      "why": "approved 20 Oct 2026: Move to identity fields (date-column)"
+    },
+    {
+      "text": "text: Move",
+      "why": "approved 20 Oct 2026: Move to identity fields (date-column)"
     }
   ],
   "removed": [
