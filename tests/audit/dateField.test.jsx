@@ -11,7 +11,7 @@ import { createRoot } from 'react-dom/client'
 import ExcelJS from 'exceljs'
 import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest'
 import App from '../../src/App'
-import { resetDataStore } from '../../src/lib/dataStore'
+import { dataStore, resetDataStore } from '../../src/lib/dataStore'
 import { forgetDashboardSetup, IMPORTED_KEY, PREFS_KEY } from '../../src/lib/dashboardSetup'
 import { forgetDashboardMonths } from '../../src/lib/dashboardMonths'
 import { newColumn, getEffectiveColumns, getColumnsByKey } from '../../src/lib/model'
@@ -756,5 +756,145 @@ describe('a text field becomes a Date', () => {
       await new Promise((resolve) => setTimeout(resolve, 1200))
       expect(hub.state.shared.get(SHARED_ID).revision).toBe(1)
     }, 15_000)
+  })
+})
+
+// ---------- "Move to identity fields" ----------
+
+describe('Move to identity fields', () => {
+  const moveDialog = () => document.querySelector('[data-testid="move-to-identity"]')
+  const moveText = () => moveDialog()?.textContent.replace(/\s+/g, ' ') ?? ''
+
+  function seedColumn(extraColumns = []) {
+    localStorage.clear()
+    localStorage.setItem(
+      STATE_KEY,
+      JSON.stringify({ identityFields, idFieldKey, globalColumns: [...globalColumns, TEXT_DOE_COLUMN, ...extraColumns], companies: [company], activeCompanyId: company.id })
+    )
+    localStorage.setItem(OCT_KEY, JSON.stringify({ employees: OCT_TEXT }))
+    localStorage.setItem(SEP_KEY, JSON.stringify({ employees: SEP_TEXT }))
+  }
+
+  async function openMove() {
+    await click(button('Global Columns'))
+    const rowOf = all('tr').find((tr) => [...tr.querySelectorAll('td')].some((td) => td.textContent.trim() === 'Date of employment') && button('Edit', tr))
+    await click(button('Move to identity fields', rowOf))
+    await vi.waitFor(() => expect(moveText()).not.toContain('Checking the saved months'))
+  }
+
+  async function renameAndMove() {
+    await type(moveDialog().querySelector('[aria-label="Name"]'), 'Date of Employment')
+    await click(button('Date', moveDialog()))
+    await click(button('Move', moveDialog()))
+  }
+
+  test('it becomes the identity field "Date of Employment" (a Date, same key); no saved value moves; it is in the Excel export and the PDF fill', async () => {
+    seedColumn()
+    const monthsBefore = [localStorage.getItem(OCT_KEY), localStorage.getItem(SEP_KEY)]
+    await startOnItsOwn()
+    await openMove()
+    expect(text()).toContain('Move "Date of employment" to the identity fields?')
+    expect(moveText()).toContain(
+      'It becomes an identity field with the same key, dateOfEmployment: leftmost in the Employee Table, and always in the Excel exports (an identity field has no “Include in Excel export” setting).'
+    )
+    expect(moveText()).toContain('Its saved values stay where they are: 2 months hold one, in 1 company.')
+    await click(button('Date', moveDialog()))
+    expect(moveText()).toContain("3 saved values are dates: shown DD/MM/YYYY from now on.2 saved values can't be read as a date.")
+    expect(moveText()).toContain('September 2026, row 2October 2026, row 3')
+    await click(button('Text', moveDialog()))
+    await renameAndMove()
+
+    await vi.waitFor(() =>
+      expect(JSON.parse(localStorage.getItem(STATE_KEY)).identityFields.at(-1)).toMatchObject({ name: 'Date of Employment', key: 'dateOfEmployment', valueType: 'date' })
+    )
+    expect(JSON.parse(localStorage.getItem(STATE_KEY)).globalColumns.some((c) => c.key === 'dateOfEmployment')).toBe(false)
+    expect([localStorage.getItem(OCT_KEY), localStorage.getItem(SEP_KEY)]).toEqual(monthsBefore)
+
+    await click(button('Employee Table'))
+    await vi.waitFor(() => expect(cell(0, 'Date of Employment').value).toBe('15/03/2021'))
+    expect(cell(0, 'Pick a date: Date of Employment')).toBeTruthy()
+
+    // Identity fields are always in the Excel export.
+    await click(button('Export to Excel'))
+    await vi.waitFor(() => expect(dialog()).toBeTruthy())
+    expect(dialog().querySelector('thead').textContent).toContain('Date of Employment')
+    expect(dialog().textContent).toContain('15/03/2021')
+    // And in the PDF fill, under exactly the name the other apps look for.
+    const state = JSON.parse(localStorage.getItem(STATE_KEY))
+    const effective = getEffectiveColumns(company, state.globalColumns)
+    const columns = buildPdfFillColumns(state.identityFields, effective)
+    const rows = buildPdfFillRows(columns, OCT_TEXT, computeGridForEmployees(OCT_TEXT, effective, getColumnsByKey(effective)))
+    expect(rows[0]['Date of Employment']).toBe('15/03/2021')
+    expect('Date of employment' in rows[0]).toBe(false)
+  })
+
+  test('a name an identity field already has is refused', async () => {
+    seedColumn()
+    await startOnItsOwn()
+    await openMove()
+    await type(moveDialog().querySelector('[aria-label="Name"]'), 'surname')
+    await click(button('Move', moveDialog()))
+    expect(moveText()).toContain('An identity field is already called "surname".')
+    expect(JSON.parse(localStorage.getItem(STATE_KEY)).globalColumns.some((c) => c.key === 'dateOfEmployment')).toBe(true)
+  })
+
+  test('not while a formula uses the column', async () => {
+    const user = { ...newColumn({ name: 'Uses it', key: 'usesIt', type: 'formula', builderMode: 'simple', formula: 'dateOfEmployment ? 1 : 0' }), id: 'col-usesIt' }
+    seedColumn([user])
+    await startOnItsOwn()
+    await openMove()
+    expect(moveText()).toContain("Can't move it: this formula uses it, and an identity field can't be used in a formula: Uses it. Change that formula first.")
+    expect(button('Move', moveDialog())).toBeUndefined()
+  })
+
+  test('inside the dashboard: ONE new revision of the shared setup, no month saved, and Restore undoes it', async () => {
+    const SHARED_TEXT_COLUMN = json({ identityFields, idFieldKey, globalColumns: [...globalColumns, TEXT_DOE_COLUMN] })
+    await startInDashboard(
+      hubSeed({
+        shared: [{ id: SHARED_ID, name: 'Shared column setup', body: SHARED_TEXT_COLUMN, revision: 1 }],
+        months: { [OCT]: { employees: OCT_TEXT }, [SEP]: { employees: SEP_TEXT } },
+      })
+    )
+    await openMove()
+    expect(moveText()).toContain('Its saved values stay where they are: 2 months hold one, in 1 company.')
+    await renameAndMove()
+    await vi.waitFor(() => expect(hub.state.shared.get(SHARED_ID).revision).toBe(2), { timeout: 4000 })
+    await new Promise((resolve) => setTimeout(resolve, 1500))
+    const body = hub.state.shared.get(SHARED_ID).body
+    expect(hub.state.shared.get(SHARED_ID).revision).toBe(2)
+    expect(body.identityFields.at(-1)).toMatchObject({ name: 'Date of Employment', key: 'dateOfEmployment', valueType: 'date' })
+    expect(body.globalColumns.some((c) => c.key === 'dateOfEmployment')).toBe(false)
+    expect([storedOctober().revision, hub.state.months.get(SEP).revision]).toEqual([1, 1])
+
+    await click(button('History of the Global columns'))
+    await vi.waitFor(() => expect(dialog().textContent).toContain('Revision 1'))
+    await click(startingWith('Revision 1', dialog()))
+    await vi.waitFor(() => expect(button('Restore this version', dialog())).toBeTruthy())
+    await click(button('Restore this version', dialog()))
+    await vi.waitFor(() => expect(button('Restore', dialog())).toBeTruthy())
+    await click(button('Restore', dialog()))
+    await vi.waitFor(() => expect(hub.state.shared.get(SHARED_ID).revision).toBe(3), { timeout: 4000 })
+    expect(hub.state.shared.get(SHARED_ID).body).toEqual(SHARED_TEXT_COLUMN)
+    expect([storedOctober().revision, hub.state.months.get(SEP).revision]).toEqual([1, 1])
+  }, 20_000)
+
+  test('a company whose months only its admins may read is named by its name in the message', async () => {
+    const B = { brn: 'TEST-BRN-B', name: 'TEST Co B', address: '2 Test Street', role: 'member' }
+    await startInDashboard(
+      hubSeed({
+        companies: [A, B],
+        setups: {
+          [A.brn]: { shared_setup_id: SHARED_ID, body: json({ columns: company.columns, customFields: company.details.customFields }), revision: 1 },
+          [B.brn]: { shared_setup_id: SHARED_ID, body: { columns: [], customFields: [] }, revision: 1 },
+        },
+      })
+    )
+    const companyB = dataStore.loadState().companies.find((c) => c.name === 'TEST Co B')
+    expect(companyB).toBeTruthy()
+    expect(await dataStore.readSavedValues([companyB.id], 'dateOfEmployment')).toEqual({
+      ok: false,
+      code: 'forbidden',
+      error: 'Only an admin of TEST Co B can see its months, so they could not be read.',
+    })
   })
 })

@@ -727,6 +727,15 @@ test('collect every visible string', async () => {
     }
     snapTopDialog('70j date fields, a text column made a Date, the saved months checked')
     while (all('[role="dialog"]').length > 0) await cancel()
+
+    // "Move to identity fields", for a Date column.
+    const move = rowButton('Date joined', 'Move to identity fields')
+    if (move) {
+      await click(move)
+      await act(async () => new Promise((r) => setTimeout(r, 50)))
+    }
+    snapTopDialog('70k date fields, move a column to the identity fields')
+    while (all('[role="dialog"]').length > 0) await cancel()
   }
 
   expect(OUT, 'TEXT_CHECK_OUT').toBeTruthy()

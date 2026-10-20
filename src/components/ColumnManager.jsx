@@ -2,6 +2,7 @@ import { useMemo, useRef, useState } from 'react'
 import { CircleAlert, Download, GripVertical, Upload, X } from 'lucide-react'
 import ColumnFormModal from './ColumnFormModal'
 import ConfirmDialog from './ConfirmDialog'
+import MoveToIdentityDialog from './MoveToIdentityDialog'
 import ColumnSetupImportModal from './ColumnSetupImportModal'
 import { SELECTABLE_CATEGORIES, DEFAULT_CATEGORY, labelColumnsForHelper } from '../lib/categories'
 import { buildColumnSetupExport, buildColumnSetupFilename, downloadColumnSetup, parseColumnSetupFile } from '../lib/columnSetup'
@@ -16,7 +17,7 @@ function tierStopOf(col) {
   return outdatedTieredRule(col) ? null : tierStopsBeforeCap(col.tiered)
 }
 
-function CategorySection({ category, ownColumns, otherColumns, onEdit, onDelete, onDragStart, onDrop, draggingId, formulaLabels, readOnly }) {
+function CategorySection({ category, ownColumns, otherColumns, onEdit, onDelete, onMove, onDragStart, onDrop, draggingId, formulaLabels, readOnly }) {
   return (
     <section className="card mb-5 overflow-hidden">
       <div className="border-b border-line px-4 py-3">
@@ -94,6 +95,12 @@ function CategorySection({ category, ownColumns, otherColumns, onEdit, onDelete,
                       <button onClick={() => onDelete(col)} className="btn btn-ghost btn-sm text-xs text-danger">
                         Delete
                       </button>
+                      {/* A Global Text or Date column can become an identity field (same key, same values). */}
+                      {onMove && col.type === 'input' && (col.valueType === 'text' || col.valueType === 'date') && (
+                        <button onClick={() => onMove(col)} className="btn btn-ghost btn-sm text-xs text-accent">
+                          Move to identity fields
+                        </button>
+                      )}
                     </>
                   )}
                 </td>
@@ -152,6 +159,10 @@ export default function ColumnManager({
   getKeyChangePreview,
   // (column, scope) -> { readSaved, companyNames }: what is checked before a column becomes a Date.
   getDateCheck,
+  // Global columns only: (column, { name, valueType }) makes a Text or Date column an identity field
+  // with the same key, and getMoveCheck(column) -> { formulas, identityNames, readSaved, companyNames }.
+  onMoveToIdentity,
+  getMoveCheck,
   onRenameKey,
   // Inside the dashboard, for someone who may not change these columns: they
   // are shown, and can be exported, but nothing offers to change them.
@@ -162,6 +173,7 @@ export default function ColumnManager({
 }) {
   const [editing, setEditing] = useState(null) // 'new' | column | null
   const [deleting, setDeleting] = useState(null)
+  const [moving, setMoving] = useState(null) // { column, check } | null
   const [draggingId, setDraggingId] = useState(null)
   const [importPreview, setImportPreview] = useState(null) // { scope, companyName, columns } | null
   const [importError, setImportError] = useState(null)
@@ -300,6 +312,7 @@ export default function ColumnManager({
           otherColumns={otherScopeColumns.filter((c) => categoryOf(c) === cat.id)}
           onEdit={setEditing}
           onDelete={setDeleting}
+          onMove={onMoveToIdentity && getMoveCheck ? (column) => setMoving({ column, check: getMoveCheck(column) }) : null}
           draggingId={draggingId}
           onDragStart={setDraggingId}
           onDrop={(targetId) => {
@@ -327,6 +340,18 @@ export default function ColumnManager({
           dateCheck={editing === 'new' || !getDateCheck ? null : getDateCheck(editing, scope)}
           onSave={handleSave}
           onClose={() => setEditing(null)}
+        />
+      )}
+
+      {moving && (
+        <MoveToIdentityDialog
+          column={moving.column}
+          {...moving.check}
+          onCancel={() => setMoving(null)}
+          onConfirm={(field) => {
+            onMoveToIdentity(moving.column, field)
+            setMoving(null)
+          }}
         />
       )}
 

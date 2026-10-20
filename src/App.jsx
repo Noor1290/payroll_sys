@@ -569,6 +569,22 @@ function PayrollApp({ onRestored, inDashboard = false, offline = null, onReloadD
   function handleDeleteGlobalColumn(id) {
     setGlobalColumns((prev) => prev.filter((c) => c.id !== id))
   }
+  // "Move to identity fields": the Global column goes and an identity field with the SAME key comes, in
+  // one change of the setup (one save; inside the dashboard, one revision of the shared setup). The
+  // months hold values by key, so nothing in them moves or changes.
+  function handleMoveColumnToIdentity(column, { name, valueType }) {
+    setGlobalColumns((prev) => prev.filter((c) => c.id !== column.id))
+    setIdentityFields((prev) => [...prev, newIdentityField({ name, key: column.key, valueType })])
+  }
+  // What the move shows first: the formulas that use the column (they would stop it), the identity
+  // field names taken, and the saved months.
+  function getMoveCheck(column) {
+    return {
+      formulas: findFormulasUsingColumn(column.key, reachOf('global').reachColumns).map((c) => c.name),
+      identityNames: identityFields.map((f) => f.name),
+      ...dateCheckFor(companies, column.key),
+    }
+  }
   function handleReorderGlobalColumns(draggedId, targetId) {
     setGlobalColumns((prev) => reorderWithinCategory(prev, draggedId, targetId))
   }
@@ -1055,6 +1071,8 @@ function PayrollApp({ onRestored, inDashboard = false, offline = null, onReloadD
                     onDelete={handleDeleteGlobalColumn}
                     onReorder={handleReorderGlobalColumns}
                     onImportColumns={handleImportGlobalColumns}
+                    onMoveToIdentity={handleMoveColumnToIdentity}
+                    getMoveCheck={getMoveCheck}
                     scope="global"
                     crossScopeExistingKeys={companyScopeKnownKeys}
                     totalCompanyCount={companies.length}

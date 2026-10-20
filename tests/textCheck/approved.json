@@ -287,12 +287,12 @@
     {
       "text": "text: Cancel",
       "why": "existing wording, not new: the Cancel button of the new \"Change this field's key?\" question, which the base version does not have; and the same button in the new backup dialogs (migration plan step 0a), which the base version does not have; also on the Phase 2 dashboard screens, where it is the same control or the company's name; also on the Phase 3 screens (months kept in the dashboard), where it is the same control or wording; also on the Phase 3 follow-up screens (History, the read-only offline copy), where it is the same control or wording; also on the \"Send to the dashboard?\" question (rehearsal fix F4), where it is the same control; also in the \"Clear this browser's data\" dialog, where it is the same control; also in the \"Clear the column setup\" dialog, where it is the same control",
-      "onlyOn": ["57 change identity field key confirm (the ID field, values in saved months)", "58 change identity field key confirm (no saved values)", "59 restore a backup, what is in the file and in the browser", "59b restore a backup, a file that does not say when it was saved", "66 embedded: company details from the dashboard", "72 embedded: import, backup first", "73 embedded: import, what it will do", "80 embedded: import months, backup first", "81 embedded: import months, what it will do", "85 embedded: History of the Global columns, restore asked", "90 embedded: History of a month, restore asked", "60b embedded: send, asked first", "66 clear this browser's data, backup downloaded", "66b clear this browser's data, columns only chosen and CLEAR typed", "66c clear this browser's data, everything chosen and CLEAR typed", "66d clear this browser's data, the backup could not be downloaded", "96 embedded: clear the column setup, exported and CLEAR typed", "96c embedded: column setup NOT cleared", "70c date fields, import mapping", "70e date fields, add identity field, Date", "70f date fields, edit the ID field", "70g date fields, add column, Date", "70h date fields, a formula using a Date column", "70i date fields, a column formulas use made a Date"]
+      "onlyOn": ["57 change identity field key confirm (the ID field, values in saved months)", "58 change identity field key confirm (no saved values)", "59 restore a backup, what is in the file and in the browser", "59b restore a backup, a file that does not say when it was saved", "66 embedded: company details from the dashboard", "72 embedded: import, backup first", "73 embedded: import, what it will do", "80 embedded: import months, backup first", "81 embedded: import months, what it will do", "85 embedded: History of the Global columns, restore asked", "90 embedded: History of a month, restore asked", "60b embedded: send, asked first", "66 clear this browser's data, backup downloaded", "66b clear this browser's data, columns only chosen and CLEAR typed", "66c clear this browser's data, everything chosen and CLEAR typed", "66d clear this browser's data, the backup could not be downloaded", "96 embedded: clear the column setup, exported and CLEAR typed", "96c embedded: column setup NOT cleared", "70c date fields, import mapping", "70e date fields, add identity field, Date", "70f date fields, edit the ID field", "70g date fields, add column, Date", "70h date fields, a formula using a Date column", "70i date fields, a column formulas use made a Date", "70j date fields, a text column made a Date, the saved months checked", "70k date fields, move a column to the identity fields"]
     },
     {
       "text": "aria-label: Close",
       "why": "existing wording, not new: the close button of the new \"Change this field's key?\" question, which the base version does not have; and the same button in the new backup dialogs (migration plan step 0a), which the base version does not have; also on the Phase 2 dashboard screens, where it is the same control or the company's name; also on the Phase 3 screens (months kept in the dashboard), where it is the same control or wording; also on the Phase 3 follow-up screens (History, the read-only offline copy), where it is the same control or wording; also on the \"Send to the dashboard?\" question (rehearsal fix F4), where it is the same control; also in the \"Clear this browser's data\" dialog and its messages, where it is the same control; also in the \"Clear the column setup\" dialog and its message, where it is the same control",
-      "onlyOn": ["57 change identity field key confirm (the ID field, values in saved months)", "58 change identity field key confirm (no saved values)", "59 restore a backup, what is in the file and in the browser", "59b restore a backup, a file that does not say when it was saved", "60 backup restored", "61 restore, not a backup file", "61b restore, a backup of another version", "61c restore, a damaged backup", "61d restore, an empty backup", "62 backup not restored, storage full", "62b backup not restored, earlier data could not be put back", "63 this change was NOT saved (storage full)", "66 embedded: company details from the dashboard", "72 embedded: import, backup first", "73 embedded: import, what it will do", "74 embedded: import, done", "80 embedded: import months, backup first", "81 embedded: import months, what it will do", "82 embedded: import months, done", "84 embedded: History of the Global columns, an earlier version", "85 embedded: History of the Global columns, restore asked", "86 embedded: History of the Global columns, restored", "87 embedded: History of the Global columns, the months could not be checked (locked)", "88 embedded: History of a company's columns, the version in use, not an admin", "89 embedded: History of a month, an earlier version", "90 embedded: History of a month, restore asked", "91 embedded: History of a month, only the record of a save kept", "92 embedded: History of a month, the dashboard locked", "60b embedded: send, asked first", "66 clear this browser's data, backup downloaded", "66b clear this browser's data, columns only chosen and CLEAR typed", "66c clear this browser's data, everything chosen and CLEAR typed", "66d clear this browser's data, the backup could not be downloaded", "67 columns cleared", "67b everything cleared", "67c nothing was cleared (storage full)", "96 embedded: clear the column setup, exported and CLEAR typed", "96b embedded: column setup cleared", "96c embedded: column setup NOT cleared", "70c date fields, import mapping", "70e date fields, add identity field, Date", "70f date fields, edit the ID field", "70g date fields, add column, Date", "70h date fields, a formula using a Date column", "70i date fields, a column formulas use made a Date"]
+      "onlyOn": ["57 change identity field key confirm (the ID field, values in saved months)", "58 change identity field key confirm (no saved values)", "59 restore a backup, what is in the file and in the browser", "59b restore a backup, a file that does not say when it was saved", "60 backup restored", "61 restore, not a backup file", "61b restore, a backup of another version", "61c restore, a damaged backup", "61d restore, an empty backup", "62 backup not restored, storage full", "62b backup not restored, earlier data could not be put back", "63 this change was NOT saved (storage full)", "66 embedded: company details from the dashboard", "72 embedded: import, backup first", "73 embedded: import, what it will do", "74 embedded: import, done", "80 embedded: import months, backup first", "81 embedded: import months, what it will do", "82 embedded: import months, done", "84 embedded: History of the Global columns, an earlier version", "85 embedded: History of the Global columns, restore asked", "86 embedded: History of the Global columns, restored", "87 embedded: History of the Global columns, the months could not be checked (locked)", "88 embedded: History of a company's columns, the version in use, not an admin", "89 embedded: History of a month, an earlier version", "90 embedded: History of a month, restore asked", "91 embedded: History of a month, only the record of a save kept", "92 embedded: History of a month, the dashboard locked", "60b embedded: send, asked first", "66 clear this browser's data, backup downloaded", "66b clear this browser's data, columns only chosen and CLEAR typed", "66c clear this browser's data, everything chosen and CLEAR typed", "66d clear this browser's data, the backup could not be downloaded", "67 columns cleared", "67b everything cleared", "67c nothing was cleared (storage full)", "96 embedded: clear the column setup, exported and CLEAR typed", "96b embedded: column setup cleared", "96c embedded: column setup NOT cleared", "70c date fields, import mapping", "70e date fields, add identity field, Date", "70f date fields, edit the ID field", "70g date fields, add column, Date", "70h date fields, a formula using a Date column", "70i date fields, a column formulas use made a Date", "70j date fields, a text column made a Date, the saved months checked", "70k date fields, move a column to the identity fields"]
     },
     {
       "text": "text: 1 item that could not be read, kept as it is",
@@ -1743,7 +1743,7 @@
     {
       "text": "text: Name",
       "why": "approved 20 Oct 2026: existing wording, recorded on the new date-field steps (the base version records nothing there)",
-      "onlyOn": ["70e date fields, add identity field, Date", "70f date fields, edit the ID field", "70g date fields, add column, Date", "70h date fields, a formula using a Date column", "70i date fields, a column formulas use made a Date"]
+      "onlyOn": ["70e date fields, add identity field, Date", "70f date fields, edit the ID field", "70g date fields, add column, Date", "70h date fields, a formula using a Date column", "70i date fields, a column formulas use made a Date", "70k date fields, move a column to the identity fields"]
     },
     {
       "text": "text: Net Pay → netPay",
@@ -2024,6 +2024,62 @@
       "text": "title: Travelling",
       "why": "approved 20 Oct 2026: existing wording, recorded on the new date-field steps (the base version records nothing there)",
       "onlyOn": ["70c date fields, import mapping", "70h date fields, a formula using a Date column"]
+    },
+    {
+      "text": "text: Make \"Full time / Part time\" a Date?",
+      "why": "approved 20 Oct 2026: a field becoming a Date checks its saved months (date-column, stage B)"
+    },
+    {
+      "text": "text: 8 saved values can't be read as a date. They are kept exactly as they are, shown in red until corrected:",
+      "why": "approved 20 Oct 2026: a field becoming a Date checks its saved months (date-column, stage B)"
+    },
+    {
+      "text": "text: September 2026, row 1",
+      "why": "approved 20 Oct 2026: a field becoming a Date checks its saved months (date-column, stage B); where a value is not a date, by month and row",
+      "onlyOn": ["70j date fields, a text column made a Date, the saved months checked"]
+    },
+    {
+      "text": "text: September 2026, row 2",
+      "why": "approved 20 Oct 2026: a field becoming a Date checks its saved months (date-column, stage B); where a value is not a date, by month and row",
+      "onlyOn": ["70j date fields, a text column made a Date, the saved months checked"]
+    },
+    {
+      "text": "text: September 2026, row 3",
+      "why": "approved 20 Oct 2026: a field becoming a Date checks its saved months (date-column, stage B); where a value is not a date, by month and row",
+      "onlyOn": ["70j date fields, a text column made a Date, the saved months checked"]
+    },
+    {
+      "text": "text: September 2026, row 4",
+      "why": "approved 20 Oct 2026: a field becoming a Date checks its saved months (date-column, stage B); where a value is not a date, by month and row",
+      "onlyOn": ["70j date fields, a text column made a Date, the saved months checked"]
+    },
+    {
+      "text": "text: October 2026, row 1",
+      "why": "approved 20 Oct 2026: a field becoming a Date checks its saved months (date-column, stage B); where a value is not a date, by month and row",
+      "onlyOn": ["70j date fields, a text column made a Date, the saved months checked"]
+    },
+    {
+      "text": "text: October 2026, row 2",
+      "why": "approved 20 Oct 2026: a field becoming a Date checks its saved months (date-column, stage B); where a value is not a date, by month and row",
+      "onlyOn": ["70j date fields, a text column made a Date, the saved months checked"]
+    },
+    {
+      "text": "text: October 2026, row 3",
+      "why": "approved 20 Oct 2026: a field becoming a Date checks its saved months (date-column, stage B); where a value is not a date, by month and row",
+      "onlyOn": ["70j date fields, a text column made a Date, the saved months checked"]
+    },
+    {
+      "text": "text: October 2026, row 4",
+      "why": "approved 20 Oct 2026: a field becoming a Date checks its saved months (date-column, stage B); where a value is not a date, by month and row",
+      "onlyOn": ["70j date fields, a text column made a Date, the saved months checked"]
+    },
+    {
+      "text": "text: No saved value is changed: a date is written as YYYY-MM-DD the next time its cell is changed.",
+      "why": "approved 20 Oct 2026: a field becoming a Date checks its saved months (date-column, stage B)"
+    },
+    {
+      "text": "text: Make it a Date",
+      "why": "approved 20 Oct 2026: a field becoming a Date checks its saved months (date-column, stage B)"
     }
   ],
   "removed": [
