@@ -111,3 +111,19 @@ export function dateRefusal(raw) {
     ? `"${text}" is not a real date. Type it as DD/MM/YYYY, for example 01/08/2026.`
     : `"${text}" is not a date. Type it as DD/MM/YYYY, for example 01/08/2026.`
 }
+
+// What making a field a Date finds in its saved months (`months` as the store's readSavedValues gives
+// them): how many values are dates, and where the ones that are not clear dates are, by company,
+// month and row (never the value or whose it is). Empty cells are neither. Nothing is changed.
+export function checkSavedDates(months) {
+  let dates = 0
+  const unreadable = []
+  for (const { companyId, period, values } of months) {
+    values.forEach((value, index) => {
+      const read = readDate(typeof value === 'boolean' ? (value ? 'Yes' : '') : value)
+      if (read.value) dates++
+      else if (read.unreadable) unreadable.push({ companyId, period, row: index + 1 })
+    })
+  }
+  return { dates, unreadable }
+}

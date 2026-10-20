@@ -717,6 +717,16 @@ test('collect every visible string', async () => {
     await clickButton('Save')
     snapTopDialog('70i date fields, a column formulas use made a Date')
     if (all('[role="dialog"]').length > 0) await cancel()
+
+    // A Text column made a Date: its saved months are checked first (what is not a date is listed).
+    await click(rowButton('Full time / Part time', 'Edit'))
+    if (dateChoice()) {
+      await click(dateChoice())
+      await clickButton('Save')
+      await act(async () => new Promise((r) => setTimeout(r, 50)))
+    }
+    snapTopDialog('70j date fields, a text column made a Date, the saved months checked')
+    while (all('[role="dialog"]').length > 0) await cancel()
   }
 
   expect(OUT, 'TEXT_CHECK_OUT').toBeTruthy()

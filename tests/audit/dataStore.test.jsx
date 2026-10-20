@@ -54,6 +54,7 @@ function memoryStore() {
     deletePeriodsForCompany: record('deletePeriodsForCompany', () => {}),
     countPeriodsHoldingKey: record('countPeriodsHoldingKey', () => ({ periods: 0, companies: 0 })),
     renameValueKeyInPeriods: record('renameValueKeyInPeriods', () => true),
+    readSavedValues: record('readSavedValues', () => Promise.resolve({ ok: true, months: [] })),
   }
 }
 
@@ -102,7 +103,7 @@ describe('one way in', () => {
     expect(importing.sort()).toEqual(allowed)
   })
 
-  test('the interface is exactly the operations the browser store has always had, and whether a month has anyone in it', () => {
+  test('the interface is exactly the operations the browser store has always had, whether a month has anyone in it, and the values saved under a key (before a field becomes a Date)', () => {
     expect(STORE_OPERATIONS).toEqual([
       'loadState',
       'saveState',
@@ -112,6 +113,7 @@ describe('one way in', () => {
       'deletePeriodsForCompany',
       'countPeriodsHoldingKey',
       'renameValueKeyInPeriods',
+      'readSavedValues',
     ])
     for (const name of STORE_OPERATIONS) expect(typeof browserStore[name]).toBe('function')
   })

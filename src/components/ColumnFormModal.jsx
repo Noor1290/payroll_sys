@@ -2,6 +2,7 @@ import { useMemo, useRef, useState } from 'react'
 import { CircleAlert, Columns3 } from 'lucide-react'
 import Modal from './Modal'
 import ConfirmDialog from './ConfirmDialog'
+import DateConversionDialog from './DateConversionDialog'
 import TieredFormulaBuilder from './TieredFormulaBuilder'
 import CompareColumnsBuilder from './CompareColumnsBuilder'
 import ProgressiveBracketsBuilder from './ProgressiveBracketsBuilder'
@@ -55,6 +56,9 @@ export default function ColumnFormModal({
   targetCompanyName,
   scopeBlockers = [],
   keyChangePreview = null,
+  // { readSaved: () => promise of the store's readSavedValues for this column, companyNames }: asked
+  // before an Input column that is not a Date becomes one.
+  dateCheck = null,
   onSave,
   onClose,
 }) {
@@ -78,6 +82,7 @@ export default function ColumnFormModal({
   const [scope, setScope] = useState(currentScope ?? 'company')
   const [pendingScopeChange, setPendingScopeChange] = useState(null) // { patch, to, keyChange } | null
   const [pendingKeyChange, setPendingKeyChange] = useState(null) // { patch, keyChange, preview } | null
+  const [pendingDateChange, setPendingDateChange] = useState(null) // { patch } | null
   const [error, setError] = useState(null)
   const formulaRef = useRef(null)
 
@@ -239,7 +244,7 @@ export default function ColumnFormModal({
     }
 
     if (type !== 'formula') {
-      return saveValidated({
+      const patch = {
         name: trimmedName,
         key: trimmedKey,
         type,
@@ -254,7 +259,12 @@ export default function ColumnFormModal({
         compare: undefined,
         progressive: undefined,
         exemption: undefined,
-      })
+      }
+      // Its saved values are checked first, and the user is told what they are.
+      if (valueType === 'date' && isEdit && initial.type === 'input' && initial.valueType !== 'date' && dateCheck) {
+        return setPendingDateChange({ patch })
+      }
+      return saveValidated(patch)
     }
 
     let finalFormula = formula
@@ -745,6 +755,20 @@ export default function ColumnFormModal({
         onConfirm={() => {
           onSave(pendingScopeChange.patch, { to: pendingScopeChange.to }, pendingScopeChange.keyChange ?? null)
           setPendingScopeChange(null)
+        }}
+      />
+    )}
+
+    {pendingDateChange && (
+      <DateConversionDialog
+        fieldName={initial.name}
+        readSaved={dateCheck.readSaved}
+        companyNames={dateCheck.companyNames}
+        onCancel={() => setPendingDateChange(null)}
+        onConfirm={() => {
+          const { patch } = pendingDateChange
+          setPendingDateChange(null)
+          saveValidated(patch)
         }}
       />
     )}

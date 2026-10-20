@@ -275,6 +275,22 @@ export function countPeriodsHoldingKey(companyIds, valueKey) {
   return { periods, companies: companies.size }
 }
 
+// Every value saved under `valueKey`, month by month, oldest first: what is checked before a field
+// becomes a Date. Reads only. Answers like the dashboard's store, with a promise:
+//   { ok: true, months: [{ companyId, period: "YYYY-MM", values: [one per employee, in table order] }] }
+// A month with no employee holding the key is left out.
+export function readSavedValues(companyIds, valueKey) {
+  const months = []
+  for (const companyId of companyIds) {
+    for (const period of listPeriods(companyId)) {
+      const employees = readEmployees(`${PERIOD_KEY_PREFIX}${companyId}_${period}`)
+      if (!employees.some((e) => e.values && valueKey in e.values)) continue
+      months.push({ companyId, period, values: employees.map((e) => e.values?.[valueKey]) })
+    }
+  }
+  return Promise.resolve({ ok: true, months })
+}
+
 // Moves every saved value from `oldKey` to `newKey`, in every month of the
 // given companies - what keeps a column's figures with it when its key is
 // changed. Returns false if the browser refused any write.

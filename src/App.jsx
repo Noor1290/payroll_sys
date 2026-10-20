@@ -629,6 +629,18 @@ function PayrollApp({ onRestored, inDashboard = false, offline = null, onReloadD
     return { reachCompanies, reachColumns }
   }
 
+  // What is checked before a field becomes a Date: every value saved under its key, in the months of
+  // the companies it reaches (read through the store; nothing is changed).
+  function dateCheckFor(reachCompanies, key) {
+    return {
+      readSaved: () => dataStore.readSavedValues(reachCompanies.map((c) => c.id), key),
+      companyNames: Object.fromEntries(reachCompanies.map((c) => [c.id, c.name])),
+    }
+  }
+  function getDateCheck(column, scope) {
+    return dateCheckFor(reachOf(scope).reachCompanies, column.key)
+  }
+
   // What changing this column's key would have to update: the formulas that
   // use it, and the saved months that hold a value under it.
   function getKeyChangePreview(column, scope) {
@@ -1024,6 +1036,7 @@ function PayrollApp({ onRestored, inDashboard = false, offline = null, onReloadD
                     onDelete={handleDeleteIdentityField}
                     onSetIdField={handleSetIdField}
                     getKeyChangePreview={getIdentityKeyChangePreview}
+                    getDateCheck={(field) => dateCheckFor(companies, field.key)}
                     onRenameKey={handleRenameIdentityFieldKey}
                     readOnly={globalReadOnly}
                   />
@@ -1049,6 +1062,7 @@ function PayrollApp({ onRestored, inDashboard = false, offline = null, onReloadD
                     onChangeScope={handleChangeColumnScope}
                     getScopeBlockers={getScopeBlockers}
                     getKeyChangePreview={getKeyChangePreview}
+                    getDateCheck={getDateCheck}
                     onRenameKey={handleRenameColumnKey}
                     readOnly={globalReadOnly}
                     allowScopeChange={!companyReadOnly}
@@ -1081,6 +1095,7 @@ function PayrollApp({ onRestored, inDashboard = false, offline = null, onReloadD
                   companyDetails={activeCompany.details}
                   onChangeScope={handleChangeColumnScope}
                   getKeyChangePreview={getKeyChangePreview}
+                  getDateCheck={getDateCheck}
                   onRenameKey={handleRenameColumnKey}
                   readOnly={companyReadOnly}
                   allowScopeChange={!globalReadOnly}

@@ -304,6 +304,48 @@ export function countPeriodsHoldingKey(companyIds, key) {
   return { periods, companies: companies.size, ...(unknown ? { unknown: true } : {}) }
 }
 
+// Every value saved under `key` in the months of the given companies, oldest first: what is checked
+// before a field becomes a Date. Reads only; needs the gate open and an admin of each company. A
+// month open on screen is read as it is on screen (what was typed, saved or on its way).
+//   { ok: true, months: [{ companyId, period, values: [one per employee, in table order] }] }
+//   { ok: false, code, error }
+export async function readSavedValues(companyIds, key) {
+  if (gate === 'locked') return fail('locked', 'The dashboard is locked, so the saved months could not be read.')
+  const found = []
+  for (const companyId of companyIds) {
+    const brn = brnOf(companyId)
+    if (!brn) continue
+    if (!adminOf(brn)) return fail('forbidden', `Only an admin of ${nameOf(brn)} can see its months, so they could not be read.`)
+    const list = await askHub({ action: 'list', brn: selectedBrn(), ...companyParam(brn) }, { dataType: MONTH })
+    if (!list.ok) {
+      if (list.code === 'locked') noteGate(false)
+      return list
+    }
+    lists.set(normaliseBrn(brn), new Map(list.rows.map((row) => [row.period, row])))
+    const held = (period) => months.get(keyOf(brn, period))
+    const holding = list.rows.filter((row) => (row.value_keys ?? []).includes(key)).map((row) => row.period)
+
+    const loaded = new Map()
+    const toLoad = holding.filter((period) => !held(period))
+    for (let i = 0; i < toLoad.length; i += LOAD_BATCH) {
+      const answer = await askHub({ action: 'load', brn: selectedBrn(), ...companyParam(brn), periods: toLoad.slice(i, i + LOAD_BATCH) }, { dataType: MONTH })
+      if (!answer.ok) {
+        if (answer.code === 'locked') noteGate(false)
+        return answer
+      }
+      for (const row of answer.rows) loaded.set(row.period, row.employees ?? [])
+    }
+
+    const onScreen = [...months.values()].filter((entry) => normaliseBrn(entry.brn) === normaliseBrn(brn)).map((entry) => entry.period)
+    for (const period of [...new Set([...holding, ...onScreen])].sort()) {
+      const employees = held(period)?.current ?? loaded.get(period) ?? []
+      if (!employees.some((e) => e.values && key in e.values)) continue
+      found.push({ companyId, period, values: employees.map((e) => e.values?.[key]) })
+    }
+  }
+  return { ok: true, months: found }
+}
+
 // ---------- saving ----------
 
 // The month on screen changed: held in memory, and on its way to the dashboard.
@@ -649,6 +691,7 @@ export const monthOperations = {
   periodHasEmployees,
   countPeriodsHoldingKey,
   renameValueKeyInPeriods,
+  readSavedValues,
   // A company is never deleted from inside the dashboard here.
   deletePeriodsForCompany: () => {},
 }

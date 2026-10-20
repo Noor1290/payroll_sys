@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { CircleAlert, IdCard } from 'lucide-react'
 import Modal from './Modal'
 import ConfirmDialog from './ConfirmDialog'
+import DateConversionDialog from './DateConversionDialog'
 import { slugify, isValidKey } from '../lib/slugify'
 
 // What the "Change this field's key?" question says will be updated.
@@ -17,7 +18,8 @@ function describeKeyChange({ keyChange, preview }, isIdField) {
   return `The key changes from "${keyChange.from}" to "${keyChange.to}". ${values}${idField} Nothing is lost.`
 }
 
-export default function IdentityFieldFormModal({ initial, existingKeys, isIdField = false, keyChangePreview = null, onSave, onClose }) {
+// dateCheck: { readSaved, companyNames }, asked before a text field becomes a Date.
+export default function IdentityFieldFormModal({ initial, existingKeys, isIdField = false, keyChangePreview = null, dateCheck = null, onSave, onClose }) {
   const isEdit = Boolean(initial)
   const [name, setName] = useState(initial?.name ?? '')
   const [key, setKey] = useState(initial?.key ?? '')
@@ -25,6 +27,7 @@ export default function IdentityFieldFormModal({ initial, existingKeys, isIdFiel
   const [valueType, setValueType] = useState(initial?.valueType === 'date' ? 'date' : 'text')
   const [error, setError] = useState(null)
   const [pendingKeyChange, setPendingKeyChange] = useState(null) // { field, keyChange, preview } | null
+  const [pendingDateChange, setPendingDateChange] = useState(null) // { field } | null
 
   function handleNameChange(value) {
     setName(value)
@@ -47,10 +50,19 @@ export default function IdentityFieldFormModal({ initial, existingKeys, isIdFiel
     // Only a Date says what it is: a text field is stored exactly as before, with no value type.
     const { valueType: _type, ...rest } = initial ?? {}
     const field = { ...rest, name: trimmedName, key: trimmedKey, ...(valueType === 'date' ? { valueType: 'date' } : {}) }
-    // Changing the key of an existing field moves its saved values in every
-    // month of every company, so that is spelled out and confirmed first.
-    if (isEdit && trimmedKey !== initial.key) {
-      const keyChange = { from: initial.key, to: trimmedKey }
+    // A text field that becomes a Date: its saved values are checked first, and the user is told.
+    if (isEdit && valueType === 'date' && initial.valueType !== 'date' && dateCheck) {
+      setPendingDateChange({ field })
+      return
+    }
+    finishSave(field)
+  }
+
+  // Changing the key of an existing field moves its saved values in every
+  // month of every company, so that is spelled out and confirmed first.
+  function finishSave(field) {
+    if (isEdit && field.key !== initial.key) {
+      const keyChange = { from: initial.key, to: field.key }
       setPendingKeyChange({ field, keyChange, preview: keyChangePreview ? keyChangePreview() : { periods: 0, companies: 0 } })
       return
     }
@@ -131,6 +143,20 @@ export default function IdentityFieldFormModal({ initial, existingKeys, isIdFiel
         </div>
       </div>
     </Modal>
+
+    {pendingDateChange && (
+      <DateConversionDialog
+        fieldName={initial.name}
+        readSaved={dateCheck.readSaved}
+        companyNames={dateCheck.companyNames}
+        onCancel={() => setPendingDateChange(null)}
+        onConfirm={() => {
+          const { field } = pendingDateChange
+          setPendingDateChange(null)
+          finishSave(field)
+        }}
+      />
+    )}
 
     {pendingKeyChange && (
       <ConfirmDialog

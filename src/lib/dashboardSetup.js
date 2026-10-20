@@ -756,6 +756,7 @@ export const dashboardStore = {
   deletePeriodsForCompany: months('deletePeriodsForCompany'),
   countPeriodsHoldingKey: months('countPeriodsHoldingKey'),
   renameValueKeyInPeriods: months('renameValueKeyInPeriods'),
+  readSavedValues: months('readSavedValues'),
 }
 
 // A save refused because the dashboard was locked goes again once it is open.

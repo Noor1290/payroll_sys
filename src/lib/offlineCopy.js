@@ -86,6 +86,7 @@ export function offlineStore(brn) {
       deletePeriodsForCompany: () => {},
       countPeriodsHoldingKey: () => ({ periods: 0, companies: 0, unknown: true }),
       renameValueKeyInPeriods: () => false,
+      readSavedValues: () => Promise.resolve({ ok: false, code: 'offline', error: 'The months are not in the offline copy.' }),
     },
   }
 }

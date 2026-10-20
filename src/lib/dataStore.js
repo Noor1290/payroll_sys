@@ -18,6 +18,9 @@
 //   deletePeriodsForCompany(companyId)             removes every saved month of a company
 //   countPeriodsHoldingKey(companyIds, key)        { periods, companies } holding a value under that key
 //   renameValueKeyInPeriods(companyIds, old, new)  moves those values; false if any write was refused
+//   readSavedValues(companyIds, key)               a promise of every value saved under that key, month by
+//                                                  month: { ok: true, months: [{ companyId, period, values }] },
+//                                                  or { ok: false, code, error } when the months cannot be read
 
 import * as browserStore from './storage'
 
@@ -30,6 +33,7 @@ export const STORE_OPERATIONS = [
   'deletePeriodsForCompany',
   'countPeriodsHoldingKey',
   'renameValueKeyInPeriods',
+  'readSavedValues',
 ]
 
 let current = browserStore

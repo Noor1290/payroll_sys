@@ -16,7 +16,7 @@ import { forgetDashboardSetup, IMPORTED_KEY, PREFS_KEY } from '../../src/lib/das
 import { forgetDashboardMonths } from '../../src/lib/dashboardMonths'
 import { newColumn, getEffectiveColumns, getColumnsByKey } from '../../src/lib/model'
 import { computeGridForEmployees } from '../../src/lib/formulaEngine'
-import { readDate, excelSerialToIso, isoToExcelSerial, showDate } from '../../src/lib/dates'
+import { readDate, excelSerialToIso, isoToExcelSerial, showDate, checkSavedDates } from '../../src/lib/dates'
 import { convertImportValue, findUnreadableValues, getImportableSystemFields, parseWorkbookFile, planMonthImport } from '../../src/lib/excelImport'
 import { buildExportPlan, buildWorkbookBuffer } from '../../src/lib/excelExport'
 import { buildPdfFillColumns, buildPdfFillRows } from '../../src/lib/pdfFillExport'
@@ -612,4 +612,149 @@ describe('inside the dashboard', () => {
     await vi.waitFor(() => expect(cell(0, 'Pick a date: Date of Employment')).toBeTruthy())
     expect(cell(0, 'Date of Employment').value).toBe('15/03/2021')
   }, 20_000)
+})
+
+// ---------- stage B: a field that is text becomes a Date ----------
+
+// "Date of employment" typed as text, as it is today: day first, YYYY-MM-DD, words, nothing.
+const TEXT_DOE_COLUMN = { ...newColumn({ name: 'Date of employment', key: 'dateOfEmployment', type: 'input', valueType: 'text' }), id: 'col-doe' }
+const TEXT_DOE_FIELD = { id: 'idf-doe', name: 'Date of Employment', key: 'dateOfEmployment' }
+const typedAsText = (employees, byId) =>
+  employees.map((e) => ({ ...e, values: { ...e.values, ...(e.values.id in byId ? { dateOfEmployment: byId[e.values.id] } : {}) } }))
+const OCT_TEXT = typedAsText(octoberEmployees, { F001: '15/03/2021', F002: '2019-11-04', F003: 'since 2018', F004: '' })
+const SEP_TEXT = typedAsText(septemberEmployees, { F001: '02/01/2020', F002: 'n/a' })
+
+describe('a text field becomes a Date', () => {
+  test('what the saved months hold, by company, month and row', () => {
+    expect(
+      checkSavedDates([
+        { companyId: 'a', period: '2026-09', values: ['02/01/2020', 'n/a', undefined] },
+        { companyId: 'a', period: '2026-10', values: ['15/03/2021', '2019-11-04', 'since 2018', ''] },
+      ])
+    ).toEqual({
+      dates: 3,
+      unreadable: [
+        { companyId: 'a', period: '2026-09', row: 2 },
+        { companyId: 'a', period: '2026-10', row: 3 },
+      ],
+    })
+  })
+
+  function seedText({ asColumn }) {
+    localStorage.clear()
+    localStorage.setItem(
+      STATE_KEY,
+      JSON.stringify({
+        identityFields: asColumn ? identityFields : [...identityFields, TEXT_DOE_FIELD],
+        idFieldKey,
+        globalColumns: asColumn ? [...globalColumns, TEXT_DOE_COLUMN] : globalColumns,
+        companies: [company],
+        activeCompanyId: company.id,
+      })
+    )
+    localStorage.setItem(OCT_KEY, JSON.stringify({ employees: OCT_TEXT }))
+    localStorage.setItem(SEP_KEY, JSON.stringify({ employees: SEP_TEXT }))
+  }
+
+  const conversion = () => document.querySelector('[data-testid="date-conversion"]')?.textContent.replace(/\s+/g, ' ') ?? ''
+  const EXPECTED =
+    "3 saved values are dates: shown DD/MM/YYYY from now on.2 saved values can't be read as a date. They are kept exactly as they are, shown in red until corrected:September 2026, row 2October 2026, row 3No saved value is changed: a date is written as YYYY-MM-DD the next time its cell is changed."
+
+  async function editToDate(name) {
+    await click(button('Global Columns'))
+    const rowOf = all('tr').find((tr) => [...tr.querySelectorAll('td')].some((td) => td.textContent.trim() === name) && button('Edit', tr))
+    await click(button('Edit', rowOf))
+    await click(button('Date', dialog()))
+    await click(button('Save', dialog()))
+  }
+
+  test.each([
+    ['an Input column', true],
+    ['an identity field', false],
+  ])('%s: the saved months are checked and listed by month and row; Make it a Date changes the setup only', async (_, asColumn) => {
+    seedText({ asColumn })
+    const monthsBefore = [localStorage.getItem(OCT_KEY), localStorage.getItem(SEP_KEY)]
+    await startOnItsOwn()
+    const name = asColumn ? 'Date of employment' : 'Date of Employment'
+    await editToDate(name)
+    await vi.waitFor(() => expect(conversion()).toContain('3 saved values'))
+    expect(text()).toContain(`Make "${name}" a Date?`)
+    expect(conversion()).toBe(`${EXPECTED}CancelMake it a Date`)
+    // No name and no value is shown.
+    expect(conversion()).not.toMatch(/Testeur|Specimen|since 2018|n\/a/)
+
+    await click(button('Make it a Date'))
+    await vi.waitFor(() => {
+      const state = JSON.parse(localStorage.getItem(STATE_KEY))
+      const saved = asColumn ? state.globalColumns.at(-1) : state.identityFields.at(-1)
+      expect(saved).toMatchObject({ key: 'dateOfEmployment', valueType: 'date' })
+    })
+    // Not one saved value is rewritten.
+    expect([localStorage.getItem(OCT_KEY), localStorage.getItem(SEP_KEY)]).toEqual(monthsBefore)
+
+    await click(button('Employee Table'))
+    await vi.waitFor(() => expect(cell(0, name).value).toBe('15/03/2021'))
+    expect(cell(1, name).value).toBe('04/11/2019')
+    expect(cell(2, name).value).toBe('since 2018')
+    expect(cell(2, name).getAttribute('aria-invalid')).toBe('true')
+    // Rewritten as YYYY-MM-DD only when its cell is changed.
+    await typeDate(cell(2, name), '01/06/2018')
+    await vi.waitFor(() => expect(storedOctoberHere()[2].values.dateOfEmployment).toBe('2018-06-01'))
+    expect(storedOctoberHere()[0].values.dateOfEmployment).toBe('15/03/2021')
+  })
+
+  test('Cancel changes nothing', async () => {
+    seedText({ asColumn: true })
+    await startOnItsOwn()
+    const before = JSON.parse(localStorage.getItem(STATE_KEY))
+    await editToDate('Date of employment')
+    await vi.waitFor(() => expect(button('Make it a Date')).toBeTruthy())
+    await click(button('Cancel', document.querySelector('[data-testid="date-conversion"]')))
+    expect(JSON.parse(localStorage.getItem(STATE_KEY)).globalColumns).toEqual(before.globalColumns)
+  })
+
+  describe('inside the dashboard', () => {
+    const SHARED_TEXT_FIELD = json({ identityFields: [...identityFields, TEXT_DOE_FIELD], idFieldKey, globalColumns })
+    const seed = () =>
+      hubSeed({
+        shared: [{ id: SHARED_ID, name: 'Shared column setup', body: SHARED_TEXT_FIELD, revision: 1 }],
+        months: { [OCT]: { employees: OCT_TEXT }, [SEP]: { employees: SEP_TEXT } },
+      })
+
+    test('September is read from the dashboard too; the change is ONE new revision of the setup, no month is saved, and Restore undoes it', async () => {
+      await startInDashboard(seed())
+      await editToDate('Date of Employment')
+      await vi.waitFor(() => expect(conversion()).toContain('3 saved values'), { timeout: 4000 })
+      expect(conversion()).toBe(`${EXPECTED}CancelMake it a Date`)
+      await click(button('Make it a Date'))
+      await vi.waitFor(() => expect(hub.state.shared.get(SHARED_ID).revision).toBe(2), { timeout: 4000 })
+      expect(hub.state.shared.get(SHARED_ID).body.identityFields.at(-1)).toMatchObject({ key: 'dateOfEmployment', valueType: 'date' })
+      // No month was saved: their values stay exactly as they were.
+      await new Promise((resolve) => setTimeout(resolve, 1200))
+      expect([storedOctober().revision, hub.state.months.get(SEP).revision]).toEqual([1, 1])
+
+      await click(button('History of the Global columns'))
+      await vi.waitFor(() => expect(dialog().textContent).toContain('Revision 1'))
+      await click(startingWith('Revision 1', dialog()))
+      await vi.waitFor(() => expect(button('Restore this version', dialog())).toBeTruthy())
+      await click(button('Restore this version', dialog()))
+      await vi.waitFor(() => expect(dialog().textContent).toContain('Date of Employment (dateOfEmployment)'))
+      await click(button('Restore', dialog()))
+      await vi.waitFor(() => expect(hub.state.shared.get(SHARED_ID).revision).toBe(3), { timeout: 4000 })
+      expect('valueType' in hub.state.shared.get(SHARED_ID).body.identityFields.at(-1)).toBe(false)
+      expect([storedOctober().revision, hub.state.months.get(SEP).revision]).toEqual([1, 1])
+    }, 20_000)
+
+    test('with the dashboard locked, the months cannot be checked: it says so, and nothing is changed', async () => {
+      await startInDashboard(seed())
+      await act(async () => hub.setGate(false))
+      await editToDate('Date of Employment')
+      await vi.waitFor(() =>
+        expect(conversion()).toContain('The saved months could not be checked: The dashboard is locked, so the saved months could not be read. Nothing was changed.')
+      )
+      expect(button('Make it a Date')).toBeUndefined()
+      await new Promise((resolve) => setTimeout(resolve, 1200))
+      expect(hub.state.shared.get(SHARED_ID).revision).toBe(1)
+    }, 15_000)
+  })
 })

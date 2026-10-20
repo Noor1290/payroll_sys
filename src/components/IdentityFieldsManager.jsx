@@ -15,6 +15,8 @@ export default function IdentityFieldsManager({
   onSetIdField,
   getKeyChangePreview,
   onRenameKey,
+  // field -> { readSaved, companyNames }: what is checked before a field becomes a Date.
+  getDateCheck,
   // Inside the dashboard, for someone who may not change the shared setup.
   readOnly = false,
 }) {
@@ -119,6 +121,7 @@ export default function IdentityFieldsManager({
           existingKeys={existingKeysExcluding(editing === 'new' ? null : editing)}
           isIdField={editing !== 'new' && editing.key === idFieldKey}
           keyChangePreview={editing === 'new' || !getKeyChangePreview ? null : () => getKeyChangePreview(editing)}
+          dateCheck={editing === 'new' || !getDateCheck ? null : getDateCheck(editing)}
           onSave={handleSave}
           onClose={() => setEditing(null)}
         />

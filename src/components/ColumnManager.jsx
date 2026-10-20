@@ -150,6 +150,8 @@ export default function ColumnManager({
   onChangeScope,
   getScopeBlockers,
   getKeyChangePreview,
+  // (column, scope) -> { readSaved, companyNames }: what is checked before a column becomes a Date.
+  getDateCheck,
   onRenameKey,
   // Inside the dashboard, for someone who may not change these columns: they
   // are shown, and can be exported, but nothing offers to change them.
@@ -322,6 +324,7 @@ export default function ColumnManager({
           targetCompanyName={targetCompanyName}
           scopeBlockers={editing === 'new' || !getScopeBlockers ? [] : getScopeBlockers(editing)}
           keyChangePreview={editing === 'new' || !getKeyChangePreview ? null : () => getKeyChangePreview(editing, scope)}
+          dateCheck={editing === 'new' || !getDateCheck ? null : getDateCheck(editing, scope)}
           onSave={handleSave}
           onClose={() => setEditing(null)}
         />

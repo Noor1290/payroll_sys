@@ -39,6 +39,7 @@ An Input column, or an identity field, can be a **Date** (`src/lib/dates.js`). I
 
 - **Import from Excel** takes a real Excel date cell (its serial number, e.g. 46235 for 01/08/2026), DD/MM/YYYY text or YYYY-MM-DD text. Anything else is not imported (a date already saved is kept) and is listed in the preview and in the summary.
 - **Exports:** Excel (values and live formulas) writes a real Excel date shown DD/MM/YYYY; "Export for PDF fill" writes DD/MM/YYYY; "Send to dashboard" sends YYYY-MM-DD.
+- **A field that is not a Date becoming one** (in the column form or the identity field form): its saved months are read first, and the form says how many values are dates and lists, by month and row (never a name or a value), the ones that can't be read. "Make it a Date" changes the setup only: no saved value is rewritten (a date is written YYYY-MM-DD the next time its cell is changed), and the ones that can't be read stay exactly as they are, in red, until corrected. Inside the dashboard it is one new revision of the column setup, which History > Restore undoes; the months can only be read while the dashboard is unlocked.
 - A date is never added up (Totals and the totals row show the first month's, like a text column), and never used in a formula: the column form says so, and a column a formula uses cannot become a Date. The ID field is always text.
 
 ## Where the data is read and saved
