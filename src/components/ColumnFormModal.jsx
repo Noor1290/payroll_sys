@@ -7,7 +7,7 @@ import CompareColumnsBuilder from './CompareColumnsBuilder'
 import ProgressiveBracketsBuilder from './ProgressiveBracketsBuilder'
 import ExemptionConditionBuilder from './ExemptionConditionBuilder'
 import { slugify, isValidKey } from '../lib/slugify'
-import { validateFormulaSyntax, detectCircularReference } from '../lib/formulaEngine'
+import { validateFormulaSyntax, detectCircularReference, getDependencies } from '../lib/formulaEngine'
 import { compileTieredFormula, compileCompareFormula, describeTieredRule, describeCompareRule } from '../lib/tieredFormula'
 import { compileProgressiveFormula, describeProgressiveRule } from '../lib/progressiveFormula'
 import { compileExemptionWrapper, defaultExemptionState, stripExemptionWrapper } from '../lib/exemptionCondition'
@@ -82,7 +82,8 @@ export default function ColumnFormModal({
   const formulaRef = useRef(null)
 
   const availableKeys = useMemo(() => availableColumns.map((c) => c.key), [availableColumns])
-  const labeledAvailableColumns = useMemo(() => labelColumnsForHelper(availableColumns), [availableColumns])
+  // A Date column is never offered to a formula: a date is not a figure. Typed in anyway, Save says so.
+  const labeledAvailableColumns = useMemo(() => labelColumnsForHelper(availableColumns.filter((c) => c.valueType !== 'date')), [availableColumns])
   const columnsByKeyForNames = useMemo(() => Object.fromEntries(availableColumns.map((c) => [c.key, c])), [availableColumns])
 
   // Live plain-language description of whichever base builder mode is
@@ -227,6 +228,16 @@ export default function ColumnFormModal({
       )
     }
 
+    // A column that becomes a Date can no longer be used by a formula, so not while one uses it.
+    if (type === 'input' && valueType === 'date' && isEdit && initial.valueType !== 'date') {
+      const users = keyChangePreview ? keyChangePreview().formulas : []
+      if (users.length > 0) {
+        return setError(
+          `Can't make this column a Date: ${users.length === 1 ? 'this formula uses' : 'these formulas use'} it, and a date can't be used in a formula's arithmetic: ${users.join(', ')}. Change ${users.length === 1 ? 'that formula' : 'those formulas'} first.`
+        )
+      }
+    }
+
     if (type !== 'formula') {
       return saveValidated({
         name: trimmedName,
@@ -292,6 +303,15 @@ export default function ColumnFormModal({
 
     const result = validateFormulaSyntax(finalFormula, availableKeys)
     if (!result.valid) return setError(result.error)
+
+    // A date is not a figure: it can't be added, multiplied or compared in a formula.
+    const datesUsed = getDependencies(finalFormula, availableKeys).filter((k) => columnsByKeyForNames[k]?.valueType === 'date')
+    if (datesUsed.length > 0) {
+      const names = datesUsed.map((k) => `"${columnsByKeyForNames[k].name}"`).join(', ')
+      return setError(
+        `A date can't be used in a formula's arithmetic: ${names} ${datesUsed.length === 1 ? 'is a Date column' : 'are Date columns'}. Remove ${datesUsed.length === 1 ? 'it' : 'them'} from the formula.`
+      )
+    }
 
     // Converting Company -> Global narrows what this formula can reference
     // for every OTHER company - re-validate against the global-only
@@ -498,11 +518,24 @@ export default function ColumnFormModal({
               >
                 Checkbox (Yes/No)
               </button>
+              <button
+                type="button"
+                onClick={() => setValueType('date')}
+                className={`choice ${
+                  valueType === 'date'
+                    ? 'choice-active'
+                    : ''
+                }`}
+              >
+                Date
+              </button>
             </div>
             <p className="hint">
               {valueType === 'checkbox'
                 ? 'A yes/no flag, shown as a checkbox in the Employee Table. Available in formulas as 1 (ticked) or 0 (not ticked).'
-                : 'Use Text for non-numeric values like "Full Time" / "Part Time" - it won\'t be coerced to 0.'}
+                : valueType === 'date'
+                  ? 'Typed and shown as DD/MM/YYYY, with a calendar to pick from. Only real dates are accepted. Not added up in Totals, and not usable in formulas.'
+                  : 'Use Text for non-numeric values like "Full Time" / "Part Time" - it won\'t be coerced to 0.'}
             </p>
           </div>
         )}

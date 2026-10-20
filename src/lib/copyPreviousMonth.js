@@ -13,7 +13,7 @@ export function buildCopyableColumnGroups(identityFields, effectiveColumns) {
   const orderedInputColumns = getOrderedEffectiveColumns(effectiveColumns).filter((c) => c.type === 'input')
   const groups = []
   if (identityFields.length > 0) {
-    groups.push({ label: 'Identifiers', columns: identityFields.map((f) => ({ key: f.key, name: f.name })) })
+    groups.push({ label: 'Identifiers', columns: identityFields.map((f) => ({ key: f.key, name: f.name, valueType: f.valueType })) })
   }
   for (const group of getCategoryGroups(orderedInputColumns)) {
     groups.push({

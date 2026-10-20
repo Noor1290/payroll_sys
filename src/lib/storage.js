@@ -25,7 +25,7 @@ function migrateEmployee(emp) {
 // unchanged behavior).
 function migrateColumn(col) {
   const valueType = col.type === 'input' ? (col.valueType ?? 'number') : undefined
-  const isNumeric = col.type === 'formula' || (col.type === 'input' && valueType !== 'text')
+  const isNumeric = col.type === 'formula' || (col.type === 'input' && valueType !== 'text' && valueType !== 'date')
   return {
     ...col,
     category: col.category ?? 'general',

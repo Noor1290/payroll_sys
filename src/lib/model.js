@@ -75,8 +75,10 @@ export function newColumn({
   }
 }
 
-export function newIdentityField({ name, key }) {
-  return { id: makeId(), name, key }
+// An identity field is text, or a Date ("YYYY-MM-DD", see dates.js). Only a Date says so: a text field
+// is stored exactly as before, with no value type.
+export function newIdentityField({ name, key, valueType }) {
+  return valueType === 'date' ? { id: makeId(), name, key, valueType } : { id: makeId(), name, key }
 }
 
 // Identity fields seeded for a brand-new install (no saved state yet).

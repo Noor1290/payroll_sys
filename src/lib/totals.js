@@ -11,7 +11,7 @@ import { formatPeriodLabel } from './periods'
 // FIRST (chronologically earliest, since `periods` must be pre-sorted)
 // period where the employee appears - and so do Text and Checkbox columns,
 // which cannot be added up: the grid carries them exactly as that first
-// month has them, so the Totals screen and the Totals export (both of which
+// month has them (a Date too: a date is never added up), so the Totals screen and the Totals export (both of which
 // read this one grid) always show the same thing.
 //
 // A figure that is in error in any month is in error in the total too: it
@@ -39,7 +39,7 @@ export function findSharedIds(periods, idFieldKey) {
 }
 
 export function computeTotals(periods, effectiveColumns, columnsByKey, idFieldKey) {
-  const isFixedColumn = (c) => c.valueType === 'text' || c.valueType === 'checkbox'
+  const isFixedColumn = (c) => c.valueType === 'text' || c.valueType === 'checkbox' || c.valueType === 'date'
   const numericColumns = effectiveColumns.filter((c) => (c.type === 'input' || c.type === 'formula') && !isFixedColumn(c))
   const fixedColumns = effectiveColumns.filter(isFixedColumn)
 

@@ -22,6 +22,7 @@ export default function IdentityFieldFormModal({ initial, existingKeys, isIdFiel
   const [name, setName] = useState(initial?.name ?? '')
   const [key, setKey] = useState(initial?.key ?? '')
   const [keyTouched, setKeyTouched] = useState(isEdit)
+  const [valueType, setValueType] = useState(initial?.valueType === 'date' ? 'date' : 'text')
   const [error, setError] = useState(null)
   const [pendingKeyChange, setPendingKeyChange] = useState(null) // { field, keyChange, preview } | null
 
@@ -43,7 +44,9 @@ export default function IdentityFieldFormModal({ initial, existingKeys, isIdFiel
       return setError(`Key "${trimmedKey}" is already used by another field or column`)
     }
 
-    const field = { ...(initial ?? {}), name: trimmedName, key: trimmedKey }
+    // Only a Date says what it is: a text field is stored exactly as before, with no value type.
+    const { valueType: _type, ...rest } = initial ?? {}
+    const field = { ...rest, name: trimmedName, key: trimmedKey, ...(valueType === 'date' ? { valueType: 'date' } : {}) }
     // Changing the key of an existing field moves its saved values in every
     // month of every company, so that is spelled out and confirmed first.
     if (isEdit && trimmedKey !== initial.key) {
@@ -82,6 +85,30 @@ export default function IdentityFieldFormModal({ initial, existingKeys, isIdFiel
             aria-label="Key"
             placeholder="employeeCode"
           />
+        </div>
+
+        <div>
+          <label className="label">Type</label>
+          <div className="flex gap-2">
+            <button type="button" onClick={() => setValueType('text')} className={`choice ${valueType === 'text' ? 'choice-active' : ''}`}>
+              Text
+            </button>
+            <button
+              type="button"
+              onClick={() => setValueType('date')}
+              disabled={isIdField}
+              className={`choice ${valueType === 'date' ? 'choice-active' : ''}`}
+            >
+              Date
+            </button>
+          </div>
+          <p className="hint">
+            {isIdField
+              ? 'The ID field is always text.'
+              : valueType === 'date'
+                ? 'Typed and shown as DD/MM/YYYY, with a calendar to pick from. Only real dates are accepted.'
+                : 'Any text, for example a name or an employee code.'}
+          </p>
         </div>
 
         {error && (

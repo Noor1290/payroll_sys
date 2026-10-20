@@ -4,12 +4,15 @@ import Modal from './Modal'
 import { columnsWrittenAsFigures, downloadExportPlan, formatCompanyDetailsLine } from '../lib/excelExport'
 import { formatDecimal } from '../lib/format'
 import { ERROR_TEXT } from '../lib/exportErrors'
+import { showDate } from '../lib/dates'
 
 function isTextLikeColumn(col) {
-  return col.kind === 'identity' || col.valueType === 'text' || col.valueType === 'checkbox'
+  return col.kind === 'identity' || col.valueType === 'text' || col.valueType === 'checkbox' || col.valueType === 'date'
 }
 
 function formatCell(value, col) {
+  // A date is shown as the file shows it: DD/MM/YYYY.
+  if (col.valueType === 'date') return showDate(value)
   if (isTextLikeColumn(col)) return value === '' || value === undefined ? '' : String(value)
   if (value === ERROR_TEXT) return ERROR_TEXT
   const n = typeof value === 'number' ? value : Number(value) || 0

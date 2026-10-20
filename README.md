@@ -33,6 +33,14 @@ Everything the app holds is in this browser only. At the foot of the company lis
 
 A backup file holds real payroll figures: keep it where the payroll itself is kept, and never in this repository.
 
+## Dates
+
+An Input column, or an identity field, can be a **Date** (`src/lib/dates.js`). It is typed and shown day first, DD/MM/YYYY, with a calendar to pick from, and saved as YYYY-MM-DD. Only a real date is accepted: anything else (31/02/2026, 13/13/2020, words) is refused in the cell, nothing is saved, and the table says why. A value saved as text before the field became a Date is read the same way, so "01/08/2026" is that date; one that is not a clear date is shown as it was saved, in red, and kept.
+
+- **Import from Excel** takes a real Excel date cell (its serial number, e.g. 46235 for 01/08/2026), DD/MM/YYYY text or YYYY-MM-DD text. Anything else is not imported (a date already saved is kept) and is listed in the preview and in the summary.
+- **Exports:** Excel (values and live formulas) writes a real Excel date shown DD/MM/YYYY; "Export for PDF fill" writes DD/MM/YYYY; "Send to dashboard" sends YYYY-MM-DD.
+- A date is never added up (Totals and the totals row show the first month's, like a text column), and never used in a formula: the column form says so, and a column a formula uses cannot become a Date. The ID field is always text.
+
 ## Where the data is read and saved
 
 Screens never touch the browser's storage themselves. They call the operations in `src/lib/dataStore.js`, and a store carries them out. Opened on its own, the store is the browser (`src/lib/storage.js`), so the app behaves as it always has. Inside the Payroll Hub dashboard it is the dashboard (`src/lib/dashboardSetup.js` for the column setup, `src/lib/dashboardMonths.js` for the months, behind the dashboard's password gate); see `docs/MIGRATION_PLAN.md` in the payroll_hub repository. `tests/audit/dataStore.test.jsx` fails if a screen reaches past the interface.

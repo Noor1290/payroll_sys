@@ -149,7 +149,7 @@ export async function parseColumnSetupFile(file) {
   return { valid: true, scope: meta.scope, companyName: meta.companyName ?? null, columns: parsed.columns }
 }
 
-const VALUE_TYPES = ['number', 'text', 'checkbox']
+const VALUE_TYPES = ['number', 'text', 'checkbox', 'date']
 
 // What a column in a file lacks to be a column the column form could have
 // made, e.g. ['no name', 'no valid key'].

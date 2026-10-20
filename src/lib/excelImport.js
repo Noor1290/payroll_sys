@@ -1,5 +1,6 @@
 import * as XLSX from 'xlsx'
 import { labelColumnsForHelper } from './categories'
+import { readExcelDateCell } from './dates'
 
 const META_SHEET_NAME = '_meta'
 const META_GENERATOR = 'payroll-sys'
@@ -149,7 +150,7 @@ export async function parseWorkbookFile(file, knownNames = []) {
 // "Export for PDF fill" use.
 export function getImportableSystemFields(identityFields, effectiveColumns) {
   return [
-    ...identityFields.map((f) => ({ key: f.key, name: f.name, label: f.name, kind: 'identity' })),
+    ...identityFields.map((f) => ({ key: f.key, name: f.name, label: f.name, kind: 'identity', ...(f.valueType === 'date' ? { valueType: 'date' } : {}) })),
     ...labelColumnsForHelper(effectiveColumns.filter((c) => c.type === 'input')).map((c) => ({
       key: c.key,
       name: c.name,
@@ -310,7 +311,15 @@ export function parseNumberCell(raw) {
 // Text) keep the raw value as-is - never forced through a numeric parser, so
 // non-numeric text like "Full Time" survives instead of becoming 0. A Number
 // cell that cannot be read is left BLANK and reported, never written as 0.
+//
+// A Date field (an identity field or an Input column) takes an Excel date cell (a serial number such
+// as 46235), "DD/MM/YYYY" text or "YYYY-MM-DD" text, and stores "YYYY-MM-DD". Anything else is left
+// blank and reported, like a Number cell, never guessed.
 export function convertImportValue(field, raw) {
+  if (field.valueType === 'date') {
+    const read = readExcelDateCell(raw)
+    return read.unreadable ? { value: '', unreadable: true } : { value: read.value, unreadable: false }
+  }
   if (field.kind === 'identity' || field.valueType === 'text') {
     return { value: raw === undefined || raw === null ? '' : String(raw), unreadable: false }
   }
@@ -349,7 +358,13 @@ export function findUnreadableValues({ rows, systemFields, mapping, meta }) {
       .join(' ')
     for (const field of systemFields) {
       if (convertImportValue(field, raw[field.key]).unreadable) {
-        found.push({ rowIndex, employee: who || `Row ${rowIndex + 1}`, field: field.label ?? field.name, raw: String(raw[field.key]) })
+        found.push({
+          rowIndex,
+          employee: who || `Row ${rowIndex + 1}`,
+          field: field.label ?? field.name,
+          raw: String(raw[field.key]),
+          ...(field.valueType === 'date' ? { date: true } : {}),
+        })
       }
     }
   })
@@ -367,7 +382,13 @@ export function buildImportedEmployees({ rows, systemFields, mapping, makeId, me
   return projected.map((row, rowIndex) => {
     const raw = rawValuesForRow(row, rowIndex, systemFields, mapping, meta)
     const values = {}
-    for (const field of systemFields) values[field.key] = convertImportValue(field, raw[field.key]).value
+    for (const field of systemFields) {
+      const converted = convertImportValue(field, raw[field.key])
+      // A date that cannot be read is not imported at all: an employee already in the month keeps the
+      // date saved for them (see planMonthImport).
+      if (converted.unreadable && field.valueType === 'date') continue
+      values[field.key] = converted.value
+    }
     return { id: makeId(), values }
   })
 }
@@ -429,7 +450,7 @@ export function planMonthImport({ rows, systemFields, mapping, meta, existing, i
     const matches = monthById.get(id) ?? []
     if (matches.length === 0) return plan.additions.push({ row, employee, label: name(employee.values) })
     if (matches.length > 1) return plan.notUpdated.push({ row, id, label: name(matches[0].values), copies: matches.length })
-    const patch = Object.fromEntries(mappedKeys.map((key) => [key, employee.values[key]]))
+    const patch = Object.fromEntries(mappedKeys.filter((key) => key in employee.values).map((key) => [key, employee.values[key]]))
     plan.updates.push({ row, employeeId: matches[0].id, patch, label: name(matches[0].values) })
   })
   if (idFieldKey) {

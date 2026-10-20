@@ -4,6 +4,7 @@ import { excelNumberFormat } from './format'
 import { translateFormulaToExcel, excelColumnLetter } from './excelFormulaTranslator'
 import { getDependencies } from './formulaEngine'
 import { ERROR_TEXT, isErrorCell } from './exportErrors'
+import { dateValue, isoToExcelSerial, readDate } from './dates'
 
 const FONT_NAME = 'Book Antiqua'
 // Approximates the reference file's header fill (Excel theme "Accent 1,
@@ -40,6 +41,8 @@ const META_VERSION = 2
 // A checkbox cell that holds the number 1 or 0 (so a live formula such as
 // IF(J7=1, ...) works) but is displayed as Yes / No.
 const CHECKBOX_NUMBER_FORMAT = '"Yes";"Yes";"No"'
+// How a Date column's cells are shown in Excel: day first, the Mauritian way.
+const EXCEL_DATE_FORMAT = 'dd/mm/yyyy'
 
 // One line combining address + BRN for the export header, e.g.
 // "123 Main St, Port Louis   •   BRN: C12345678". A multi-line address is
@@ -90,7 +93,7 @@ export function buildExportPlan({
   effectiveColumns,
   computedGrid,
 }) {
-  const identityColumns = identityFields.map((f) => ({ key: f.key, name: f.name, kind: 'identity' }))
+  const identityColumns = identityFields.map((f) => ({ key: f.key, name: f.name, kind: 'identity', valueType: f.valueType }))
   // Grouping must run on the RAW effective columns (which still carry
   // `.category`) - mapping them down to the plain {key,name,kind,...} shape
   // first (as the export column list needs) strips that field, and
@@ -122,13 +125,17 @@ export function buildExportPlan({
     groups.push({ label: group.label, count: group.columns.length })
   }
 
-  const isTextColumn = (col) => col.kind === 'identity' || col.valueType === 'text'
+  // Never added up in the totals row: text, and dates.
+  const isTextColumn = (col) => col.kind === 'identity' || col.valueType === 'text' || col.valueType === 'date'
   const isCheckboxColumn = (col) => col.valueType === 'checkbox'
 
+  // A date is "YYYY-MM-DD" here (the sheet writes it as an Excel date), or the saved text when it is
+  // not a clear date.
   function cellValue(col, emp) {
-    if (col.kind === 'identity') return emp.values?.[col.key] ?? ''
+    if (col.kind === 'identity') return col.valueType === 'date' ? dateValue(emp.values?.[col.key]) : (emp.values?.[col.key] ?? '')
     const cell = computedGrid[emp.id]?.[col.key]
     const value = cell?.value
+    if (col.valueType === 'date') return typeof value === 'string' ? value : ''
     if (isCheckboxColumn(col)) return value === 1 ? 'Yes' : 'No'
     if (isTextColumn(col)) return typeof value === 'string' ? value : (value ?? '')
     // A figure that could not be worked out is never exported as a number.
@@ -281,7 +288,19 @@ export function columnsWrittenAsFigures(plan) {
 // columns (written as "Yes"/"No"). Shared by the data rows, the totals
 // row, and column-width sizing so all three treat these consistently.
 function isTextLikeColumn(col) {
-  return col.kind === 'identity' || col.valueType === 'text' || col.valueType === 'checkbox'
+  return col.kind === 'identity' || col.valueType === 'text' || col.valueType === 'checkbox' || col.valueType === 'date'
+}
+
+// A date cell: a real Excel date (its serial number) shown DD/MM/YYYY, so Excel sorts and filters it as
+// a date. Something saved that is not a clear date is written as the text it is.
+function writeDateCell(cell, value) {
+  const read = readDate(value)
+  if (read.value) {
+    cell.value = isoToExcelSerial(read.value)
+    cell.numFmt = EXCEL_DATE_FORMAT
+  } else {
+    cell.value = read.empty ? '' : String(value)
+  }
 }
 
 function computeColumnWidths(plan) {
@@ -393,6 +412,9 @@ export async function buildWorkbookBuffer(plan) {
         cell.value = ERROR_TEXT
       } else if (col.kind === 'formula' && useLiveFormulas) {
         cell.value = buildLiveFormulaCellValue(col.formula, columnKeyToLetter, excelRowNum, value)
+      } else if (col.valueType === 'date') {
+        // The same in a values file and a live-formula file: no formula ever uses a date.
+        writeDateCell(cell, value)
       } else if (col.valueType === 'checkbox' && useLiveFormulas) {
         // The compiled formulas test a checkbox against 1 ("colKey === 1"),
         // and in a spreadsheet the text "Yes" is never equal to 1. So in a

@@ -8,6 +8,7 @@ import { askToUnlock, loadMonthRevision, monthHistory, monthInUse, monthStatus, 
 import { computeGridForEmployees } from '../lib/formulaEngine'
 import { getColumnsByKey } from '../lib/model'
 import { formatDecimal } from '../lib/format'
+import { showDate } from '../lib/dates'
 import { formatPeriodLabel, parsePeriodKey } from '../lib/periods'
 
 // The History of what the dashboard keeps for this app: a column setup (the
@@ -411,6 +412,7 @@ export function SetupHistoryModal({ target, companyName, onRestored, onClose }) 
 function cellText(column, cell) {
   const value = cell?.value
   if (cell?.trace?.error) return 'Error'
+  if (column.valueType === 'date') return showDate(value)
   if (typeof value === 'boolean') return value ? 'Yes' : 'No'
   if (typeof value === 'number') return formatDecimal(value, column.decimals)
   return value === undefined || value === null ? '' : String(value)
@@ -437,7 +439,7 @@ function MonthShown({ employees, identityFields, columns }) {
             <tr key={employee.id}>
               {identityFields.map((field) => (
                 <td key={field.key} className="px-3 py-2 text-fg">
-                  {String(employee.values?.[field.key] ?? '')}
+                  {field.valueType === 'date' ? showDate(employee.values?.[field.key]) : String(employee.values?.[field.key] ?? '')}
                 </td>
               ))}
               {columns.map((column) => (

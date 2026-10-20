@@ -16,7 +16,7 @@ export function isErrorCell(cell) {
 
 function isFigureColumn(col) {
   const kind = col.kind ?? col.type
-  return kind !== 'identity' && col.valueType !== 'text' && col.valueType !== 'checkbox'
+  return kind !== 'identity' && col.valueType !== 'text' && col.valueType !== 'checkbox' && col.valueType !== 'date'
 }
 
 // How an employee is named in a warning: their first identity values, e.g.

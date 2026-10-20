@@ -66,6 +66,8 @@ const unlabelled = new Set()
 function sweepUnlabelled(step) {
   for (const el of document.querySelectorAll('input, select, textarea')) {
     if (el.type === 'file' || el.type === 'hidden') continue
+    // Hidden from screen readers on purpose (a Date cell's calendar, opened by its labelled button).
+    if (el.closest('[aria-hidden="true"]')) continue
     const named =
       el.getAttribute('aria-label') ||
       el.getAttribute('aria-labelledby') ||
@@ -627,6 +629,95 @@ test('collect every visible string', async () => {
   await start()
   await vi.waitFor(() => expect(document.body.textContent).toContain('October 2026'))
   snap('65 opened on its own after an import to the dashboard')
+
+  // ---------- Date fields ----------
+  // A Date identity field and a Date Global column, with dates saved day first, as YYYY-MM-DD, and as
+  // text that is not a date. The base version has no Date type: there they are text (the identity
+  // field) or a number (the column), and a step that needs a Date control does nothing.
+  {
+    const doe = { id: 'idf-doe', name: 'Date of Employment', key: 'dateOfEmployment', valueType: 'date' }
+    const joined = { id: 'col-dateJoined', name: 'Date joined', key: 'dateJoined', type: 'input', category: 'general', valueType: 'date' }
+    const dated = octoberEmployees.map((e, i) => ({
+      ...e,
+      values: { ...e.values, dateOfEmployment: ['2021-03-15', '04/11/2019', 'since 2018'][i] ?? '', dateJoined: i === 0 ? '2021-03-15' : '' },
+    }))
+    localStorage.clear()
+    localStorage.setItem(
+      'payroll_app_state_v1',
+      JSON.stringify({ identityFields: [...identityFields, doe], idFieldKey, globalColumns: [...globalColumns, joined], companies: [company], activeCompanyId: company.id })
+    )
+    localStorage.setItem(`payroll_period_${company.id}_2026-10`, JSON.stringify({ employees: dated }))
+    localStorage.setItem(`payroll_period_${company.id}_2026-09`, JSON.stringify({ employees: septemberEmployees }))
+    await start()
+    await vi.waitFor(() => expect(document.body.textContent).toContain('October 2026'))
+    snap('70 date fields, employee table')
+
+    // Dates typed that are not dates.
+    const firstRow = () => all('tbody tr')[0]
+    for (const [label, typed] of [
+      ['Date of Employment', '31/02/2026'],
+      ['Date joined', 'abc'],
+    ]) {
+      const input = firstRow().querySelector(`input[aria-label="${label}"]`)
+      // The base version has no label on some of these cells.
+      if (!input) continue
+      await act(async () => input.focus())
+      await setValue(input, typed)
+      await act(async () => input.blur())
+    }
+    snap('70b date fields, dates refused')
+
+    const datesWorkbook = () => {
+      const sheet = XLSX.utils.aoa_to_sheet([
+        ['ID', 'Surname', 'Date of Employment', 'Date joined'],
+        ['F001', 'Testeur', 46235, '15/03/2021'],
+        ['F002', 'Exemple, Jr', '2019-11-04', '31/02/2026'],
+        ['F003', 'Specimen', 'abc', ''],
+      ])
+      const book = XLSX.utils.book_new()
+      XLSX.utils.book_append_sheet(book, sheet, 'Payroll')
+      return XLSX.write(book, { type: 'array', bookType: 'xlsx' })
+    }
+    await chooseFile('.xlsx', { name: 'fake-dates.xlsx', arrayBuffer: async () => datesWorkbook() })
+    snapTopDialog('70c date fields, import mapping')
+    const confirm = all('[role="dialog"] button.btn-primary').pop()
+    if (confirm && !confirm.disabled) await click(confirm)
+    snap('70d date fields, import summary')
+
+    await tab('Global Columns')
+    await clickButton('+ Add Identity Field')
+    const dateChoice = () => all('[role="dialog"] button').find((b) => textOf(b) === 'Date')
+    if (dateChoice()) await click(dateChoice())
+    snapTopDialog('70e date fields, add identity field, Date')
+    await cancel()
+    await click(all('tr').find((tr) => [...tr.querySelectorAll('td')].some((td) => textOf(td) === 'ID')).querySelectorAll('button')[1])
+    snapTopDialog('70f date fields, edit the ID field')
+    await cancel()
+
+    await clickButton('+ Add Column')
+    if (dateChoice()) await click(dateChoice())
+    snapTopDialog('70g date fields, add column, Date')
+    await cancel()
+
+    await clickButton('+ Add Column')
+    // The base version's form is not a labelled dialog: there this step records nothing.
+    const nameInput = document.querySelector('[role="dialog"] [aria-label="Name"]')
+    if (nameInput) {
+      await setValue(nameInput, 'Years')
+      await clickButton('Formula')
+      await setValue(byLabel('Formula expression'), 'basicSalary + dateJoined')
+      await clickButton('Save')
+    }
+    snapTopDialog('70h date fields, a formula using a Date column')
+    // Without the Date type it is saved: then there is nothing to cancel.
+    if (all('[role="dialog"]').length > 0) await cancel()
+
+    await click(rowButton('Basic Salary', 'Edit'))
+    if (dateChoice()) await click(dateChoice())
+    await clickButton('Save')
+    snapTopDialog('70i date fields, a column formulas use made a Date')
+    if (all('[role="dialog"]').length > 0) await cancel()
+  }
 
   expect(OUT, 'TEXT_CHECK_OUT').toBeTruthy()
   fs.writeFileSync(OUT, JSON.stringify(collected, null, 2))

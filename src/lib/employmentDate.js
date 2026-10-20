@@ -3,33 +3,15 @@
 // "01/08/2026". "Send to dashboard" sends it converted; a date that cannot be read without guessing
 // is not sent for that employee, and the user is told before sending.
 
-const pad = (n) => String(n).padStart(2, '0')
-
-// A real calendar date within what the dashboard accepts (1900 to 2100), as "YYYY-MM-DD", or null.
-function isoDate(year, month, day) {
-  if (year < 1900 || year > 2100 || month < 1 || month > 12 || day < 1) return null
-  const d = new Date(Date.UTC(year, month - 1, day))
-  if (d.getUTCFullYear() !== year || d.getUTCMonth() !== month - 1 || d.getUTCDate() !== day) return null
-  return `${year}-${pad(month)}-${pad(day)}`
-}
+import { readDate } from './dates'
 
 // Reads one typed date. Returns { value: "YYYY-MM-DD" }, { empty: true } for nothing typed, or
 // { unreadable: true } for anything else: two-digit years, words, a number, an impossible date.
 // Accepted: "YYYY-MM-DD", and day first with "/", "-" or "." between: "1/8/2026", "01-08-2026".
+// The same reading as a Date field (src/lib/dates.js).
 export function readEmploymentDate(raw) {
-  if (raw === undefined || raw === null || String(raw).trim() === '') return { empty: true }
-  const text = String(raw).trim()
-  let m = text.match(/^(\d{4})-(\d{2})-(\d{2})$/)
-  if (m) {
-    const value = isoDate(Number(m[1]), Number(m[2]), Number(m[3]))
-    return value ? { value } : { unreadable: true }
-  }
-  m = text.match(/^(\d{1,2})([/.-])(\d{1,2})\2(\d{4})$/)
-  if (m) {
-    const value = isoDate(Number(m[4]), Number(m[3]), Number(m[1]))
-    return value ? { value } : { unreadable: true }
-  }
-  return { unreadable: true }
+  const read = readDate(raw)
+  return read.unreadable ? { unreadable: true } : read
 }
 
 const loose = (name) => String(name).trim().replace(/\s+/g, ' ').toLowerCase()

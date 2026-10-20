@@ -3,12 +3,14 @@ import { ChevronDown, ChevronRight, Sigma } from 'lucide-react'
 import Modal from './Modal'
 import { formatDecimal } from '../lib/format'
 import { formatFormulaForDisplay } from '../lib/formulaEngine'
+import { showDate } from '../lib/dates'
 
 const SECTION_LABEL = 'text-xs font-medium uppercase tracking-wide text-subtle'
 const CODE_LINE = 'num mt-1 rounded-md border border-line bg-surface px-2.5 py-1.5 text-sm text-fg'
 
 function formatValue(v, decimals, valueType) {
   if (valueType === 'checkbox') return v === 1 || v === true ? 'Yes' : 'No'
+  if (valueType === 'date') return showDate(v) || '—'
   if (typeof v === 'string') return v || '—'
   if (typeof v !== 'number' || Number.isNaN(v)) return '—'
   return formatDecimal(v, decimals ?? 2)

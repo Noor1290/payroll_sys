@@ -7,6 +7,7 @@ import { buildProgressiveExplanation } from './progressiveFormula'
 import { evaluateExemptionCondition, buildExemptionExplanation } from './exemptionCondition'
 import { formatDecimal } from './format'
 import { outdatedTieredRule } from './outdatedRules'
+import { dateValue } from './dates'
 
 // Identifiers that are safe to leave unresolved in an expression (global
 // JS values/functions) rather than flagging as an "unknown column reference".
@@ -207,6 +208,15 @@ export function computeCell(key, employee, columnsByKey, memo, visiting = new Se
     if (col.valueType === 'text') {
       const value = raw === undefined || raw === null ? '' : String(raw)
       const result = { value, trace: { key, name: col.name, type: 'input', valueType: 'text', value } }
+      memo.set(key, result)
+      return result
+    }
+
+    // A date is "YYYY-MM-DD" (also when it was saved day first, as text), never a figure: a formula
+    // cannot use it (the column form refuses that), so it is never added to anything.
+    if (col.valueType === 'date') {
+      const value = dateValue(raw)
+      const result = { value, trace: { key, name: col.name, type: 'input', valueType: 'date', value } }
       memo.set(key, result)
       return result
     }

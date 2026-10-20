@@ -3,9 +3,11 @@ import { Copy } from 'lucide-react'
 import Modal from './Modal'
 import ConfirmDialog from './ConfirmDialog'
 import { formatDecimal } from '../lib/format'
+import { showDate } from '../lib/dates'
 import { buildCopyableColumnGroups, matchPreviousEmployees, applyCopyFromPreviousMonth } from '../lib/copyPreviousMonth'
 
 function displayValue(raw, col) {
+  if (col?.valueType === 'date') return showDate(raw)
   if (col.valueType === 'checkbox') return raw ? 'Yes' : 'No'
   if (col.valueType === 'text' || !col) return raw === undefined || raw === null ? '' : String(raw)
   const n = Number(raw)
@@ -175,7 +177,7 @@ export default function CopyPreviousMonthModal({
                       <th
                         key={col.key}
                         className={`bg-elevated px-3 py-2 shadow-[inset_0_-1px_0_var(--line)] ${
-                          col.valueType === 'text' || col.valueType === 'checkbox' || !col.valueType ? '' : 'text-right'
+                          col.valueType === 'text' || col.valueType === 'checkbox' || col.valueType === 'date' || !col.valueType ? '' : 'text-right'
                         }`}
                       >
                         {col.name}
@@ -196,7 +198,7 @@ export default function CopyPreviousMonthModal({
                         <td
                           key={col.key}
                           className={`num px-3 py-2 text-fg ${
-                            col.valueType === 'text' || col.valueType === 'checkbox' || !col.valueType ? '' : 'text-right'
+                            col.valueType === 'text' || col.valueType === 'checkbox' || col.valueType === 'date' || !col.valueType ? '' : 'text-right'
                           }`}
                         >
                           {displayValue(prevEmp.values?.[col.key], columnsByKey[col.key])}

@@ -63,6 +63,9 @@ export function describeSetupChange(nowBody, revisionBody, target) {
       const to = formulaOf(after)
       if (from !== to) out.formulas.push({ name: after.name, key: after.key, from, to })
       else if (!sameJson(settingsOf(before), settingsOf(after))) out.settings.push({ name: after.name, key: after.key })
+    } else if (!sameJson(settingsOf(before), settingsOf(after))) {
+      // An identity field's other setting: whether it is a Date.
+      out.settings.push({ name: after.name, key: after.key })
     }
   }
   for (const [id, before] of now) {

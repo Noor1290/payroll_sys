@@ -1,6 +1,8 @@
 import { useLayoutEffect, useMemo, useState } from 'react'
-import { TriangleAlert, Users } from 'lucide-react'
+import { CircleAlert, TriangleAlert, Users } from 'lucide-react'
 import ConfirmDialog from './ConfirmDialog'
+import DateCell from './DateCell'
+import { dateRefusal } from '../lib/dates'
 import { getOrderedEffectiveColumns, getCategoryGroups, labelColumnsForHelper } from '../lib/categories'
 import { formatDecimal } from '../lib/format'
 
@@ -13,6 +15,8 @@ const MAX_COLUMN_WIDTH = 600
 const DEFAULT_ID_WIDTH = 140
 const DEFAULT_IDENTITY_WIDTH = 160
 const DEFAULT_COLUMN_WIDTH = 120
+// Room for "01/08/2026" and the calendar button.
+const DEFAULT_DATE_WIDTH = 150
 const DEFAULT_ACTIONS_WIDTH = 88
 const GROUP_HEADER_HEIGHT = 28
 
@@ -23,8 +27,10 @@ const HEADER_CELL = 'bg-elevated shadow-[inset_0_-1px_0_var(--line)]'
 
 // Figures (number inputs and formula results) are right-aligned; so are their headers.
 function isFigureColumn(col) {
-  return col.type === 'formula' || (col.valueType !== 'text' && col.valueType !== 'checkbox')
+  return col.type === 'formula' || (col.valueType !== 'text' && col.valueType !== 'checkbox' && col.valueType !== 'date')
 }
+
+const defaultColumnWidth = (col) => (col.valueType === 'date' ? DEFAULT_DATE_WIDTH : DEFAULT_COLUMN_WIDTH)
 
 function ResizeHandle({ onResizeStart }) {
   return (
@@ -85,6 +91,8 @@ export default function EmployeeTable({
   // blurred, it displays rounded to the column's configured decimal places.
   // The underlying stored value is never touched by this - display only.
   const [focusedCellKey, setFocusedCellKey] = useState(null)
+  // Dates typed that are not dates, by cell ("employeeId:key"): not saved, listed above the table.
+  const [refusedDates, setRefusedDates] = useState({})
 
   // Taking focus swaps the rounded figure ("18115.00") for the raw one
   // ("18115"), and changing an input's content drops its selection - so
@@ -136,11 +144,41 @@ export default function EmployeeTable({
         key: field.key,
         defaultWidth: idx === 0 ? DEFAULT_ID_WIDTH : DEFAULT_IDENTITY_WIDTH,
       })),
-      ...orderedColumns.map((col) => ({ key: col.key, defaultWidth: DEFAULT_COLUMN_WIDTH })),
+      ...orderedColumns.map((col) => ({ key: col.key, defaultWidth: defaultColumnWidth(col) })),
       { key: '__actions', defaultWidth: DEFAULT_ACTIONS_WIDTH, resizable: false },
     ],
     [identityFields, orderedColumns]
   )
+
+  // A Date cell (a Date Input column or a Date identity field): what is typed is saved only when it is
+  // a date; anything else is refused and listed above the table.
+  function renderDateCell(emp, field) {
+    const cellKey = `${emp.id}:${field.key}`
+    const clear = () =>
+      setRefusedDates((prev) => {
+        if (!(cellKey in prev)) return prev
+        const next = { ...prev }
+        delete next[cellKey]
+        return next
+      })
+    return (
+      <DateCell
+        value={emp.values?.[field.key] ?? ''}
+        label={field.name}
+        refused={refusedDates[cellKey]?.text}
+        describedBy={`refused-date-${cellKey}`}
+        onCommit={(iso) => onUpdateValue(emp.id, field.key, iso)}
+        onRefuse={(text) => setRefusedDates((prev) => ({ ...prev, [cellKey]: { text, employeeId: emp.id, key: field.key, name: field.name } }))}
+        onClearRefusal={clear}
+      />
+    )
+  }
+
+  // The refused dates of the employees and Date fields on screen, in table order.
+  const refusedList = Object.entries(refusedDates)
+    .map(([cellKey, r]) => ({ ...r, cellKey, row: employees.findIndex((e) => e.id === r.employeeId) + 1 }))
+    .filter((r) => r.row > 0)
+    .sort((a, b) => a.row - b.row)
 
   function getWidth(key, fallback) {
     return liveWidths[key] ?? columnWidths?.[key] ?? fallback
@@ -181,6 +219,18 @@ export default function EmployeeTable({
 
   return (
     <div className="flex h-full min-h-0 flex-col">
+      {refusedList.length > 0 && (
+        <div role="alert" data-testid="refused-dates" className="panel panel-danger mb-3 items-start text-sm">
+          <CircleAlert aria-hidden="true" />
+          <ul className="min-w-0 flex-1 space-y-0.5">
+            {refusedList.map((r) => (
+              <li key={r.cellKey} id={`refused-date-${r.cellKey}`}>
+                Row {r.row}, {r.name} — not saved: {dateRefusal(r.text)}
+              </li>
+            ))}
+          </ul>
+        </div>
+      )}
       {/* The table scrolls inside its card. No backdrop blur here: a large
           scrolling area has to stay cheap to paint. */}
       <div className="card flex max-h-full flex-col overflow-hidden">
@@ -245,7 +295,7 @@ export default function EmployeeTable({
                     )}
                   </div>
                   <ResizeHandle
-                    onResizeStart={(e) => handleResizeStart(e, col.key, getWidth(col.key, DEFAULT_COLUMN_WIDTH))}
+                    onResizeStart={(e) => handleResizeStart(e, col.key, getWidth(col.key, defaultColumnWidth(col)))}
                   />
                 </th>
               ))}
@@ -261,6 +311,9 @@ export default function EmployeeTable({
                 <tr key={emp.id} className="transition-colors hover:bg-surface-hover">
                   {identityFields.map((field) => (
                     <td key={field.key} className="overflow-hidden px-1.5 py-1">
+                      {field.valueType === 'date' && idFieldKey !== field.key ? (
+                        renderDateCell(emp, field)
+                      ) : (
                       <div className="flex items-center gap-1">
                         <input
                           aria-label={field.name}
@@ -274,6 +327,7 @@ export default function EmployeeTable({
                           </span>
                         )}
                       </div>
+                      )}
                     </td>
                   ))}
                   {orderedColumns.map((col) => {
@@ -290,6 +344,13 @@ export default function EmployeeTable({
                               checked={Boolean(raw)}
                               onChange={(e) => onUpdateValue(emp.id, col.key, e.target.checked)}
                             />
+                          </td>
+                        )
+                      }
+                      if (col.valueType === 'date') {
+                        return (
+                          <td key={col.key} className="overflow-hidden px-1.5 py-1">
+                            {renderDateCell(emp, col)}
                           </td>
                         )
                       }

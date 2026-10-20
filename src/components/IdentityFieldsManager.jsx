@@ -2,7 +2,7 @@ import { useState } from 'react'
 import IdentityFieldFormModal from './IdentityFieldFormModal'
 import ConfirmDialog from './ConfirmDialog'
 
-// Manages the global set of identity fields (always leftmost, plain text,
+// Manages the global set of identity fields (always leftmost, text or a date,
 // shared by every company) and which one is designated the "ID field" used
 // for duplicate detection on import.
 export default function IdentityFieldsManager({
@@ -44,7 +44,7 @@ export default function IdentityFieldsManager({
         <div className="min-w-0">
           <h3 className="text-base font-semibold text-fg">Identity Fields</h3>
           <p className="mt-0.5 text-xs text-muted">
-            Always leftmost in the Employee Table, plain text, shared by every company.
+            Always leftmost in the Employee Table, text or a date, shared by every company.
           </p>
         </div>
         {!readOnly && (
@@ -67,12 +67,15 @@ export default function IdentityFieldsManager({
           <tbody className="divide-y divide-line">
             {identityFields.map((field) => (
               <tr key={field.id} className="transition-colors hover:bg-surface-hover">
-                <td className="px-4 py-2.5 font-medium text-fg">{field.name}</td>
+                <td className="px-4 py-2.5 font-medium text-fg">
+                  {field.name}
+                  {field.valueType === 'date' && <span className="badge ml-1.5 normal-case">date</span>}
+                </td>
                 <td className="num px-4 py-2.5 text-xs text-muted">{field.key}</td>
                 <td className="px-4 py-2.5">
                   {readOnly ? (
                     idFieldKey === field.key && <span className="badge badge-warn normal-case">ID field ✓</span>
-                  ) : (
+                  ) : field.valueType === 'date' && idFieldKey !== field.key ? null : (
                     <button
                       onClick={() => onSetIdField(idFieldKey === field.key ? null : field.key)}
                       className={`badge normal-case transition-colors ${

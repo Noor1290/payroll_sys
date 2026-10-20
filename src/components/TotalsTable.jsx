@@ -3,6 +3,7 @@ import { CalendarSearch } from 'lucide-react'
 import { getOrderedEffectiveColumns, getCategoryGroups, labelColumnsForHelper } from '../lib/categories'
 import { formatDecimal } from '../lib/format'
 import { ERROR_TEXT, isErrorCell } from '../lib/exportErrors'
+import { showDate } from '../lib/dates'
 
 // Sticky header cells: a solid background (rows scroll underneath) and the
 // bottom rule drawn as an inset shadow, since a collapsed border doesn't
@@ -10,7 +11,7 @@ import { ERROR_TEXT, isErrorCell } from '../lib/exportErrors'
 const HEADER_CELL = 'bg-elevated shadow-[inset_0_-1px_0_var(--line)]'
 
 function isFigureColumn(col) {
-  return col.valueType !== 'text' && col.valueType !== 'checkbox'
+  return col.valueType !== 'text' && col.valueType !== 'checkbox' && col.valueType !== 'date'
 }
 
 // Read-only aggregated view: same category-grouped header as the Employee
@@ -72,7 +73,7 @@ export default function TotalsTable({ identityFields, idFieldKey, effectiveColum
               <tr key={emp.id} className="transition-colors hover:bg-surface-hover">
                 {identityFields.map((field) => (
                   <td key={field.key} className={`px-3 py-2 text-fg ${idFieldKey === field.key ? 'num' : ''}`}>
-                    {emp.values?.[field.key] ?? ''}
+                    {field.valueType === 'date' ? showDate(emp.values?.[field.key]) : (emp.values?.[field.key] ?? '')}
                   </td>
                 ))}
                 {orderedColumns.map((col) => {
@@ -83,6 +84,13 @@ export default function TotalsTable({ identityFields, idFieldKey, effectiveColum
                     return (
                       <td key={col.key} className="px-3 py-2 text-fg">
                         {cell?.value ?? ''}
+                      </td>
+                    )
+                  }
+                  if (col.valueType === 'date') {
+                    return (
+                      <td key={col.key} className="num px-3 py-2 text-fg">
+                        {showDate(cell?.value)}
                       </td>
                     )
                   }

@@ -62,15 +62,15 @@ export default function SendToDashboardButton({
             ? `Can't send yet: ${clashingLabels.map((label) => `more than one company detail is called "${label}".`).join(' ')} Each would overwrite the other in what is sent. Rename them in Company Details first.`
             : null
 
-  // Exactly what is sent: the PDF fill rows, with the date of employment written "YYYY-MM-DD"
-  // (rehearsal fix F6). A date that cannot be read is left out for that employee.
+  // Exactly what is sent: the PDF fill rows, with every Date field and the date of employment written
+  // "YYYY-MM-DD" (rehearsal fix F6). A date of employment that cannot be read is left out for that employee.
   function rowsToSend() {
     const columns = buildPdfFillColumns(identityFields, effectiveColumns)
     const companyFields = resolveCompanyFieldHeaders(
       buildCompanyDetailFields(companyName, companyDetails),
       columns.map((c) => c.name)
     )
-    const rows = buildPdfFillRows(columns, employees, computedGrid, companyFields)
+    const rows = buildPdfFillRows(columns, employees, computedGrid, companyFields, { isoDates: true })
     return withIsoEmploymentDates(rows, employmentDateHeader(columns.map((c) => c.name)))
   }
 

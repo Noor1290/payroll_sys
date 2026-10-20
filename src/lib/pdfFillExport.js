@@ -8,6 +8,7 @@ import { periodKey } from './periods'
 import { getCategoryGroups, getOrderedEffectiveColumns, getCategoryLabel, DEFAULT_CATEGORY } from './categories'
 import { roundHalfUp } from './format'
 import { ERROR_TEXT, isErrorCell } from './exportErrors'
+import { formatDateDMY, readDate } from './dates'
 
 // The flat, ordered list of every column a PDF-fill export could include:
 // identity fields first, then Global/Company columns in their normal
@@ -44,7 +45,7 @@ function buildExportNames(identityFields, orderedColumns) {
 export function buildPdfFillColumns(identityFields, effectiveColumns) {
   const orderedColumns = getOrderedEffectiveColumns(effectiveColumns)
   const exportNames = buildExportNames(identityFields, orderedColumns)
-  const identity = identityFields.map((f) => ({ key: f.key, name: exportNames[f.key], kind: 'identity' }))
+  const identity = identityFields.map((f) => ({ key: f.key, name: exportNames[f.key], kind: 'identity', valueType: f.valueType }))
   const ordered = orderedColumns.map((c) => ({
     key: c.key,
     name: exportNames[c.key],
@@ -62,7 +63,7 @@ export function buildPdfFillColumnGroups(identityFields, effectiveColumns) {
   const exportNames = buildExportNames(identityFields, orderedEffectiveColumns)
   const groups = []
   if (identityFields.length > 0) {
-    groups.push({ label: 'Identifiers', columns: identityFields.map((f) => ({ key: f.key, name: exportNames[f.key], kind: 'identity' })) })
+    groups.push({ label: 'Identifiers', columns: identityFields.map((f) => ({ key: f.key, name: exportNames[f.key], kind: 'identity', valueType: f.valueType })) })
   }
   for (const group of getCategoryGroups(orderedEffectiveColumns)) {
     groups.push({
@@ -116,10 +117,19 @@ export function pdfFillHeaders(columns, resolvedCompanyFields) {
   return [...columns.map((c) => c.name), ...resolvedCompanyFields.map((cf) => cf.header)]
 }
 
-function cellDisplayValue(col, emp, computedGrid) {
-  if (col.kind === 'identity') return emp.values?.[col.key] ?? ''
+// A date as "DD/MM/YYYY" (as typed), or as "YYYY-MM-DD" for what "Send to dashboard" sends (`isoDates`).
+// Something saved that is not a clear date is written as it is.
+function dateText(raw, isoDates) {
+  const read = readDate(raw)
+  if (read.value) return isoDates ? read.value : formatDateDMY(read.value)
+  return read.empty ? '' : String(raw)
+}
+
+function cellDisplayValue(col, emp, computedGrid, isoDates) {
+  if (col.kind === 'identity') return col.valueType === 'date' ? dateText(emp.values?.[col.key], isoDates) : (emp.values?.[col.key] ?? '')
   const cell = computedGrid[emp.id]?.[col.key]
   const value = cell?.value
+  if (col.valueType === 'date') return dateText(value, isoDates)
   if (col.valueType === 'checkbox') return value === 1 ? 'Yes' : 'No'
   if (col.valueType === 'text') return typeof value === 'string' ? value : (value ?? '')
   // A figure that could not be worked out is never exported as a number.
@@ -136,11 +146,12 @@ function cellDisplayValue(col, emp, computedGrid) {
 // row through `headers` in order. `resolvedCompanyFields` (from
 // resolveCompanyFieldHeaders) repeat the SAME value on every row, since
 // they describe the one company, not the individual employee.
-export function buildPdfFillRows(columns, employees, computedGrid, resolvedCompanyFields = []) {
+// Dates are "DD/MM/YYYY", as typed; `isoDates` writes them "YYYY-MM-DD", as "Send to dashboard" sends them.
+export function buildPdfFillRows(columns, employees, computedGrid, resolvedCompanyFields = [], { isoDates = false } = {}) {
   return employees.map((emp) => {
     const row = {}
     for (const col of columns) {
-      row[col.name] = cellDisplayValue(col, emp, computedGrid)
+      row[col.name] = cellDisplayValue(col, emp, computedGrid, isoDates)
     }
     for (const cf of resolvedCompanyFields) {
       row[cf.header] = cf.value

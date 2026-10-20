@@ -2,6 +2,7 @@ import { useMemo, useState } from 'react'
 import { Upload } from 'lucide-react'
 import Modal from './Modal'
 import { guessMapping, projectRows, convertImportValue, findUnreadableValues, planMonthImport } from '../lib/excelImport'
+import { showDate } from '../lib/dates'
 
 const PREVIEW_ROW_COUNT = 5
 
@@ -111,10 +112,24 @@ export default function ImportMappingModal({
   // Number cells in the WHOLE file (not just the previewed rows) that cannot
   // be read as numbers. They are left blank on import, never written as 0.
   const unreadable = useMemo(() => findUnreadableValues({ rows, systemFields, mapping, meta }), [rows, systemFields, mapping, meta])
+  const unreadableNumbers = unreadable.filter((u) => !u.date)
+  const unreadableDates = unreadable.filter((u) => u.date)
 
   // What a previewed cell will be stored as - the same conversion the import
   // itself uses, so the preview and the imported value always match.
   function previewCell(field, raw) {
+    if (field.valueType === 'date') {
+      if (raw === undefined || raw === null || raw === '') return <span className="font-sans italic text-subtle">empty</span>
+      const converted = convertImportValue(field, raw)
+      if (converted.unreadable) {
+        return (
+          <span className="text-warn" title="Not a date: this cell will not be imported">
+            {String(raw)} <span className="font-sans italic">(not a date)</span>
+          </span>
+        )
+      }
+      return showDate(converted.value)
+    }
     if (field.kind === 'identity' || field.valueType === 'text' || field.valueType === 'checkbox') {
       return raw === undefined || raw === '' ? <span className="font-sans italic text-subtle">empty</span> : String(raw)
     }
@@ -180,19 +195,36 @@ export default function ImportMappingModal({
           </div>
         )}
 
-        {unreadable.length > 0 && (
+        {unreadableNumbers.length > 0 && (
           <div role="alert" className="note note-warn">
             <p className="font-medium">
-              {unreadable.length} value{unreadable.length === 1 ? '' : 's'} can't be read as a number and will be left blank (not
+              {unreadableNumbers.length} value{unreadableNumbers.length === 1 ? '' : 's'} can't be read as a number and will be left blank (not
               imported as 0):
             </p>
             <ul className="mt-1 max-h-24 overflow-y-auto">
-              {unreadable.map((u, i) => (
+              {unreadableNumbers.map((u, i) => (
                 <li key={i}>
                   {u.employee} — {u.field}: “{u.raw}”
                 </li>
               ))}
             </ul>
+          </div>
+        )}
+
+        {unreadableDates.length > 0 && (
+          <div role="alert" className="note note-warn">
+            <p className="font-medium">
+              {unreadableDates.length} date{unreadableDates.length === 1 ? '' : 's'} can't be read and will not be imported (a date already
+              saved is kept):
+            </p>
+            <ul className="mt-1 max-h-24 overflow-y-auto">
+              {unreadableDates.map((u, i) => (
+                <li key={i}>
+                  {u.employee} — {u.field}: “{u.raw}”
+                </li>
+              ))}
+            </ul>
+            <p className="mt-1">A date is read from an Excel date cell, or from text written DD/MM/YYYY or YYYY-MM-DD.</p>
           </div>
         )}
 

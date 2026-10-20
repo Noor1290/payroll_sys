@@ -288,8 +288,11 @@ function PayrollApp({ onRestored, inDashboard = false, offline = null, onReloadD
   const revertingPeriod = useRef(false)
   // An export waiting for the user's answer to "some figures are in error".
   const [pendingExport, setPendingExport] = useState(null) // { errors, proceed } | null
-  // What the last import could not read as numbers.
+  // What the last import could not read as numbers or as dates.
   const [importSummary, setImportSummary] = useState(null) // { count, unreadable } | null
+  // What the import summary lists: Number cells left blank, and dates not imported.
+  const unreadableNumbers = importSummary?.unreadable.filter((u) => !u.date) ?? []
+  const unreadableDates = importSummary?.unreadable.filter((u) => u.date) ?? []
 
   // A column setup restored from its History: the screen shows what the store now holds.
   function showRestoredSetup() {
@@ -516,8 +519,15 @@ function PayrollApp({ onRestored, inDashboard = false, offline = null, onReloadD
   function handleAddIdentityField(field) {
     setIdentityFields((prev) => [...prev, newIdentityField(field)])
   }
+  // `field` says its type itself: a Date has valueType 'date', a text field has none.
   function handleEditIdentityField(id, field) {
-    setIdentityFields((prev) => prev.map((f) => (f.id === id ? { ...f, ...field } : f)))
+    setIdentityFields((prev) =>
+      prev.map((f) => {
+        if (f.id !== id) return f
+        const { valueType: _type, ...rest } = f
+        return { ...rest, ...field }
+      })
+    )
   }
   function handleDeleteIdentityField(id) {
     setIdentityFields((prev) => {
@@ -952,17 +962,40 @@ function PayrollApp({ onRestored, inDashboard = false, offline = null, onReloadD
                 <CircleAlert aria-hidden="true" />
                 <div className="min-w-0 flex-1">
                   <p className="font-medium text-fg">
-                    Imported {importSummary.count} row{importSummary.count === 1 ? '' : 's'}. {importSummary.unreadable.length} value
-                    {importSummary.unreadable.length === 1 ? '' : 's'} could not be read as a number and{' '}
-                    {importSummary.unreadable.length === 1 ? 'was' : 'were'} left blank:
+                    Imported {importSummary.count} row{importSummary.count === 1 ? '' : 's'}.
+                    {unreadableNumbers.length > 0 && (
+                      <>
+                        {' '}
+                        {unreadableNumbers.length} value
+                        {unreadableNumbers.length === 1 ? '' : 's'} could not be read as a number and{' '}
+                        {unreadableNumbers.length === 1 ? 'was' : 'were'} left blank:
+                      </>
+                    )}
                   </p>
-                  <ul className="mt-1 max-h-32 overflow-y-auto">
-                    {importSummary.unreadable.map((u, i) => (
-                      <li key={i}>
-                        {u.employee} — {u.field}: “{u.raw}”
-                      </li>
-                    ))}
-                  </ul>
+                  {unreadableNumbers.length > 0 && (
+                    <ul className="mt-1 max-h-32 overflow-y-auto">
+                      {unreadableNumbers.map((u, i) => (
+                        <li key={i}>
+                          {u.employee} — {u.field}: “{u.raw}”
+                        </li>
+                      ))}
+                    </ul>
+                  )}
+                  {unreadableDates.length > 0 && (
+                    <>
+                      <p className="mt-2 font-medium text-fg">
+                        {unreadableDates.length} date{unreadableDates.length === 1 ? '' : 's'} could not be read and{' '}
+                        {unreadableDates.length === 1 ? 'was' : 'were'} not imported (a date already saved is kept):
+                      </p>
+                      <ul className="mt-1 max-h-32 overflow-y-auto">
+                        {unreadableDates.map((u, i) => (
+                          <li key={i}>
+                            {u.employee} — {u.field}: “{u.raw}”
+                          </li>
+                        ))}
+                      </ul>
+                    </>
+                  )}
                 </div>
                 <button onClick={() => setImportSummary(null)} className="btn btn-ghost btn-icon btn-sm" aria-label="Dismiss">
                   <X aria-hidden="true" />
