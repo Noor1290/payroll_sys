@@ -862,6 +862,9 @@ function PayrollApp({ onRestored, inDashboard = false, offline = null, onReloadD
               }
             : null
         }
+        severalCompanies={
+          monthsKept && companyRole === 'admin' && activeCompany ? { period: periodKey(selectedYear, selectedMonth) } : null
+        }
         open={sidebarOpen}
         onClose={() => setSidebarOpen(false)}
       />

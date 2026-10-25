@@ -1,7 +1,8 @@
 import { useRef, useState } from 'react'
-import { Eraser, Info, Trash2, WalletCards, X } from 'lucide-react'
+import { Eraser, Files, Info, Trash2, WalletCards, X } from 'lucide-react'
 import { useBackupControls } from './BackupControls'
 import ClearColumnSetupModal from './ClearColumnSetupModal'
+import SeveralCompaniesModal from './SeveralCompaniesModal'
 import ConfirmDialog from './ConfirmDialog'
 import { exportColumnSetupNow } from '../lib/columnSetup'
 import ThemeToggle from './ThemeToggle'
@@ -31,8 +32,12 @@ export default function Sidebar({
   // Inside the dashboard (not the offline copy): "Clear the column setup…".
   // { canChange, setup: { globalColumns, companyColumns, companyName, companyDetails } }, or null.
   columnClear = null,
+  // Inside a dashboard that keeps the months, as an admin: "Several companies…".
+  // { period: "YYYY-MM" (the month on screen) }, or null.
+  severalCompanies = null,
 }) {
   const [clearing, setClearing] = useState(null) // { firstExport } | null
+  const [several, setSeveral] = useState(false)
   const [renamingId, setRenamingId] = useState(null)
   const [renameValue, setRenameValue] = useState('')
   const [deletingCompany, setDeletingCompany] = useState(null)
@@ -155,6 +160,19 @@ export default function Sidebar({
 
         {backup.controls}
 
+        {severalCompanies && (
+          <div className="px-3 pt-1">
+            <button
+              onClick={() => setSeveral(true)}
+              className="btn btn-ghost btn-sm w-full"
+              title="One month of several companies in one Excel file"
+            >
+              <Files aria-hidden="true" />
+              Several companies…
+            </button>
+          </div>
+        )}
+
         {columnClear && (
           <div className="px-3 pt-1">
             <button
@@ -186,6 +204,8 @@ export default function Sidebar({
       </aside>
 
       {backup.dialogs}
+
+      {several && severalCompanies && <SeveralCompaniesModal period={severalCompanies.period} onClose={() => setSeveral(false)} />}
 
       {clearing && columnClear && (
         <ClearColumnSetupModal

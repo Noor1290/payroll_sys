@@ -99,7 +99,11 @@ function reply(type, id, payload) {
 
 async function answerSetup(message) {
   const dataType = message.payload?.dataType
-  if ((message.type !== 'request-data' && message.type !== 'send-data') || (dataType !== 'payroll-setup' && dataType !== 'payroll-month')) return
+  if (
+    (message.type !== 'request-data' && message.type !== 'send-data') ||
+    (dataType !== 'payroll-setup' && dataType !== 'payroll-month' && dataType !== 'payroll-batch')
+  )
+    return
   const answer = setupHub
     ? await setupHub.handle(message.type, structuredClone(message.payload))
     : { ok: false, error: `This app is not registered to ${message.type === 'request-data' ? 'receive' : 'send'} this kind of data.` }
@@ -486,6 +490,60 @@ test('collect every visible string (inside the dashboard)', async () => {
     setupHub.state.down = false
     anchorClick.mockRestore()
     vi.useRealTimers()
+  }
+
+  // ---------- Several companies in one Excel file ----------
+  // Only the dialogs: the base version has no such button (its page is screen 76).
+  const KNOWS_SEVERAL = fs.existsSync(path.join(SRC, 'components/SeveralCompaniesModal.jsx'))
+  if (KNOWS_SEVERAL) {
+    URL.createObjectURL = () => 'blob:fake'
+    URL.revokeObjectURL = () => {}
+    const anchorClick = vi.spyOn(HTMLAnchorElement.prototype, 'click').mockImplementation(() => {})
+    const severalHub = (more = {}) =>
+      attachedHub({
+        monthsSupported: true,
+        months: { 'C00000001|2026-10': { employees: octoberEmployees } },
+        setups: {
+          C00000001: { shared_setup_id: SHARED_ID, body: structuredClone({ columns: company.columns, customFields: company.details.customFields }), revision: 1 },
+        },
+        ...more,
+      })
+    const openSeveral = async (hub) => {
+      await start({ hub, waitFor: 'months of Fake Co Ltd, kept in the dashboard' })
+      await click('Several companies…')
+      await vi.waitFor(() => expect(topDialog().textContent).toMatch(/Companies where you are an admin|cannot export|could not/))
+    }
+    await openSeveral(severalHub())
+    snapDialog('97 embedded: several companies, nothing chosen')
+    await click('Select all', topDialog())
+    snapDialog('97b embedded: several companies, all chosen')
+    setupHub.state.delayMs = 300
+    await click('Export 2 companies', topDialog())
+    snapDialog('97c embedded: several companies, waiting for the answer in the dashboard')
+    await vi.waitFor(() => expect(topDialog().textContent).toContain('Reading'))
+    snapDialog('97d embedded: several companies, reading one company')
+    await vi.waitFor(() => expect(topDialog().textContent).toContain('Downloaded'), { timeout: 10000 })
+    setupHub.state.delayMs = 0
+    snapWording('97e embedded: several companies, downloaded')
+
+    await openSeveral(severalHub())
+    setupHub.state.batchAnswer = 'deny'
+    await click('Select all', topDialog())
+    await click('Export 2 companies', topDialog())
+    await vi.waitFor(() => expect(topDialog().textContent).toContain('declined'))
+    snapDialog('97f embedded: several companies, turned down in the dashboard')
+
+    await openSeveral(severalHub())
+    setupHub.state.unlocked = false
+    setupHub.state.unlockAnswer = 'deny'
+    await click('Select all', topDialog())
+    await click('Export 2 companies', topDialog())
+    await vi.waitFor(() => expect(topDialog().textContent).toContain('locked'))
+    snapDialog('97g embedded: several companies, the dashboard locked')
+
+    await openSeveral(severalHub({ batchSupported: false }))
+    snapDialog('97h embedded: several companies, a dashboard that cannot export them')
+    anchorClick.mockRestore()
   }
 
   expect(OUT, 'TEXT_CHECK_OUT_EMBEDDED').toBeTruthy()

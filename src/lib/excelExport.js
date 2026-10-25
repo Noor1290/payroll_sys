@@ -321,7 +321,27 @@ function computeColumnWidths(plan) {
 // system export, for automatic recognition on re-import.
 export async function buildWorkbookBuffer(plan) {
   const wb = new ExcelJS.Workbook()
-  const ws = wb.addWorksheet('Payroll')
+  writePlanSheet(wb, 'Payroll', plan)
+
+  // Hidden metadata sheet: invisible in the normal Excel view (not just
+  // scrolled off - "veryHidden" means it doesn't even show up in Excel's
+  // own Unhide-sheet dialog), carrying enough for a later import to
+  // recognize this exact file and know precisely which column key sits at
+  // which position, without guessing from header text.
+  // `rowCount`, the number of employee rows, lets an import stop before the
+  // totals row even when there is no identity column to hold "TOTAL".
+  const metaSheet = wb.addWorksheet(META_SHEET_NAME)
+  metaSheet.getCell('A1').value = JSON.stringify({ ...plan.meta, rowCount: plan.rows.length })
+  metaSheet.state = 'veryHidden'
+
+  return wb.xlsx.writeBuffer()
+}
+
+// Adds one styled sheet for an export plan to a workbook: the single-company
+// export's only sheet, and each company's sheet in the several-companies file
+// (severalCompanies.js). The employee rows start at DATA_START_ROW either way.
+export function writePlanSheet(wb, sheetName, plan) {
+  const ws = wb.addWorksheet(sheetName)
   const colCount = plan.columns.length
   const widths = computeColumnWidths(plan)
 
@@ -491,19 +511,14 @@ export async function buildWorkbookBuffer(plan) {
   })
 
   ws.views = [{ state: 'frozen', xSplit: 0, ySplit: COLUMN_ROW, topLeftCell: `A${COLUMN_ROW + 1}` }]
+  return ws
+}
 
-  // Hidden metadata sheet: invisible in the normal Excel view (not just
-  // scrolled off - "veryHidden" means it doesn't even show up in Excel's
-  // own Unhide-sheet dialog), carrying enough for a later import to
-  // recognize this exact file and know precisely which column key sits at
-  // which position, without guessing from header text.
-  // `rowCount`, the number of employee rows, lets an import stop before the
-  // totals row even when there is no identity column to hold "TOTAL".
-  const metaSheet = wb.addWorksheet(META_SHEET_NAME)
-  metaSheet.getCell('A1').value = JSON.stringify({ ...plan.meta, rowCount: plan.rows.length })
-  metaSheet.state = 'veryHidden'
+// Where a sheet's rows are, for code that reads one back.
+export const SHEET_ROWS = { group: GROUP_ROW, column: COLUMN_ROW, dataStart: DATA_START_ROW }
 
-  return wb.xlsx.writeBuffer()
+export function downloadWorkbook(buffer, filename) {
+  downloadBuffer(buffer, filename)
 }
 
 function downloadBuffer(buffer, filename) {
