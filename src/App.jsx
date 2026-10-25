@@ -22,6 +22,7 @@ import DashboardBar from './components/DashboardBar'
 import DashboardStart from './components/DashboardStart'
 import ImportToDashboardModal from './components/ImportToDashboardModal'
 import ImportMonthsModal from './components/ImportMonthsModal'
+import SeveralCompaniesModal from './components/SeveralCompaniesModal'
 import { MonthHistoryModal, SetupHistoryModal } from './components/HistoryModal'
 import UnreadableSetup from './components/UnreadableSetup'
 import { dataStore, renameValueKey, resetDataStore, setDataStore } from './lib/dataStore'
@@ -46,7 +47,7 @@ import {
   makeId,
 } from './lib/model'
 import { reorderWithinCategory, labelColumnsForHelper } from './lib/categories'
-import { formatPeriodLabel, periodKey, shiftPeriod } from './lib/periods'
+import { formatPeriodLabel, getCurrentPeriod, periodKey, shiftPeriod } from './lib/periods'
 import { useComputedGrid } from './hooks/useComputedGrid'
 import { buildExportPlan } from './lib/excelExport'
 import {
@@ -115,6 +116,8 @@ export default function App() {
   const [startProblem, setStartProblem] = useState('')
   const [importOpen, setImportOpen] = useState(false)
   const [importMonthsOpen, setImportMonthsOpen] = useState(false)
+  // "Several companies…" from the start screen (a company with no column setup yet).
+  const [severalOpen, setSeveralOpen] = useState(false)
   // The offline copy on screen: { brn, label, loadedAt } | null.
   const [offline, setOffline] = useState(null)
 
@@ -193,8 +196,19 @@ export default function App() {
           onImport={() => setImportOpen(true)}
           offlineCopies={mode === 'failed' ? listOfflineCopies() : []}
           onOpenOffline={openOffline}
+          onSeveralCompanies={() => setSeveralOpen(true)}
         />
         {importDialog}
+        {severalOpen && (
+          <SeveralCompaniesModal
+            period={periodKey(getCurrentPeriod().year, getCurrentPeriod().month)}
+            onClose={() => setSeveralOpen(false)}
+            onImported={() => {
+              setSeveralOpen(false)
+              void loadFromDashboard()
+            }}
+          />
+        )}
       </div>
     )
   }
@@ -863,7 +877,9 @@ function PayrollApp({ onRestored, inDashboard = false, offline = null, onReloadD
             : null
         }
         severalCompanies={
-          monthsKept && companyRole === 'admin' && activeCompany ? { period: periodKey(selectedYear, selectedMonth) } : null
+          monthsKept && companyRole === 'admin' && activeCompany
+            ? { period: periodKey(selectedYear, selectedMonth), onImported: onReloadDashboard }
+            : null
         }
         open={sidebarOpen}
         onClose={() => setSidebarOpen(false)}

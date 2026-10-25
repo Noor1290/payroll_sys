@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { CircleAlert, CircleCheck, Download, Files, LoaderCircle, LockKeyhole, TriangleAlert } from 'lucide-react'
 import Modal from './Modal'
+import SeveralCompaniesImport from './SeveralCompaniesImport'
 import { batchCompanies, exportCompanies } from '../lib/dashboardBatch'
 import { askToUnlock } from '../lib/dashboardMonths'
 import { downloadWorkbook } from '../lib/excelExport'
@@ -8,13 +9,50 @@ import { MAX_MONTHS, monthsBetween, rangeLabelOf } from '../lib/severalCompanies
 
 const isMonth = (value) => /^\d{4}-(0[1-9]|1[0-2])$/.test(value)
 
-// "Several companies…", inside the dashboard: one month, or a range of months,
-// of several companies in one Excel file (severalCompanies.js). The companies
-// are the ones the user is an admin of, as the dashboard's database says; the
-// dashboard asks once, naming the months and every company, before anything is
-// read.
-//   period   "YYYY-MM": the month offered first, as From and To (the one on screen)
-export default function SeveralCompaniesModal({ period: firstPeriod, onClose }) {
+// "Several companies…", inside the dashboard: Export puts one month, or a range
+// of months, of several companies in one Excel file (severalCompanies.js);
+// Import reads such a file back (SeveralCompaniesImport.jsx).
+//   period      "YYYY-MM": the month offered first, as From and To (the one on screen)
+//   onImported  after an import: the app loads again what the dashboard now has
+export default function SeveralCompaniesModal({ period, onClose, onImported }) {
+  const [tab, setTab] = useState('export')
+  const [working, setWorking] = useState(false)
+  const tabButton = (id, label) => (
+    <button
+      role="tab"
+      aria-selected={tab === id}
+      onClick={() => setTab(id)}
+      disabled={working}
+      className={`btn btn-sm ${tab === id ? 'btn-secondary' : 'btn-ghost'}`}
+    >
+      {label}
+    </button>
+  )
+  return (
+    <Modal
+      title="Several companies"
+      description="Export one or more months of several companies to one Excel file, each company on its own sheet, or import such a file."
+      onClose={working ? () => {} : onClose}
+      width="max-w-3xl"
+      icon={<Files />}
+    >
+      <div role="tablist" aria-label="Export or import" className="mb-4 flex gap-1">
+        {tabButton('export', 'Export')}
+        {tabButton('import', 'Import')}
+      </div>
+      {tab === 'export' ? (
+        <ExportSeveral period={period} onClose={onClose} onWorking={setWorking} />
+      ) : (
+        <SeveralCompaniesImport onWorking={setWorking} onClose={onClose} onImported={onImported} />
+      )}
+    </Modal>
+  )
+}
+
+// Export: the companies are the ones the user is an admin of, as the dashboard's
+// database says; the dashboard asks once, naming the months and every company,
+// before anything is read.
+function ExportSeveral({ period: firstPeriod, onClose, onWorking }) {
   const [list, setList] = useState(null) // the dashboard's answer to `companies`
   const [from, setFrom] = useState(firstPeriod)
   const [to, setTo] = useState(firstPeriod)
@@ -58,8 +96,10 @@ export default function SeveralCompaniesModal({ period: firstPeriod, onClose }) 
 
   async function handleExport() {
     setResult(null)
+    onWorking(true)
     const picked = companies.filter((c) => chosen.has(c.brn)).map(({ brn, name }) => ({ brn, name }))
     const answer = await exportCompanies({ from, to }, picked, setProgress)
+    onWorking(false)
     setProgress(null)
     setResult(answer)
     if (answer.ok) downloadWorkbook(answer.buffer, answer.fileName)
@@ -73,13 +113,7 @@ export default function SeveralCompaniesModal({ period: firstPeriod, onClose }) 
   }
 
   return (
-    <Modal
-      title="Several companies"
-      description="One or more months of several companies in one Excel file, each company on its own sheet."
-      onClose={working ? () => {} : onClose}
-      width="max-w-2xl"
-      icon={<Files />}
-    >
+    <>
       {!list && (
         <p role="status" className="flex items-center gap-2 text-sm text-muted">
           <LoaderCircle className="h-4 w-4 motion-safe:animate-spin" aria-hidden="true" />
@@ -217,7 +251,7 @@ export default function SeveralCompaniesModal({ period: firstPeriod, onClose }) 
       )}
 
       {result?.ok && <ExportDone result={result} monthLabel={monthLabel} months={monthsBetween(from, to)} onClose={onClose} />}
-    </Modal>
+    </>
   )
 }
 

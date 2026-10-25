@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { CircleAlert, Cloud, CloudOff, CloudUpload, LoaderCircle, RotateCw } from 'lucide-react'
+import { CircleAlert, Cloud, CloudOff, CloudUpload, Files, LoaderCircle, RotateCw } from 'lucide-react'
 import { defaultIdentityFields } from '../lib/model'
 import { dashboardCompany, startOptions, startSetup } from '../lib/dashboardSetup'
 import { formatLoadedAt } from '../lib/offlineCopy'
@@ -14,7 +14,7 @@ import { formatLoadedAt } from '../lib/offlineCopy'
 //                browser: [{ brn, label, loadedAt }], offered read-only (mode 'failed')
 // Once a setup has been started here, the app is started again from it (see
 // onSetupReplaced in lib/dashboardSetup.js).
-export default function DashboardStart({ mode, problem, canImport, onRetry, onImport, offlineCopies = [], onOpenOffline }) {
+export default function DashboardStart({ mode, problem, canImport, onRetry, onImport, offlineCopies = [], onOpenOffline, onSeveralCompanies }) {
   const company = dashboardCompany()
 
   return (
@@ -55,12 +55,14 @@ export default function DashboardStart({ mode, problem, canImport, onRetry, onIm
         </div>
       )}
 
-      {mode === 'empty' && company && <EmptyStart company={company} canImport={canImport} onImport={onImport} />}
+      {mode === 'empty' && company && (
+        <EmptyStart company={company} canImport={canImport} onImport={onImport} onSeveralCompanies={onSeveralCompanies} />
+      )}
     </main>
   )
 }
 
-function EmptyStart({ company, canImport, onImport }) {
+function EmptyStart({ company, canImport, onImport, onSeveralCompanies }) {
   const admin = company.role === 'admin'
   const [options, setOptions] = useState(null) // [{ sharedSetupId, companies }] | null while loading
   const [busy, setBusy] = useState(false)
@@ -123,6 +125,15 @@ function EmptyStart({ company, canImport, onImport }) {
             <button onClick={startNew} disabled={busy} className="btn btn-secondary">
               Start with new, empty Global columns
             </button>
+          )}
+          {onSeveralCompanies && (
+            <>
+              <p className="text-sm text-muted">Or import companies and their months from an Excel file made by "Several companies…":</p>
+              <button onClick={onSeveralCompanies} disabled={busy} className="btn btn-secondary">
+                <Files aria-hidden="true" />
+                Several companies…
+              </button>
+            </>
           )}
         </>
       )}

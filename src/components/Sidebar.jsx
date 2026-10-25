@@ -33,7 +33,7 @@ export default function Sidebar({
   // { canChange, setup: { globalColumns, companyColumns, companyName, companyDetails } }, or null.
   columnClear = null,
   // Inside a dashboard that keeps the months, as an admin: "Several companies…".
-  // { period: "YYYY-MM" (the month on screen) }, or null.
+  // { period: "YYYY-MM" (the month on screen), onImported }, or null.
   severalCompanies = null,
 }) {
   const [clearing, setClearing] = useState(null) // { firstExport } | null
@@ -205,7 +205,16 @@ export default function Sidebar({
 
       {backup.dialogs}
 
-      {several && severalCompanies && <SeveralCompaniesModal period={severalCompanies.period} onClose={() => setSeveral(false)} />}
+      {several && severalCompanies && (
+        <SeveralCompaniesModal
+          period={severalCompanies.period}
+          onClose={() => setSeveral(false)}
+          onImported={() => {
+            setSeveral(false)
+            severalCompanies.onImported()
+          }}
+        />
+      )}
 
       {clearing && columnClear && (
         <ClearColumnSetupModal

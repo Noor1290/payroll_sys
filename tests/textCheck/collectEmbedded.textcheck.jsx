@@ -101,7 +101,7 @@ async function answerSetup(message) {
   const dataType = message.payload?.dataType
   if (
     (message.type !== 'request-data' && message.type !== 'send-data') ||
-    (dataType !== 'payroll-setup' && dataType !== 'payroll-month' && dataType !== 'payroll-batch')
+    (dataType !== 'payroll-setup' && dataType !== 'payroll-month' && dataType !== 'payroll-batch' && dataType !== 'payroll-import')
   )
     return
   const answer = setupHub
@@ -565,6 +565,59 @@ test('collect every visible string (inside the dashboard)', async () => {
     await click('Export 2 companies', topDialog())
     await vi.waitFor(() => expect(topDialog().textContent).toContain('Downloaded'), { timeout: 10000 })
     snapWording('97l embedded: several companies, twelve months downloaded')
+
+    // Import: a file made by Export, of the fake company and one that is not in the dashboard.
+    // Only where Import exists (Stage 2).
+    if (fs.existsSync(path.join(SRC, 'components/SeveralCompaniesImport.jsx'))) {
+    const { buildCompaniesWorkbook, companyForFile } = await load('lib/severalCompanies.js')
+    const loadRow = (brn, name, months) => ({
+      brn,
+      name,
+      address: null,
+      setup: {
+        shared_setup_id: SHARED_ID,
+        shared_name: 'Shared column setup',
+        shared_body: structuredClone({ identityFields, idFieldKey, globalColumns }),
+        shared_revision: 1,
+        company_body: structuredClone({ columns: company.columns, customFields: [] }),
+        company_revision: 1,
+      },
+      months,
+    })
+    const month = (period) => ({ period, revision: 1, shared_revision: 1, company_revision: 1, employee_count: 6, employees: octoberEmployees })
+    const { buffer } = await buildCompaniesWorkbook({
+      from: '2026-09',
+      to: '2026-10',
+      exportedAt: new Date(2026, 9, 25, 16, 5),
+      companies: [
+        companyForFile(loadRow('C00000001', 'Fake Co Ltd', [month('2026-09'), month('2026-10')]), '2026-09', '2026-10'),
+        companyForFile(loadRow('C00000077', 'New Fake Ltd', [month('2026-10')]), '2026-09', '2026-10'),
+      ],
+    })
+    const chooseFile = async (bytes) => {
+      const input = topDialog().querySelector('input[type="file"]')
+      Object.defineProperty(input, 'files', { value: [new File([bytes], 'Payroll 2026-09 to 2026-10 (2 companies).xlsx')], configurable: true })
+      await act(async () => input.dispatchEvent(new Event('change', { bubbles: true })))
+    }
+    await openSeveral(severalHub({ approvedRuns: [] }))
+    await click('Import', topDialog())
+    snapDialog('97m embedded: several companies, import: choose the file')
+    await chooseFile(buffer)
+    await vi.waitFor(() => expect(topDialog().textContent).toContain('Do you want to add them?'))
+    snapDialog('97n embedded: several companies, import: companies not in the dashboard')
+    await act(async () => topDialog().querySelector('li input[type="checkbox"]').click())
+    await click('Add the ticked companies', topDialog())
+    await vi.waitFor(() => expect(topDialog().textContent).toContain('Nothing has been saved yet.'))
+    snapWording('97o embedded: several companies, import: the preview')
+    await click('Import 2 companies', topDialog())
+    await vi.waitFor(() => expect(topDialog().textContent).toContain('Created in the dashboard.'), { timeout: 10000 })
+    snapWording('97p embedded: several companies, import: done')
+    await openSeveral(severalHub())
+    await click('Import', topDialog())
+    await chooseFile(new Uint8Array([0x50, 0x4b, 0x03, 0x04, 1, 2, 3]))
+    await vi.waitFor(() => expect(topDialog().textContent).toMatch(/Could not read|not made by/))
+    snapDialog('97q embedded: several companies, import: not a file made by Export')
+    }
     anchorClick.mockRestore()
   }
 

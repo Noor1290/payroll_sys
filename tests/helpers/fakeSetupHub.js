@@ -62,6 +62,14 @@ export function createFakeSetupHub(seed = {}) {
     batchAsked: [],
     // What was allowed: { from, to, brns: Set } | null.
     batchPermit: null,
+    // ---------- importing a "Several companies" file ("payroll-import", migration 0019) ----------
+    importSupported: seed.importSupported ?? seed.monthsSupported === true,
+    // Months whose saved run is approved: `${BRN}|${YYYY-MM}`.
+    approvedRuns: new Set(seed.approvedRuns || []),
+    // BRNs of companies in the dashboard that this user is not a member of (and cannot see).
+    otherBrns: (seed.otherBrns || []).map((brn) => String(brn).trim().toUpperCase()),
+    // The summaries the app sent at the end of an import, for the dashboard's one toast.
+    importSummaries: [],
   }
   for (const s of seed.shared || []) {
     state.shared.set(s.id, { mine: true, ...s, body: structuredClone(s.body) })
@@ -600,6 +608,132 @@ export function createFakeSetupHub(seed = {}) {
     }
   }
 
+  // ---------- importing a "Several companies" file ----------
+  // The dashboard's "payroll-import": for each BRN of the file what the dashboard has; then one
+  // company at a time, ALL of it or NOTHING (migration 0019); then the app's summary.
+  function importRequest(params) {
+    if (norm(params.brn) !== norm(state.selectedBrn)) return refuse('wrong-company', 'The dashboard has a different company selected.')
+    if (!state.unlocked) return LOCKED()
+    if (params.action !== 'check' || !Array.isArray(params.companies) || params.companies.length < 1) return refuse('invalid', '"companies" is missing or not valid.')
+    const index = (m) => Number(m.slice(0, 4)) * 12 + Number(m.slice(5, 7)) - 1
+    if (!/^\d{4}-\d{2}$/.test(params.from || '') || !/^\d{4}-\d{2}$/.test(params.to || '') || params.from > params.to || index(params.to) - index(params.from) >= 24) {
+      return refuse('invalid', '"to" is missing or not valid.')
+    }
+    const inRange = (period) => period >= params.from && period <= params.to
+    const rows = [...new Set(params.companies.map(norm))].map((brn) => {
+      const company = member(brn)
+      if (!company) return { brn, status: 'absent' }
+      if (company.role !== 'admin') return { brn: company.brn, status: 'member', name: company.name }
+      const own = state.setups.get(norm(company.brn))
+      const shared = own ? state.shared.get(own.shared_setup_id) : null
+      return {
+        brn: company.brn,
+        status: 'admin',
+        name: company.name,
+        address: company.address ?? null,
+        setup:
+          own && shared
+            ? { shared_setup_id: shared.id, shared_name: shared.name, shared_body: shared.body, shared_revision: shared.revision, company_body: own.body, company_revision: own.revision }
+            : null,
+        months: [...state.months]
+          .filter(([key]) => key.startsWith(`${norm(company.brn)}|`) && inRange(key.split('|')[1]))
+          .map(([key, m]) => ({ period: key.split('|')[1], revision: m.revision, employee_count: m.employees.length }))
+          .sort((a, b) => (a.period < b.period ? -1 : 1)),
+        approved: [...state.approvedRuns].filter((key) => key.startsWith(`${norm(company.brn)}|`) && inRange(key.split('|')[1])).map((key) => key.split('|')[1]),
+      }
+    })
+    return { ok: true, dataType: 'payroll-import', rows, meta: meta() }
+  }
+
+  function importSave(row) {
+    if (norm(row.brn) !== norm(state.selectedBrn)) return refuse('wrong-company', 'The dashboard has a different company selected.')
+    if (row.action === 'summary') {
+      state.importSummaries.push({ ...row })
+      return { ok: true, result: { action: 'summary' } }
+    }
+    if (row.action !== 'company') return refuse('invalid', '"action" is missing or not valid.')
+    if (!state.unlocked) return refuse('locked', 'The dashboard is locked, so this was NOT saved. Unlock it there, and it is saved then.')
+    const found = member(row.company_brn)
+    if (found && found.role !== 'admin') return refuse('forbidden', 'Only an admin of that company can import its months.')
+    if (found && row.new_company) return refuse('stale', 'That company is already in the dashboard. Check the file again.')
+    if (!found && !row.new_company) return refuse('not-found', 'You have no company with that BRN in the dashboard.')
+    if (!Array.isArray(row.months) || row.months.length < 1 || row.months.length > 24) return refuse('invalid', '"months" is missing or not valid.')
+
+    // All or nothing: what the import changes is put back exactly as it was if any part fails.
+    const before = {
+      companies: structuredClone(state.companies),
+      shared: structuredClone(state.shared),
+      setups: structuredClone(state.setups),
+      history: structuredClone(state.history),
+      months: structuredClone(state.months),
+      monthHistory: structuredClone(state.monthHistory),
+    }
+    const undo = (refusal) => {
+      Object.assign(state, before)
+      return refusal
+    }
+    let created = false
+    let attached = false
+    let sharedCreated = false
+    if (!found) {
+      if (state.otherBrns.includes(norm(row.company_brn))) {
+        return refuse('invalid', 'A company with this BRN is already in the dashboard, and you are not a member of it. It was not added.')
+      }
+      if (!state.companies.some((c) => c.role === 'admin')) return refuse('forbidden', 'Only an admin of this company can do this.')
+      state.companies.push({ brn: String(row.company_brn).trim(), name: row.new_company.name, address: row.new_company.address ?? null, role: 'admin' })
+      created = true
+    }
+    const company = member(row.company_brn)
+    const brn = norm(company.brn)
+    if (!state.setups.has(brn)) {
+      if (!row.setup) return undo(refuse('not-found', 'The dashboard has no such item.'))
+      if (row.setup.create) {
+        const made = save({ action: 'save-shared', brn: row.brn, shared_setup_id: row.setup.shared_setup_id, name: row.setup.name, body: row.setup.shared_body, expected_revision: 0 })
+        if (!made.ok) return undo(made)
+        sharedCreated = true
+      }
+      const joined = save({ action: 'attach-company', brn: row.brn, company_brn: company.brn, shared_setup_id: row.setup.shared_setup_id, body: row.setup.company_body })
+      if (!joined.ok) return undo(joined)
+      attached = true
+    } else {
+      if (row.setup) return undo(refuse('stale', 'It was saved by someone else since you loaded it. Reload, then make the change again.'))
+      const own = state.setups.get(brn)
+      const shared = state.shared.get(own.shared_setup_id)
+      if (!row.expected || row.expected.shared_revision !== shared.revision || row.expected.company_revision !== own.revision) {
+        return undo(refuse('stale', 'It was saved by someone else since you loaded it. Reload, then make the change again.'))
+      }
+    }
+    const own = state.setups.get(brn)
+    const sharedRevision = state.shared.get(own.shared_setup_id).revision
+    const months = []
+    for (const month of row.months) {
+      const existing = state.months.get(monthKey(brn, month.period))
+      if (existing && !month.replace) return undo(refuse('stale', 'It was saved by someone else since you loaded it. Reload, then make the change again.'))
+      if (existing && state.approvedRuns.has(monthKey(brn, month.period))) {
+        return undo(
+          refuse('forbidden', `The month ${month.period} has an approved run in the dashboard, so it is never replaced. Nothing of this company was saved.`)
+        )
+      }
+      const saved = monthSave({
+        action: 'save',
+        brn: row.brn,
+        company_brn: company.brn,
+        period: month.period,
+        employees: month.employees,
+        expected_revision: month.expected_revision,
+        shared_revision: sharedRevision,
+        company_revision: own.revision,
+        keep_previous: Boolean(existing),
+      })
+      if (!saved.ok) return undo(saved)
+      months.push({ period: month.period, revision: saved.result.revision, employee_count: saved.result.employee_count, replaced: Boolean(existing) })
+    }
+    return {
+      ok: true,
+      result: { action: 'company', brn: company.brn, company: company.name, created, attached, shared_created: sharedCreated, shared_setup_id: own.shared_setup_id, months },
+    }
+  }
+
   // The dashboard's gate opens or locks; the app is told, as the dashboard tells it.
   function setGate(unlocked) {
     if (state.unlocked === unlocked) return
@@ -631,15 +765,16 @@ export function createFakeSetupHub(seed = {}) {
     const command = isRequest ? payload.params || {} : payload.rows[0]
     state.log.push({
       type,
-      ...(payload.dataType === 'payroll-month' || payload.dataType === 'payroll-batch' ? { dataType: payload.dataType } : {}),
+      ...(['payroll-month', 'payroll-batch', 'payroll-import'].includes(payload.dataType) ? { dataType: payload.dataType } : {}),
       action: command.action,
       ...(command.company_brn ? { company_brn: command.company_brn } : {}),
       ...(command.period ? { period: command.period } : {}),
     })
     const isMonth = payload.dataType === 'payroll-month'
     const isBatch = payload.dataType === 'payroll-batch'
-    if (payload.dataType !== 'payroll-setup' && !isMonth && !isBatch) return undefined
-    if (!state.supported || (isMonth && !state.monthsSupported) || (isBatch && (!state.batchSupported || !isRequest))) {
+    const isImport = payload.dataType === 'payroll-import'
+    if (payload.dataType !== 'payroll-setup' && !isMonth && !isBatch && !isImport) return undefined
+    if (!state.supported || (isMonth && !state.monthsSupported) || (isBatch && (!state.batchSupported || !isRequest)) || (isImport && !state.importSupported)) {
       return { ok: false, error: `This app is not registered to ${isRequest ? 'receive' : 'send'} this kind of data.` }
     }
     if (state.down) return { ok: false, code: 'unavailable', error: "Can't reach the database." }
@@ -655,7 +790,11 @@ export function createFakeSetupHub(seed = {}) {
     if (state.delayMs > 0) await new Promise((resolve) => setTimeout(resolve, state.delayMs))
     let answer
     if (!matches || failing.store) {
-      answer = isBatch
+      answer = isImport
+        ? isRequest
+          ? importRequest(command)
+          : importSave(command)
+        : isBatch
         ? batchRequest(command)
         : isMonth
           ? isRequest

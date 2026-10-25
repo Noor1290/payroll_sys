@@ -195,6 +195,11 @@ export const dashboardCompany = () => company
 // What the screens need to know about the shared setup: whether it can be changed here, and why not.
 export const sharedAccess = () =>
   shared ? { canChange: shared.canChange, companies: shared.companies, adminOf: shared.adminOf, revision: shared.revision } : null
+// The shared setup of the company selected in the dashboard, as the dashboard last confirmed it:
+// a company imported from an Excel file is attached to it when the file's is the same
+// (severalImport.js). Null when the selected company has no setup yet.
+export const heldShared = () =>
+  shared ? { shared_setup_id: shared.id, shared_body: asJson(shared.saved), canChange: shared.canChange } : null
 // The revisions of what is on screen, as last confirmed by the dashboard: what a
 // month will record it was saved with (Phase 3).
 export function setupRevisions() {

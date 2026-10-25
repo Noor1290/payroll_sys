@@ -7,6 +7,7 @@
 // downloaded file as "example.xlsx", and a picture of each of its sheets.
 
 import fs from 'node:fs'
+import os from 'node:os'
 import path from 'node:path'
 import ExcelJS from 'exceljs'
 import * as XLSX from 'xlsx'
@@ -248,6 +249,95 @@ test('several companies over twelve months: one question for the range, a sheet 
     await pictureOfSheet(context, book, 'Read me', path.join(SHOTS, 'range-3-file-read-me.png'))
     await pictureOfSheet(context, book, 'Companies', path.join(SHOTS, 'range-4-file-companies.png'))
     await pictureOfSheet(context, book, 'Fake Trading Company of the Ind', path.join(SHOTS, 'range-5-file-company-sheet.png'))
+  }
+  await context.close()
+})
+
+// Import: the twelve-month file exported above, into a fresh dashboard where only the owner's
+// company exists, with no column setup yet (as one made in the SQL editor).
+test('import into a fresh dashboard: the question, the preview, every company and month created', async () => {
+  const source = createFakeSetupHub(yearSeed())
+  const exporting = await openStandin(source)
+  await expect.poll(() => Boolean(appFrame(exporting.page))).toBe(true)
+  let frame = appFrame(exporting.page)
+  await frame.locator('tbody input').first().waitFor()
+  await frame.getByRole('button', { name: 'Several companies…' }).click()
+  let dialog = frame.getByRole('dialog', { name: 'Several companies' })
+  await dialog.getByText('Companies where you are an admin').waitFor()
+  await dialog.getByLabel('From').fill('2026-07')
+  await dialog.getByLabel('To').fill('2027-06')
+  await dialog.getByRole('button', { name: 'Select all' }).click()
+  const downloading = exporting.page.waitForEvent('download')
+  await dialog.getByRole('button', { name: 'Export 4 companies' }).click()
+  // Kept apart: the browser removes its downloads when its context closes.
+  const file = path.join(fs.mkdtempSync(path.join(os.tmpdir(), 'several-')), 'Payroll 2026-07 to 2027-06 (4 companies).xlsx')
+  fs.copyFileSync(await (await downloading).path(), file)
+  await exporting.context.close()
+
+  const fresh = createFakeSetupHub({ companies: [{ brn: 'C00000099', name: 'Owner Fake Ltd', address: null, role: 'admin' }], selectedBrn: 'C00000099', monthsSupported: true })
+  const importing = await openStandin(fresh)
+  await expect.poll(() => Boolean(appFrame(importing.page))).toBe(true)
+  frame = appFrame(importing.page)
+  await frame.getByText('Owner Fake Ltd has no column setup in the dashboard yet').waitFor()
+  await frame.getByRole('button', { name: 'Several companies…' }).click()
+  dialog = frame.getByRole('dialog', { name: 'Several companies' })
+  await dialog.getByRole('tab', { name: 'Import' }).click()
+  await dialog.getByLabel('The Excel file to import').setInputFiles(file)
+  await dialog.getByText("These companies aren't in the dashboard yet. Do you want to add them?").waitFor()
+  if (SHOTS) await importing.page.locator('#app').screenshot({ path: path.join(SHOTS, 'import-1-question.png') })
+  expect(fresh.state.companies).toHaveLength(1)
+  await dialog.getByRole('button', { name: 'Select all' }).click()
+  await dialog.getByRole('button', { name: 'Add the ticked companies' }).click()
+  await dialog.getByText('Nothing has been saved yet.').waitFor()
+  if (SHOTS) await importing.page.locator('#app').screenshot({ path: path.join(SHOTS, 'import-2-preview.png') })
+  await dialog.getByRole('button', { name: 'Import 3 companies' }).click()
+  await dialog.getByText('Created in the dashboard.').first().waitFor()
+  if (SHOTS) await importing.page.locator('#app').screenshot({ path: path.join(SHOTS, 'import-3-done.png') })
+  // Every company with data and every month of it, as in the dashboard the file came from.
+  expect(fresh.state.companies.map((c) => c.brn)).toEqual(['C00000099', 'C00000001', 'C00000002', 'C00000003'])
+  const monthsOf = (hub) => [...hub.state.months.keys()].filter((k) => !k.startsWith('C00000005')).sort()
+  expect(monthsOf(fresh)).toEqual(monthsOf(source))
+  await importing.context.close()
+})
+
+// The preview against the dashboard the file came from: months already saved (Replace offered),
+// one whose run is approved (never replaced), and a company the user is now only a member of.
+test('import into a dashboard that has the months: kept, Replace offered, approved never replaced, a problem', async () => {
+  const seed = yearSeed()
+  const hub = createFakeSetupHub({ ...seed, companies: seed.companies.map((c) => (c.brn === 'C00000003' ? { ...c, role: 'member' } : c)), approvedRuns: ['C00000001|2026-12'] })
+  // The file: October 2026 to March 2027 of every admin company, exported from the same months.
+  const exporting = await openStandin(createFakeSetupHub(yearSeed()))
+  await expect.poll(() => Boolean(appFrame(exporting.page))).toBe(true)
+  let frame = appFrame(exporting.page)
+  await frame.locator('tbody input').first().waitFor()
+  await frame.getByRole('button', { name: 'Several companies…' }).click()
+  let dialog = frame.getByRole('dialog', { name: 'Several companies' })
+  await dialog.getByText('Companies where you are an admin').waitFor()
+  await dialog.getByLabel('From').fill('2026-10')
+  await dialog.getByLabel('To').fill('2027-03')
+  await dialog.getByRole('button', { name: 'Select all' }).click()
+  const downloading = exporting.page.waitForEvent('download')
+  await dialog.getByRole('button', { name: 'Export 4 companies' }).click()
+  const file = path.join(fs.mkdtempSync(path.join(os.tmpdir(), 'several-')), 'Payroll 2026-10 to 2027-03 (4 companies).xlsx')
+  fs.copyFileSync(await (await downloading).path(), file)
+  await exporting.context.close()
+
+  const { context, page } = await openStandin(hub)
+  await expect.poll(() => Boolean(appFrame(page))).toBe(true)
+  frame = appFrame(page)
+  await frame.locator('tbody input').first().waitFor()
+  await frame.getByRole('button', { name: 'Several companies…' }).click()
+  dialog = frame.getByRole('dialog', { name: 'Several companies' })
+  await dialog.getByRole('tab', { name: 'Import' }).click()
+  await dialog.getByLabel('The Excel file to import').setInputFiles(file)
+  await dialog.getByText('Nothing has been saved yet.').waitFor()
+  await dialog.getByLabel('What to do with October 2026 of Fake Co Ltd').selectOption('replace')
+  await dialog.getByText('never replaced').first().waitFor()
+  await dialog.getByText('You are not an admin of this company in the dashboard.').waitFor()
+  if (SHOTS) await page.locator('#app').screenshot({ path: path.join(SHOTS, 'import-4-preview-existing.png') })
+  if (SHOTS) {
+    await dialog.getByText('You are not an admin of this company in the dashboard.').scrollIntoViewIfNeeded()
+    await page.locator('#app').screenshot({ path: path.join(SHOTS, 'import-5-preview-problem.png') })
   }
   await context.close()
 })

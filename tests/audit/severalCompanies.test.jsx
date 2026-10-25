@@ -580,7 +580,8 @@ describe('"Several companies…" inside the dashboard', () => {
     expect(listed).toEqual(['Fake Co Ltd · BRN C00000001 · selected in the dashboard', 'Empty Fake Ltd · BRN C00000002'])
     expect(monthInput('From').value).toBe('2026-10')
     expect(monthInput('To').value).toBe('2026-10')
-    expect(button('Export').disabled).toBe(true)
+    // The button, not the tab of the same name.
+    expect(all('button:not([role="tab"])').find((b) => b.textContent.trim() === 'Export').disabled).toBe(true)
 
     await click(button('Select all'))
     expect(dialog().textContent).toContain('2 of 2 chosen')
