@@ -2225,6 +2225,170 @@
     {
       "text": "text: · sheet \"Fake Co Ltd\", 6 employees",
       "why": "approved (several companies in one Excel file, Stage 1, 25 Oct 2026): a company's sheet, one month; the name and count are the fake data's"
+    },
+    {
+      "text": "aria-label: Export or import",
+      "why": "approved (several companies in one Excel file, months and import, 25 Oct 2026): the dialog, the export of a range of months and the import"
+    },
+    {
+      "text": "aria-label: Import Fake Co Ltd",
+      "why": "approved (several companies in one Excel file, months and import, 25 Oct 2026): the dialog, the export of a range of months and the import"
+    },
+    {
+      "text": "aria-label: Import New Fake Ltd",
+      "why": "approved (several companies in one Excel file, months and import, 25 Oct 2026): the dialog, the export of a range of months and the import"
+    },
+    {
+      "text": "aria-label: The Excel file to import",
+      "why": "approved (several companies in one Excel file, months and import, 25 Oct 2026): the dialog, the export of a range of months and the import"
+    },
+    {
+      "text": "aria-label: What to do with October 2026 of Fake Co Ltd",
+      "why": "approved (several companies in one Excel file, months and import, 25 Oct 2026): the dialog, the export of a range of months and the import"
+    },
+    {
+      "text": "text: \"To\" is before \"From\".",
+      "why": "approved (several companies in one Excel file, months and import, 25 Oct 2026): the dialog, the export of a range of months and the import"
+    },
+    {
+      "text": "text: 12 months",
+      "why": "approved (several companies in one Excel file, months and import, 25 Oct 2026): the dialog, the export of a range of months and the import"
+    },
+    {
+      "text": "text: A company you add is created in the dashboard with its name, BRN and details from the file, and its months imported.",
+      "why": "approved (several companies in one Excel file, months and import, 25 Oct 2026): the dialog, the export of a range of months and the import"
+    },
+    {
+      "text": "text: Add the ticked companies",
+      "why": "approved (several companies in one Excel file, months and import, 25 Oct 2026): the dialog, the export of a range of months and the import"
+    },
+    {
+      "text": "text: Added: September 2026. Skipped: October 2026 (already saved).",
+      "why": "approved (several companies in one Excel file, months and import, 25 Oct 2026): the dialog, the export of a range of months and the import"
+    },
+    {
+      "text": "text: Already saved (revision 1, 6 employees):",
+      "why": "approved (several companies in one Excel file, months and import, 25 Oct 2026): the dialog, the export of a range of months and the import"
+    },
+    {
+      "text": "text: At most 24 months at a time.",
+      "why": "approved (several companies in one Excel file, months and import, 25 Oct 2026): the dialog, the export of a range of months and the import"
+    },
+    {
+      "text": "text: Choose a file made by Export. Each sheet is matched to a company by its BRN, and nothing is saved before you confirm the preview. The file is not changed.",
+      "why": "approved (several companies in one Excel file, months and import, 25 Oct 2026): the dialog, the export of a range of months and the import"
+    },
+    {
+      "text": "text: Choose another file",
+      "why": "approved (several companies in one Excel file, months and import, 25 Oct 2026): the dialog, the export of a range of months and the import"
+    },
+    {
+      "text": "text: Choose the Excel file…",
+      "why": "approved (several companies in one Excel file, months and import, 25 Oct 2026): the dialog, the export of a range of months and the import"
+    },
+    {
+      "text": "text: Created in the dashboard. Added: October 2026.",
+      "why": "approved (several companies in one Excel file, months and import, 25 Oct 2026): the dialog, the export of a range of months and the import"
+    },
+    {
+      "text": "text: Don't add any",
+      "why": "approved (several companies in one Excel file, months and import, 25 Oct 2026): the dialog, the export of a range of months and the import"
+    },
+    {
+      "text": "text: Downloaded Payroll 2026-07 to 2027-06 (2 companies).xlsx: July 2026 to June 2027, 1 company with a sheet.",
+      "why": "approved (several companies in one Excel file, months and import, 25 Oct 2026): the dialog, the export of a range of months and the import"
+    },
+    {
+      "text": "text: Export one or more months of several companies to one Excel file, each company on its own sheet, or import such a file.",
+      "why": "approved (several companies in one Excel file, months and import, 25 Oct 2026): the dialog, the export of a range of months and the import"
+    },
+    {
+      "text": "text: From",
+      "why": "approved (several companies in one Excel file, months and import, 25 Oct 2026): the dialog, the export of a range of months and the import"
+    },
+    {
+      "text": "text: Import 2 companies",
+      "why": "approved (several companies in one Excel file, months and import, 25 Oct 2026): the dialog, the export of a range of months and the import"
+    },
+    {
+      "text": "text: Import",
+      "why": "approved (several companies in one Excel file, months and import, 25 Oct 2026): the dialog, the export of a range of months and the import"
+    },
+    {
+      "text": "text: Keep the dashboard's (skip)",
+      "why": "approved (several companies in one Excel file, months and import, 25 Oct 2026): the dialog, the export of a range of months and the import"
+    },
+    {
+      "text": "text: New Fake Ltd",
+      "why": "approved (several companies in one Excel file, months and import, 25 Oct 2026): the dialog, the export of a range of months and the import"
+    },
+    {
+      "text": "text: New company: it will be added to the dashboard, and uses your shared setup.",
+      "why": "approved (several companies in one Excel file, months and import, 25 Oct 2026): the dialog, the export of a range of months and the import"
+    },
+    {
+      "text": "text: Nothing has been saved yet.",
+      "why": "approved (several companies in one Excel file, months and import, 25 Oct 2026): the dialog, the export of a range of months and the import"
+    },
+    {
+      "text": "text: October 2026",
+      "why": "approved (several companies in one Excel file, months and import, 25 Oct 2026): the dialog, the export of a range of months and the import"
+    },
+    {
+      "text": "text: Or import companies and their months from an Excel file made by \"Several companies…\":",
+      "why": "approved (several companies in one Excel file, months and import, 25 Oct 2026): the dialog, the export of a range of months and the import"
+    },
+    {
+      "text": "text: Payroll 2026-09 to 2026-10 (2 companies).xlsx: September 2026 to October 2026, 2 companies.",
+      "why": "approved (several companies in one Excel file, months and import, 25 Oct 2026): the dialog, the export of a range of months and the import"
+    },
+    {
+      "text": "text: Replace it with the file's (6 employees), as a new revision",
+      "why": "approved (several companies in one Excel file, months and import, 25 Oct 2026): the dialog, the export of a range of months and the import"
+    },
+    {
+      "text": "text: September 2026",
+      "why": "approved (several companies in one Excel file, months and import, 25 Oct 2026): the dialog, the export of a range of months and the import"
+    },
+    {
+      "text": "text: The dashboard asks you once to allow it, naming the months and the companies. A company with no data in those months is listed in the file, without a sheet.",
+      "why": "approved (several companies in one Excel file, months and import, 25 Oct 2026): the dialog, the export of a range of months and the import"
+    },
+    {
+      "text": "text: These companies aren't in the dashboard yet. Do you want to add them?",
+      "why": "approved (several companies in one Excel file, months and import, 25 Oct 2026): the dialog, the export of a range of months and the import"
+    },
+    {
+      "text": "text: To",
+      "why": "approved (several companies in one Excel file, months and import, 25 Oct 2026): the dialog, the export of a range of months and the import"
+    },
+    {
+      "text": "text: Will be added (6 employees).",
+      "why": "approved (several companies in one Excel file, months and import, 25 Oct 2026): the dialog, the export of a range of months and the import"
+    },
+    {
+      "text": "text: · BRN C00000001:",
+      "why": "approved (several companies in one Excel file, months and import, 25 Oct 2026): the dialog, the export of a range of months and the import"
+    },
+    {
+      "text": "text: · BRN C00000077",
+      "why": "approved (several companies in one Excel file, months and import, 25 Oct 2026): the dialog, the export of a range of months and the import"
+    },
+    {
+      "text": "text: · BRN C00000077:",
+      "why": "approved (several companies in one Excel file, months and import, 25 Oct 2026): the dialog, the export of a range of months and the import"
+    },
+    {
+      "text": "text: · No data in these months: no sheet",
+      "why": "approved (several companies in one Excel file, months and import, 25 Oct 2026): the dialog, the export of a range of months and the import"
+    },
+    {
+      "text": "text: · sheet \"Fake Co Ltd\", 2 of 12 months (no data: July 2026, August 2026, November 2026, December 2026, January 2027, February 2027, March 2027, April 2027, May 2027, June 2027)",
+      "why": "approved (several companies in one Excel file, months and import, 25 Oct 2026): the dialog, the export of a range of months and the import"
+    },
+    {
+      "text": "title: One or more months of several companies in one Excel file",
+      "why": "approved (several companies in one Excel file, months and import, 25 Oct 2026): the dialog, the export of a range of months and the import"
     }
   ],
   "removed": [
