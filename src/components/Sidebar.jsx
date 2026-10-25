@@ -165,7 +165,7 @@ export default function Sidebar({
             <button
               onClick={() => setSeveral(true)}
               className="btn btn-ghost btn-sm w-full"
-              title="One month of several companies in one Excel file"
+              title="One or more months of several companies in one Excel file"
             >
               <Files aria-hidden="true" />
               Several companies…

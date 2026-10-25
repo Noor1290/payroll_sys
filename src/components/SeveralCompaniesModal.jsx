@@ -4,16 +4,20 @@ import Modal from './Modal'
 import { batchCompanies, exportCompanies } from '../lib/dashboardBatch'
 import { askToUnlock } from '../lib/dashboardMonths'
 import { downloadWorkbook } from '../lib/excelExport'
-import { formatPeriodLabel, parsePeriodKey } from '../lib/periods'
+import { MAX_MONTHS, monthsBetween, rangeLabelOf } from '../lib/severalCompanies'
 
-// "Several companies…", inside the dashboard: one month of several companies in
-// one Excel file (severalCompanies.js). The companies are the ones the user is
-// an admin of, as the dashboard's database says; the dashboard asks once,
-// naming the month and every company, before anything is read.
-//   period   "YYYY-MM": the month offered first (the one on screen)
+const isMonth = (value) => /^\d{4}-(0[1-9]|1[0-2])$/.test(value)
+
+// "Several companies…", inside the dashboard: one month, or a range of months,
+// of several companies in one Excel file (severalCompanies.js). The companies
+// are the ones the user is an admin of, as the dashboard's database says; the
+// dashboard asks once, naming the months and every company, before anything is
+// read.
+//   period   "YYYY-MM": the month offered first, as From and To (the one on screen)
 export default function SeveralCompaniesModal({ period: firstPeriod, onClose }) {
   const [list, setList] = useState(null) // the dashboard's answer to `companies`
-  const [period, setPeriod] = useState(firstPeriod)
+  const [from, setFrom] = useState(firstPeriod)
+  const [to, setTo] = useState(firstPeriod)
   const [chosen, setChosen] = useState(() => new Set())
   const [progress, setProgress] = useState(null) // what exportCompanies is doing, while it runs
   const [result, setResult] = useState(null) // what exportCompanies answered
@@ -32,7 +36,17 @@ export default function SeveralCompaniesModal({ period: firstPeriod, onClose }) 
   const companies = list?.ok ? list.rows : []
   const count = chosen.size
   const working = progress !== null
-  const monthLabel = /^\d{4}-(0[1-9]|1[0-2])$/.test(period) ? formatPeriodLabel(parsePeriodKey(period).year, parsePeriodKey(period).month) : null
+  // What is wrong with the months chosen, or null.
+  const rangeProblem =
+    !isMonth(from) || !isMonth(to)
+      ? 'Choose a month in "From" and in "To".'
+      : to < from
+        ? '"To" is before "From".'
+        : monthsBetween(from, to).length > MAX_MONTHS
+          ? `At most ${MAX_MONTHS} months at a time.`
+          : null
+  const single = from === to
+  const monthLabel = rangeProblem ? null : rangeLabelOf(from, to)
 
   const toggle = (brn, on) =>
     setChosen((prev) => {
@@ -45,7 +59,7 @@ export default function SeveralCompaniesModal({ period: firstPeriod, onClose }) 
   async function handleExport() {
     setResult(null)
     const picked = companies.filter((c) => chosen.has(c.brn)).map(({ brn, name }) => ({ brn, name }))
-    const answer = await exportCompanies(period, picked, setProgress)
+    const answer = await exportCompanies({ from, to }, picked, setProgress)
     setProgress(null)
     setResult(answer)
     if (answer.ok) downloadWorkbook(answer.buffer, answer.fileName)
@@ -61,7 +75,7 @@ export default function SeveralCompaniesModal({ period: firstPeriod, onClose }) 
   return (
     <Modal
       title="Several companies"
-      description="One month of several companies in one Excel file, each company on its own sheet."
+      description="One or more months of several companies in one Excel file, each company on its own sheet."
       onClose={working ? () => {} : onClose}
       width="max-w-2xl"
       icon={<Files />}
@@ -93,16 +107,33 @@ export default function SeveralCompaniesModal({ period: firstPeriod, onClose }) 
 
       {list?.ok && !result?.ok && (
         <div className="space-y-4 text-sm">
-          <label className="flex flex-wrap items-center gap-2">
-            <span className="font-medium text-fg">Month</span>
-            <input
-              type="month"
-              className="field w-auto"
-              value={period}
-              disabled={working}
-              onChange={(e) => setPeriod(e.target.value)}
-            />
-          </label>
+          <div className="flex flex-wrap items-center gap-x-4 gap-y-2">
+            <label className="flex items-center gap-2">
+              <span className="font-medium text-fg">From</span>
+              <input
+                type="month"
+                className="field w-auto"
+                value={from}
+                disabled={working}
+                onChange={(e) => {
+                  // Moving "From" past "To" moves "To" with it.
+                  setFrom(e.target.value)
+                  if (isMonth(e.target.value) && (!isMonth(to) || to < e.target.value)) setTo(e.target.value)
+                }}
+              />
+            </label>
+            <label className="flex items-center gap-2">
+              <span className="font-medium text-fg">To</span>
+              <input type="month" className="field w-auto" value={to} disabled={working} onChange={(e) => setTo(e.target.value)} />
+            </label>
+            {rangeProblem ? (
+              <span role="alert" className="text-xs text-danger">
+                {rangeProblem}
+              </span>
+            ) : (
+              !single && <span className="text-xs text-muted">{monthsBetween(from, to).length} months</span>
+            )}
+          </div>
 
           <section className="space-y-2">
             <div className="flex flex-wrap items-center gap-2">
@@ -144,8 +175,9 @@ export default function SeveralCompaniesModal({ period: firstPeriod, onClose }) 
           </section>
 
           <p className="text-muted">
-            The dashboard asks you once to allow it, naming the month and the companies. A company with no data for that month is listed in the
-            file, without a sheet.
+            {single
+              ? 'The dashboard asks you once to allow it, naming the month and the companies. A company with no data for that month is listed in the file, without a sheet.'
+              : 'The dashboard asks you once to allow it, naming the months and the companies. A company with no data in those months is listed in the file, without a sheet.'}
           </p>
 
           {result && !result.ok && (
@@ -184,12 +216,22 @@ export default function SeveralCompaniesModal({ period: firstPeriod, onClose }) 
         </div>
       )}
 
-      {result?.ok && <ExportDone result={result} monthLabel={monthLabel} onClose={onClose} />}
+      {result?.ok && <ExportDone result={result} monthLabel={monthLabel} months={monthsBetween(from, to)} onClose={onClose} />}
     </Modal>
   )
 }
 
-function ExportDone({ result, monthLabel, onClose }) {
+// What one company got in the file: its sheet and employees, or, for several
+// months, its sheet and the months it has data for.
+function companyLine(company, sheet, months) {
+  if (company.status !== 'sheet') return months.length === 1 ? ' · No data for this month: no sheet' : ' · No data in these months: no sheet'
+  if (months.length === 1) return ` · sheet "${sheet}", ${company.employeeCount} ${company.employeeCount === 1 ? 'employee' : 'employees'}`
+  const have = new Set(company.months.map((m) => m.period))
+  const missing = months.filter((m) => !have.has(m)).map((m) => rangeLabelOf(m, m))
+  return ` · sheet "${sheet}", ${have.size} of ${months.length} months${missing.length > 0 ? ` (no data: ${missing.join(', ')})` : ''}`
+}
+
+function ExportDone({ result, monthLabel, months, onClose }) {
   const withSheets = result.companies.filter((c) => c.status === 'sheet').length
   return (
     <div className="space-y-4 text-sm">
@@ -208,17 +250,14 @@ function ExportDone({ result, monthLabel, onClose }) {
           <li key={company.brn} className="space-y-1 px-4 py-2">
             <p>
               <span className="font-medium text-fg">{company.name}</span>
-              <span className="text-muted">
-                {company.status === 'sheet'
-                  ? ` · sheet "${result.sheets[i]}", ${company.employeeCount} ${company.employeeCount === 1 ? 'employee' : 'employees'}`
-                  : ' · No data for this month: no sheet'}
-              </span>
+              <span className="text-muted">{companyLine(company, result.sheets[i], months)}</span>
             </p>
             {company.status === 'sheet' && company.errors.length > 0 && (
               <p className="flex items-start gap-1.5 text-warn">
                 <TriangleAlert className="mt-0.5 h-3.5 w-3.5 shrink-0" aria-hidden="true" />
                 {company.errors.length} {company.errors.length === 1 ? 'figure' : 'figures'} could not be worked out and{' '}
-                {company.errors.length === 1 ? 'is' : 'are'} written as Error (first: {company.errors[0].employee}, {company.errors[0].column}).
+                {company.errors.length === 1 ? 'is' : 'are'} written as Error (first: {months.length > 1 && `${rangeLabelOf(company.errors[0].period, company.errors[0].period)}, `}
+                {company.errors[0].employee}, {company.errors[0].column}).
               </p>
             )}
           </li>

@@ -58,9 +58,9 @@ export function createFakeSetupHub(seed = {}) {
     batchSupported: seed.batchSupported ?? seed.monthsSupported === true,
     // What the user does with the dashboard's one question: 'allow' | 'deny'.
     batchAnswer: 'allow',
-    // Every question asked: { period, companies } (BRNs as sent).
+    // Every question asked: { from, to, companies } (BRNs as sent).
     batchAsked: [],
-    // What was allowed: { period, brns: Set } | null.
+    // What was allowed: { from, to, brns: Set } | null.
     batchPermit: null,
   }
   for (const s of seed.shared || []) {
@@ -505,7 +505,8 @@ export function createFakeSetupHub(seed = {}) {
 
   // ---------- several companies at once ----------
   // The dashboard's "payroll-batch": the user's admin companies; ONE question naming the
-  // month and every company; then one company per load, only as allowed and while unlocked.
+  // months (from `from` to `to`, 24 at most) and every company; then one company per load,
+  // only as allowed and while unlocked.
   function batchRequest(params) {
     if (params.brn !== undefined && norm(params.brn) !== norm(state.selectedBrn)) {
       return refuse('wrong-company', 'The dashboard has a different company selected.')
@@ -516,47 +517,56 @@ export function createFakeSetupHub(seed = {}) {
       .sort((a, b) => Number(norm(b.brn) === norm(state.selectedBrn)) - Number(norm(a.brn) === norm(state.selectedBrn)) || a.name.localeCompare(b.name))
     const adminOf = (brn) => admins.find((c) => norm(c.brn) === norm(brn)) || null
     const isMonth = (period) => typeof period === 'string' && /^\d{4}-(0[1-9]|1[0-2])$/.test(period)
+    const monthsOf = (from, to) => {
+      const index = (m) => Number(m.slice(0, 4)) * 12 + Number(m.slice(5, 7)) - 1
+      const out = []
+      for (let i = index(from); i <= index(to); i++) out.push(`${Math.floor(i / 12)}-${String((i % 12) + 1).padStart(2, '0')}`)
+      return out
+    }
+    const isRange = (from, to) => isMonth(from) && isMonth(to) && from <= to && monthsOf(from, to).length <= 24
     switch (params.action) {
       case 'companies':
         return answer(
           admins.map((c) => ({ brn: c.brn, name: c.name, selected: norm(c.brn) === norm(state.selectedBrn), has_setup: state.setups.has(norm(c.brn)) }))
         )
       case 'ask': {
-        if (!isMonth(params.period) || !Array.isArray(params.companies) || params.companies.length < 1 || params.companies.length > 200) {
+        if (!isRange(params.from, params.to) || !Array.isArray(params.companies) || params.companies.length < 1 || params.companies.length > 200) {
           return refuse('invalid', '"companies" is missing or not valid.')
         }
         if (params.companies.some((brn) => !adminOf(brn))) return refuse('forbidden', 'Only companies where you are an admin can be chosen.')
-        state.batchAsked.push({ period: params.period, companies: [...params.companies] })
+        state.batchAsked.push({ from: params.from, to: params.to, companies: [...params.companies] })
         if (state.batchAnswer === 'deny') return refuse('denied', 'The dashboard user declined the request.')
         if (!state.unlocked) {
           if (state.unlockAnswer === 'deny') return refuse('locked', 'The dashboard is locked. Confirm your password there to unlock it, then ask again.')
           setGate(true)
         }
         const granted = [...new Set(params.companies.map(norm))].map(adminOf)
-        state.batchPermit = { period: params.period, brns: new Set(granted.map((c) => norm(c.brn))) }
+        state.batchPermit = { from: params.from, to: params.to, brns: new Set(granted.map((c) => norm(c.brn))) }
         return answer(
           granted.map((c) => ({ brn: c.brn, name: c.name })),
-          params.period
+          params.from === params.to ? params.from : undefined
         )
       }
       case 'load': {
         const permit = state.batchPermit
-        if (!permit || permit.period !== params.period || !permit.brns.has(norm(params.company_brn))) {
-          return refuse('denied', 'That company and month were not allowed in the dashboard for this app. Ask again.')
+        if (!isRange(params.from, params.to)) return refuse('invalid', '"to" is missing or not valid.')
+        if (!permit || permit.from !== params.from || permit.to !== params.to || !permit.brns.has(norm(params.company_brn))) {
+          return refuse('denied', 'That company and those months were not allowed in the dashboard for this app. Ask again.')
         }
         if (!state.unlocked) return refuse('locked', 'The dashboard is locked. Confirm your password there to unlock it, then ask again.')
         const company = adminOf(params.company_brn)
         if (!company) return refuse('forbidden', "Only an admin of that company can export its employees' figures.")
         const own = state.setups.get(norm(company.brn))
         const shared = own ? state.shared.get(own.shared_setup_id) : null
-        const month = state.months.get(monthKey(company.brn, params.period))
+        const saved = monthsOf(params.from, params.to).filter((period) => state.months.has(monthKey(company.brn, period)))
         return answer(
           [
             {
               brn: company.brn,
               name: company.name,
               address: company.address ?? null,
-              period: params.period,
+              from: params.from,
+              to: params.to,
               setup:
                 own && shared
                   ? {
@@ -568,19 +578,21 @@ export function createFakeSetupHub(seed = {}) {
                       company_revision: own.revision,
                     }
                   : null,
-              month: month
-                ? {
-                    revision: month.revision,
-                    shared_revision: month.shared_revision,
-                    company_revision: month.company_revision,
-                    employee_count: month.employees.length,
-                    employees: month.employees,
-                    updated_at: stamp(),
-                  }
-                : null,
+              months: saved.map((period) => {
+                const month = state.months.get(monthKey(company.brn, period))
+                return {
+                  period,
+                  revision: month.revision,
+                  shared_revision: month.shared_revision,
+                  company_revision: month.company_revision,
+                  employee_count: month.employees.length,
+                  employees: month.employees,
+                  updated_at: stamp(),
+                }
+              }),
             },
           ],
-          params.period
+          params.from === params.to ? params.from : undefined
         )
       }
       default:

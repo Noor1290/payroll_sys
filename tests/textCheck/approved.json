@@ -2113,6 +2113,118 @@
     {
       "text": "text: Move",
       "why": "approved 20 Oct 2026: Move to identity fields (date-column)"
+    },
+    {
+      "text": "aria-label: Close",
+      "why": "approved (several companies in one Excel file, Stage 1, 25 Oct 2026): the close button of the \"Several companies\" dialog"
+    },
+    {
+      "text": "text: 0 of 2 chosen",
+      "why": "approved (several companies in one Excel file, Stage 1, 25 Oct 2026): how many companies are ticked; the counts are the fake data's"
+    },
+    {
+      "text": "text: 2 of 2 chosen",
+      "why": "approved (several companies in one Excel file, Stage 1, 25 Oct 2026): how many companies are ticked; the counts are the fake data's"
+    },
+    {
+      "text": "text: Cancel",
+      "why": "approved (several companies in one Excel file, Stage 1, 25 Oct 2026): button"
+    },
+    {
+      "text": "text: Close",
+      "why": "approved (several companies in one Excel file, Stage 1, 25 Oct 2026): button once the file is downloaded"
+    },
+    {
+      "text": "text: Companies where you are an admin",
+      "why": "approved (several companies in one Excel file, Stage 1, 25 Oct 2026): heading of the list of companies"
+    },
+    {
+      "text": "text: Downloaded Payroll 2026-10 (2 companies).xlsx: October 2026, 1 company with a sheet.",
+      "why": "approved (several companies in one Excel file, Stage 1, 25 Oct 2026): one month downloaded; the file name, month and counts are the fake data's"
+    },
+    {
+      "text": "text: Export 2 companies",
+      "why": "approved (several companies in one Excel file, Stage 1, 25 Oct 2026): the button, \"Export N companies\" (\"1 company\")"
+    },
+    {
+      "text": "text: Export",
+      "why": "approved (several companies in one Excel file, Stage 1, 25 Oct 2026): the button while no company is ticked (disabled)"
+    },
+    {
+      "text": "text: Fake Co Ltd",
+      "why": "approved (several companies in one Excel file, Stage 1, 25 Oct 2026): a fake company's name in the list"
+    },
+    {
+      "text": "text: TEST Co B",
+      "why": "approved (several companies in one Excel file, Stage 1, 25 Oct 2026): a fake company's name in the list"
+    },
+    {
+      "text": "text: Reading Fake Co Ltd (1 of 2)…",
+      "why": "approved (several companies in one Excel file, Stage 1, 25 Oct 2026): progress, one company at a time; the name and counts are the fake data's"
+    },
+    {
+      "text": "text: Select all",
+      "why": "approved (several companies in one Excel file, Stage 1, 25 Oct 2026): button"
+    },
+    {
+      "text": "text: Several companies",
+      "why": "approved (several companies in one Excel file, Stage 1, 25 Oct 2026): the dialog's title"
+    },
+    {
+      "text": "text: Several companies…",
+      "why": "approved (several companies in one Excel file, Stage 1, 25 Oct 2026): the button at the foot of the company list"
+    },
+    {
+      "text": "text: The dashboard asks you once to allow it, naming the month and the companies. A company with no data for that month is listed in the file, without a sheet.",
+      "why": "approved (several companies in one Excel file, Stage 1, 25 Oct 2026): the note under the list, for one month"
+    },
+    {
+      "text": "text: The dashboard is locked. Confirm your password there to unlock it, then ask again.",
+      "why": "approved (several companies in one Excel file, Stage 1, 25 Oct 2026): the dashboard's answer when it is locked"
+    },
+    {
+      "text": "text: The dashboard user declined the request.",
+      "why": "approved (several companies in one Excel file, Stage 1, 25 Oct 2026): the dashboard's answer when the question is turned down"
+    },
+    {
+      "text": "text: The file holds national IDs and salaries. Keep it where the payroll itself is kept.",
+      "why": "approved (several companies in one Excel file, Stage 1, 25 Oct 2026): once the file is downloaded"
+    },
+    {
+      "text": "text: This dashboard cannot export several companies yet.",
+      "why": "approved (several companies in one Excel file, Stage 1, 25 Oct 2026): a dashboard without payroll-batch"
+    },
+    {
+      "text": "text: Unlock the dashboard",
+      "why": "approved (several companies in one Excel file, Stage 1, 25 Oct 2026): button when the dashboard is locked"
+    },
+    {
+      "text": "text: Waiting for your answer in the dashboard…",
+      "why": "approved (several companies in one Excel file, Stage 1, 25 Oct 2026): progress, while the dashboard asks"
+    },
+    {
+      "text": "text: · BRN C00000001",
+      "why": "approved (several companies in one Excel file, Stage 1, 25 Oct 2026): a fake company's BRN in the list"
+    },
+    {
+      "text": "text: · BRN TEST-BRN-B",
+      "why": "approved (several companies in one Excel file, Stage 1, 25 Oct 2026): a fake company's BRN in the list"
+    },
+    {
+      "text": "text: · No data for this month: no sheet",
+      "why": "approved (several companies in one Excel file, Stage 1, 25 Oct 2026): a company with no data for the month, once downloaded"
+    },
+    {
+      "text": "text: · no column setup in the dashboard yet",
+      "why": "approved (several companies in one Excel file, Stage 1, 25 Oct 2026): a company with no column setup, in the list"
+    },
+    {
+      "text": "text: · selected in the dashboard",
+      "why": "approved (several companies in one Excel file, Stage 1, 25 Oct 2026): the company selected in the dashboard, in the list"
+    },
+    {
+      "text": "text: · sheet \"Fake Co Ltd\", 6 employees",
+      "why": "approved (several companies in one Excel file, Stage 1, 25 Oct 2026): a company's sheet, one month; the name and count are the fake data's"
     }
   ],
   "removed": [

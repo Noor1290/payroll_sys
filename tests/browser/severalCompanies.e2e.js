@@ -135,7 +135,7 @@ test('several companies: one question, one file with a sheet per company with da
   if (SHOTS) await page.locator('#app').screenshot({ path: path.join(SHOTS, '4-downloaded.png') })
 
   // One question, naming the month and the four companies; then one load each.
-  expect(hub.state.batchAsked).toEqual([{ period: '2026-10', companies: ['C00000001', 'C00000004', 'C00000002', 'C00000003'] }])
+  expect(hub.state.batchAsked).toEqual([{ from: '2026-10', to: '2026-10', companies: ['C00000001', 'C00000004', 'C00000002', 'C00000003'] }])
   expect(hub.state.log.filter((m) => m.dataType === 'payroll-batch' && m.action === 'load').map((m) => m.company_brn)).toEqual([
     'C00000001',
     'C00000004',
@@ -172,6 +172,82 @@ test('several companies: one question, one file with a sheet per company with da
     await pictureOfSheet(context, book, 'Read me', path.join(SHOTS, '5-file-read-me.png'))
     await pictureOfSheet(context, book, 'Companies', path.join(SHOTS, '6-file-companies.png'))
     await pictureOfSheet(context, book, 'Fake Co Ltd', path.join(SHOTS, '7-file-company-sheet.png'))
+  }
+  await context.close()
+})
+
+// Twelve months, July 2026 to June 2027, of the same fake companies: Fake Co Ltd has every month
+// but January 2027 (a leaver from April), the first long-named company July to December only, the
+// second only March 2027, and Empty Fake Ltd none.
+const YEAR = ['2026-07', '2026-08', '2026-09', '2026-10', '2026-11', '2026-12', '2027-01', '2027-02', '2027-03', '2027-04', '2027-05', '2027-06']
+const monthOf = (period, i, people) =>
+  withDates(people).map((e) => ({
+    ...e,
+    id: `${e.id}-${period}`,
+    values: { ...e.values, basicSalary: e.values.basicSalary && !Number.isNaN(Number(e.values.basicSalary)) ? String(Number(e.values.basicSalary) + i * 250) : e.values.basicSalary },
+  }))
+function yearSeed() {
+  const months = {}
+  YEAR.forEach((period, i) => {
+    if (period !== '2027-01') months[`C00000001|${period}`] = { employees: monthOf(period, i, period >= '2027-04' ? octoberEmployees.slice(0, 5) : octoberEmployees) }
+    if (period <= '2026-12') months[`C00000002|${period}`] = { employees: monthOf(period, i, octoberEmployees.slice(0, 3)) }
+    if (period === '2027-03') months[`C00000003|${period}`] = { employees: monthOf(period, i, octoberEmployees.slice(3)) }
+    months[`C00000005|${period}`] = { employees: monthOf(period, i, octoberEmployees) }
+  })
+  return { ...hubSeed(), months }
+}
+
+test('several companies over twelve months: one question for the range, a sheet per company with its months, subtotals and a TOTAL', async () => {
+  const hub = createFakeSetupHub(yearSeed())
+  const { context, page } = await openStandin(hub)
+  await expect.poll(() => Boolean(appFrame(page))).toBe(true)
+  const frame = appFrame(page)
+  await frame.locator('tbody input').first().waitFor()
+  await frame.getByRole('button', { name: 'Several companies…' }).click()
+  const dialog = frame.getByRole('dialog', { name: 'Several companies' })
+  await dialog.getByText('Companies where you are an admin').waitFor()
+  await dialog.getByLabel('From').fill('2026-07')
+  await dialog.getByLabel('To').fill('2027-06')
+  await dialog.getByRole('button', { name: 'Select all' }).click()
+  await dialog.getByText('12 months').waitFor()
+  if (SHOTS) await page.locator('#app').screenshot({ path: path.join(SHOTS, 'range-1-choose.png') })
+  const downloading = page.waitForEvent('download')
+  await dialog.getByRole('button', { name: 'Export 4 companies' }).click()
+  const download = await downloading
+  expect(download.suggestedFilename()).toBe('Payroll 2026-07 to 2027-06 (4 companies).xlsx')
+  await dialog.getByText('Downloaded Payroll 2026-07 to 2027-06 (4 companies).xlsx').waitFor()
+  if (SHOTS) await page.locator('#app').screenshot({ path: path.join(SHOTS, 'range-2-downloaded.png') })
+  expect(hub.state.batchAsked).toEqual([{ from: '2026-07', to: '2027-06', companies: ['C00000001', 'C00000004', 'C00000002', 'C00000003'] }])
+
+  const file = await download.path()
+  const buffer = fs.readFileSync(file)
+  const wb = new ExcelJS.Workbook()
+  await wb.xlsx.load(buffer)
+  expect(wb.worksheets.map((ws) => ws.name)).toEqual([
+    'Read me',
+    'Companies',
+    'Fake Co Ltd',
+    'Fake Trading Company of the Ind',
+    'Fake Trading Company of the (2)',
+    '_companies',
+  ])
+  const companiesSheet = wb.getWorksheet('Companies')
+  expect(companiesSheet.getRow(2).values.slice(1)).toEqual(['Fake Co Ltd', 'Fake Co Ltd', 'C00000001', 6, 6, 6, 6, 6, 6, 'No data', 6, 6, 5, 5, 5])
+  expect(companiesSheet.getRow(3).values.slice(1)).toEqual(['', 'Empty Fake Ltd', 'C00000004', ...YEAR.map(() => 'No data')])
+  const sheet = wb.getWorksheet('Fake Co Ltd')
+  expect(sheet.getCell(6, 1).value).toBe('Month')
+  expect(sheet.getCell(7, 1).value).toEqual(new Date('2026-07-01T00:00:00.000Z'))
+  expect(sheet.getCell(7 + 6, 1).value).toBe('Subtotal July 2026')
+  // 11 months of 6, 6, ... 5 employees, each with its subtotal, then the TOTAL.
+  const rows = 6 * 8 + 5 * 3 + 11
+  expect(sheet.getCell(7 + rows, 1).value).toBe('TOTAL')
+
+  if (SHOTS) {
+    fs.copyFileSync(file, path.join(SHOTS, 'example-12-months.xlsx'))
+    const book = XLSX.read(buffer, { type: 'buffer', cellDates: true, dateNF: 'dd/mm/yyyy' })
+    await pictureOfSheet(context, book, 'Read me', path.join(SHOTS, 'range-3-file-read-me.png'))
+    await pictureOfSheet(context, book, 'Companies', path.join(SHOTS, 'range-4-file-companies.png'))
+    await pictureOfSheet(context, book, 'Fake Trading Company of the Ind', path.join(SHOTS, 'range-5-file-company-sheet.png'))
   }
   await context.close()
 })

@@ -418,6 +418,8 @@ export function writePlanSheet(wb, sheetName, plan) {
   plan.rows.forEach((row, rIdx) => {
     const excelRowNum = DATA_START_ROW + rIdx
     const isBanded = rIdx % 2 === 1
+    // A subtotal after each month (several months on one sheet, severalCompanies.js): bold and shaded.
+    const isSubtotal = plan.rowKinds?.[rIdx] === 'subtotal'
     row.forEach((value, cIdx) => {
       const col = plan.columns[cIdx]
       const isText = isTextLikeColumn(col)
@@ -435,6 +437,7 @@ export function writePlanSheet(wb, sheetName, plan) {
       } else if (col.valueType === 'date') {
         // The same in a values file and a live-formula file: no formula ever uses a date.
         writeDateCell(cell, value)
+        if (col.dateFormat && typeof cell.value === 'number') cell.numFmt = col.dateFormat
       } else if (col.valueType === 'checkbox' && useLiveFormulas) {
         // The compiled formulas test a checkbox against 1 ("colKey === 1"),
         // and in a spreadsheet the text "Yes" is never equal to 1. So in a
@@ -446,7 +449,10 @@ export function writePlanSheet(wb, sheetName, plan) {
         cell.value = value
       }
 
-      if (col.kind === 'formula') {
+      if (isSubtotal) {
+        cell.font = { name: FONT_NAME, size: 10, bold: true }
+        cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: TOTALS_FILL } }
+      } else if (col.kind === 'formula') {
         cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: FORMULA_FILL } }
       } else if (isBanded) {
         cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: BANDING_FILL } }

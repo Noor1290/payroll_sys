@@ -543,6 +543,28 @@ test('collect every visible string (inside the dashboard)', async () => {
 
     await openSeveral(severalHub({ batchSupported: false }))
     snapDialog('97h embedded: several companies, a dashboard that cannot export them')
+
+    // A range of months.
+    const monthField = (label) => [...topDialog().querySelectorAll('label')].find((l) => squash(l.textContent).startsWith(label)).querySelector('input')
+    const setMonth = (label, value) =>
+      act(async () => {
+        const input = monthField(label)
+        Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, 'value').set.call(input, value)
+        input.dispatchEvent(new Event('input', { bubbles: true }))
+      })
+    await openSeveral(severalHub({ months: { 'C00000001|2026-09': { employees: octoberEmployees }, 'C00000001|2026-10': { employees: octoberEmployees } } }))
+    await click('Select all', topDialog())
+    await setMonth('To', '2026-08')
+    snapDialog('97i embedded: several companies, "To" before "From"')
+    await setMonth('From', '2024-01')
+    await setMonth('To', '2026-01')
+    snapDialog('97j embedded: several companies, more than 24 months')
+    await setMonth('From', '2026-07')
+    await setMonth('To', '2027-06')
+    snapDialog('97k embedded: several companies, twelve months chosen')
+    await click('Export 2 companies', topDialog())
+    await vi.waitFor(() => expect(topDialog().textContent).toContain('Downloaded'), { timeout: 10000 })
+    snapWording('97l embedded: several companies, twelve months downloaded')
     anchorClick.mockRestore()
   }
 
