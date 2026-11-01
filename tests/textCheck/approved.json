@@ -3643,6 +3643,30 @@
     {
       "text": "text: TOTAL",
       "why": "approved by the owner 1 Nov 2026 (MRA fixes P9): the TOTAL row of the Totals tab"
+    },
+    {
+      "text": "text: Fake Co Ltd has no column setup in the dashboard yet",
+      "why": "approved by the owner 1 Nov 2026 (MRA fixes P3): the separate column setup"
+    },
+    {
+      "text": "text: Import to the dashboard",
+      "why": "approved by the owner 1 Nov 2026 (MRA fixes P3): the separate column setup"
+    },
+    {
+      "text": "text: Its columns will not be shared with any other company. Changing one setup never changes the other.",
+      "why": "approved by the owner 1 Nov 2026 (MRA fixes P3): the separate column setup"
+    },
+    {
+      "text": "text: Start a separate column setup for this company",
+      "why": "approved by the owner 1 Nov 2026 (MRA fixes P3): the separate column setup"
+    },
+    {
+      "text": "text: Start empty",
+      "why": "approved by the owner 1 Nov 2026 (MRA fixes P3): the separate column setup"
+    },
+    {
+      "text": "text: This browser holds companies and columns that are not in the dashboard yet.",
+      "why": "approved by the owner 1 Nov 2026 (MRA fixes P3): the separate column setup"
     }
   ],
   "removed": [
