@@ -238,6 +238,6 @@ styling-only change (the table now has an explicit width, so the browser applies
 column's width). The Excel export's own column widths are computed separately and
 were not changed.
 
-## Some dashboard tests can pass the 5-second limit
+## Tests that drive the whole app could pass the 5-second limit (fixed 1 November 2026)
 
-Found 1 November 2026, open. In a full `npm test`, up to three tests of `tests/audit/dashboardApp.test.jsx` sometimes fail with "Test timed out in 5000ms" ("opening and saving every column with no change", "a real change is one new revision", "nothing changes, and after an import"). A different number each run, also without the separate-setup change, and the whole file passes on its own or with `--testTimeout=30000`. They are slow, not wrong: they open every column in turn. A longer limit on those tests would fix it.
+In a full `npm test`, a changing few tests timed out at 5 seconds. They are slow by nature, not wrong: each mounts the whole app in jsdom and re-renders it on every click, and some wait 1.3 seconds of real time for the auto-save. One takes 4 seconds alone, 8 in a full run, and still 5.6 with 4 workers, so fewer workers is no cure. Tests of this kind already carried their own limit; the 41 that were measured over 1.5 seconds without one now have `20_000` too. The limit of every other test stays 5 seconds.

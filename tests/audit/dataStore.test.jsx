@@ -168,7 +168,7 @@ describe('another store in its place', () => {
     // Nothing of it went to the browser's storage.
     expect(setItem.mock.calls.filter(([key]) => String(key).startsWith('payroll_app') || String(key).startsWith('payroll_period'))).toEqual([])
     expect(Object.keys(localStorage)).toEqual([])
-  })
+  }, 20_000)
 
   test('going back to the browser store puts the app back on the browser\'s own copy', async () => {
     setDataStore(memoryStore())

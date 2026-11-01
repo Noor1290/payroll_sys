@@ -337,7 +337,7 @@ describe('the Employee Table', () => {
     expect(cell(3, 'Date of Employment').value).toBe('01/08/2026')
     expect(cell(3, 'Date joined').value).toBe('01/08/2026')
     expect(refusals()).toBe('')
-  })
+  }, 20_000)
 
   test('the calendar saves the date picked', async () => {
     await startOnItsOwn()
@@ -345,7 +345,7 @@ describe('the Employee Table', () => {
     await type(picker, '2024-02-29')
     await vi.waitFor(() => expect(storedOctoberHere()[4].values.dateOfEmployment).toBe('2024-02-29'))
     expect(cell(4, 'Date of Employment').value).toBe('29/02/2024')
-  })
+  }, 20_000)
 
   test.each([
     ['31/02/2026', '"31/02/2026" is not a real date. Type it as DD/MM/YYYY, for example 01/08/2026.'],
@@ -366,7 +366,7 @@ describe('the Employee Table', () => {
     await typeDate(cell(0, 'Date of Employment'), '15/04/2021')
     await vi.waitFor(() => expect(storedOctoberHere()[0].values.dateOfEmployment).toBe('2021-04-15'))
     expect(refusals()).toBe('')
-  })
+  }, 20_000)
 
   test('Esc puts back what is saved', async () => {
     await startOnItsOwn()

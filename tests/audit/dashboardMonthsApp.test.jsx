@@ -172,7 +172,7 @@ describe('the months, inside the dashboard', () => {
     expect(text()).toContain('Column setup and months of Fake Co Ltd, kept in the dashboard.')
     expect(await tableShown()).toEqual(alone)
     expect(text()).toContain('Saved')
-  })
+  }, 20_000)
 
   test('typing, adding and deleting an employee and Delete All are saved to the dashboard a moment later, never to this browser', async () => {
     const browserBefore = localStorage.getItem(`payroll_period_${company.id}_2026-10`)
@@ -212,7 +212,7 @@ describe('the months, inside the dashboard', () => {
     const formulaCell = rows()[0].querySelector('button[title="Click to see calculation breakdown"]')
     await click(formulaCell)
     expect(dialog()).toBeTruthy()
-  })
+  }, 20_000)
 
   test('someone who is not an admin of the company sees no figures, and is told why', async () => {
     await startInDashboard(hubSeed({ companies: [{ ...A, role: 'member' }, B] }))
@@ -245,7 +245,7 @@ describe('the password gate', () => {
     await vi.waitFor(() => expect(container.querySelector('table')).toBeTruthy())
     expect(cell(0, 'Basic Salary').value).toBe('25000.00')
     await vi.waitFor(() => expect(text()).toContain('Saved'))
-  })
+  }, 20_000)
 
   test('opened while locked: nothing is shown until it is unlocked', async () => {
     await startInDashboard(hubSeed({ unlocked: false }))
@@ -270,7 +270,7 @@ describe('two people saving the same month', () => {
     await vi.waitFor(() => expect(storedOctober()).toMatchObject({ revision: 3, by: 'me' }))
     expect(storedOctober().employees).toHaveLength(octoberEmployees.length)
     await vi.waitFor(() => expect(text()).toContain('Saved'))
-  })
+  }, 20_000)
 
   test('"Use the dashboard\'s version" puts theirs on screen', async () => {
     await startInDashboard()
@@ -282,7 +282,7 @@ describe('two people saving the same month', () => {
     await vi.waitFor(() => expect(rows()).toHaveLength(3))
     expect(storedOctober()).toMatchObject({ revision: 2, by: 'other' })
     expect(text()).not.toContain('NOT saved')
-  })
+  }, 20_000)
 })
 
 // ---------- the same as this browser: imports, copies and exports ----------
@@ -339,7 +339,7 @@ describe('the same as from this browser', () => {
     await click(button('Import 4 rows'))
     await vi.waitFor(() => expect(storedOctober().employees).toHaveLength(4), { timeout: 3000 })
     expect({ autoMapping, employees: withNewIds(storedOctober().employees) }).toEqual(recorded('import-external-workbook'))
-  })
+  }, 20_000)
 
   test('"Copy from Previous Month" stores what the safety net recorded, and leaves September as it was', async () => {
     const october = [
@@ -361,7 +361,7 @@ describe('the same as from this browser', () => {
     await vi.waitFor(() => expect(storedOctober().employees).toHaveLength(4), { timeout: 3000 })
     expect(withNewIds(storedOctober().employees, ['oct-1', 'oct-2', 'oct-9'])).toEqual(recorded('copy-from-previous-month'))
     expect(hub.state.months.get(SEP)).toMatchObject({ revision: 1, employees: json(septemberEmployees) })
-  })
+  }, 20_000)
 
   test('"Send to dashboard" sends exactly the recorded message', async () => {
     await startInDashboard()

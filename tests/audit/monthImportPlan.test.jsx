@@ -186,4 +186,4 @@ test('the delete question tells two copies of one ID apart by row and figure (F2
   expect(await ask(2)).toContain('Delete TST001 Uno (row 3, Basic Salary 19,000.00)?')
   expect(await ask(0)).toContain('Delete TST001 Uno (row 1, Basic Salary 18,000.00)?')
   expect(await ask(1)).toContain('Delete TST002 Dos?')
-})
+}, 20_000)

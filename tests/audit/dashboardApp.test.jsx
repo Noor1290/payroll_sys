@@ -99,7 +99,7 @@ describe('inside the dashboard', () => {
     expect(buttonIn(aside, 'Restore')).toBeUndefined()
     expect(buttonIn(aside, 'Back up')).toBeTruthy()
     expect(aside.querySelector('[aria-label="Delete Fake Co Ltd"]')).toBeNull()
-  })
+  }, 20_000)
 
   test('a change of company details is saved to the dashboard a moment later, and this browser\'s copy is left alone', async () => {
     await startInDashboard()
@@ -116,7 +116,7 @@ describe('inside the dashboard', () => {
     expect(hub.state.log.filter((m) => m.type === 'send-data')).toEqual([{ type: 'send-data', action: 'save-company', company_brn: 'C00000001' }])
     expect(hub.state.setups.get('C00000001').body.customFields[0].value).toBe('VAT-FAKE-2')
     expect(localStorage.getItem('payroll_app_state_v1')).toBe(JSON.stringify(STATE))
-  })
+  }, 20_000)
 
   test('the Global columns are read-only, and say why, for an admin of some but not all companies using them', async () => {
     await startInDashboard(attachedSeed({ othersAttached: [{ brn: 'TEST-BRN-Z', role: null, shared_setup_id: SHARED_ID }] }))
@@ -286,7 +286,7 @@ describe('saving a Simple formula with an exemption (known issue 4)', () => {
     expect(hub.state.shared.get(SHARED_ID).revision).toBe(1)
     expect(storedNsf().formula).toBe(nsfFormula('emoluments * 0.01'))
     expect(text()).toContain('Saved')
-  })
+  }, 20_000)
 
   test('opening and saving every column with no change, of every kind, sends nothing', async () => {
     const seed = simpleNsfSeed()
@@ -311,7 +311,7 @@ describe('saving a Simple formula with an exemption (known issue 4)', () => {
     expect(saves()).toEqual([])
     expect(hub.state.shared.get(SHARED_ID).revision).toBe(1)
     expect(hub.state.setups.get('C00000001').revision).toBe(1)
-  })
+  }, 20_000)
 
   test('a real change is one new revision, wrapped once; saving it again changes nothing', async () => {
     await startInDashboard(simpleNsfSeed())
@@ -333,7 +333,7 @@ describe('saving a Simple formula with an exemption (known issue 4)', () => {
     expect(saves()).toHaveLength(1)
     expect(hub.state.shared.get(SHARED_ID).revision).toBe(2)
     expect(storedNsf().formula).toBe(nsfFormula('emoluments * 0.015'))
-  })
+  }, 20_000)
 })
 
 describe('opened on its own', () => {

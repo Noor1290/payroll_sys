@@ -157,7 +157,7 @@ describe('one month: the workbook', () => {
       [HIDDEN_SHEET, 'veryHidden'],
     ])
     expect(sheets).toEqual(['Fake Co Ltd', null, 'Fake Holdings and Investments C', 'Fake Holdings and Investmen (2)'])
-  })
+  }, 20_000)
 
   test('"Read me" says what the file is, when it was exported, the month and how to import it back', async () => {
     const ws = (await readBook((await build()).buffer)).getWorksheet('Read me')
@@ -295,7 +295,7 @@ describe('a range of months: the workbook', () => {
   test('twelve months: a sheet for each company with data, none for the one without', async () => {
     const wb = await readBook((await build()).buffer)
     expect(wb.worksheets.map((ws) => ws.name)).toEqual(['Read me', 'Companies', 'Fake Co Ltd', 'One Month Ltd', HIDDEN_SHEET])
-  })
+  }, 20_000)
 
   test('"Companies": one row per company, its employees in each month, "No data" where a month is missing', async () => {
     const ws = (await readBook((await build()).buffer)).getWorksheet('Companies')
@@ -351,7 +351,7 @@ describe('a range of months: the workbook', () => {
     expect(sheet.getCell(r, 1).value).toBe('TOTAL')
     for (const [, i] of numberColumns) expect(sheet.getCell(r, i + 2).value, `TOTAL, column ${i + 2}`).toBeCloseTo(grand.get(i), 6)
     expect(sheet.rowCount).toBe(r)
-  })
+  }, 20_000)
 
   test('the hidden sheet: the range, every month of it, the month of every row and each month saved', async () => {
     const ws = (await readBook((await build()).buffer)).getWorksheet(HIDDEN_SHEET)
@@ -596,7 +596,7 @@ describe('"Several companies…" inside the dashboard', () => {
     expect(hub.state.batchAsked).toEqual([{ from: '2026-10', to: '2026-10', companies: [A.brn, B.brn] }])
     const wb = await readBook(await downloads.files[0].arrayBuffer())
     expect(wb.worksheets.map((ws) => ws.name)).toEqual(['Read me', 'Companies', 'Fake Co Ltd', HIDDEN_SHEET])
-  })
+  }, 20_000)
 
   test('a range: From and To, checked before anything is asked, and the months each company has', async () => {
     const hub = await startInDashboard(hubSeed())

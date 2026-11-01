@@ -145,7 +145,7 @@ test('"Import from Excel": a fake external workbook, through the real mapping di
   await vi.waitFor(() => expect(JSON.parse(localStorage.getItem(OCTOBER_KEY)).employees).toHaveLength(4))
 
   expectRecorded('import-external-workbook', { autoMapping, employees: storedOctober() })
-})
+}, 20_000)
 
 test('"Import from Excel": the app\'s own export, recognised and re-imported', async () => {
   // The file "Export to Excel" would produce for the fake October data.
@@ -171,7 +171,7 @@ test('"Import from Excel": the app\'s own export, recognised and re-imported', a
   await vi.waitFor(() => expect(JSON.parse(localStorage.getItem(OCTOBER_KEY)).employees).toHaveLength(6))
 
   expectRecorded('import-own-export', storedOctober())
-})
+}, 20_000)
 
 test('"Copy from Previous Month": selected employees and columns, with overwrite', async () => {
   // October already has two of September's employees (with different figures) and one of its own.
@@ -205,4 +205,4 @@ test('"Copy from Previous Month": selected employees and columns, with overwrite
 
   // The source month must be untouched.
   expect(JSON.parse(localStorage.getItem(SEPTEMBER_KEY)).employees).toEqual(septemberEmployees)
-})
+}, 20_000)

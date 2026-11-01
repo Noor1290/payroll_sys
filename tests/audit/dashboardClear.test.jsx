@@ -158,7 +158,7 @@ describe('inside the dashboard, for an admin of every company using the Global c
     expect(sharedNow().body).toEqual(SHARED_1)
     expect(ownNow().body).toEqual(OWN_1)
     expect(monthsHeld()).toEqual(monthsBefore)
-  })
+  }, 20_000)
 
   test('Cancel sends nothing', async () => {
     await startInDashboard()
@@ -168,7 +168,7 @@ describe('inside the dashboard, for an admin of every company using the Global c
     await click(button('Cancel', topDialog()))
     expect(saves().length).toBe(savesBefore)
     expect(sharedNow().revision).toBe(1)
-  })
+  }, 20_000)
 })
 
 test('the identity fields and their keys, and the ID field, are unchanged after Clear', async () => {
@@ -185,7 +185,7 @@ test('the identity fields and their keys, and the ID field, are unchanged after 
   await click(button('OK', topDialog()))
   await click(button('Global Columns'))
   for (const f of identityFields) expect(text()).toContain(f.name)
-})
+}, 20_000)
 
 describe('for someone who may not change the shared setup', () => {
   test('the button is disabled with the reason, and clearing is refused with nothing sent', async () => {

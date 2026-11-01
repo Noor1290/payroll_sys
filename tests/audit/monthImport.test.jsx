@@ -188,7 +188,7 @@ describe('importing', () => {
       { year: 2026, month: 10, employees: (await load('company-fake', 2026, 10)).employees },
     ]
     expect(json(totalsOf(await range(dashboardStore.loadPeriod)))).toEqual(json(totalsOf(await range(browserStore.loadPeriod))))
-  })
+  }, 20_000)
 
   test('a repeat imports nothing twice', async () => {
     await open()
@@ -209,7 +209,7 @@ describe('importing', () => {
     expect(hub.state.months.get('C00000001|2026-10')).toMatchObject({ revision: 2 })
     expect(hub.state.months.get('C00000001|2026-10').employees).toEqual(json(octoberEmployees))
     expect(hub.state.monthHistory.find((h) => h.key === 'C00000001|2026-10' && h.revision === 1).employees).toEqual(json(octoberEmployees.slice(0, 2)))
-  })
+  }, 20_000)
 
   test('what the dashboard stored is not the same: NOT imported, not noted, and this browser\'s copy is still the one to use', async () => {
     const before = browserText()
@@ -224,7 +224,7 @@ describe('importing', () => {
     expect(browserText()).toEqual(before)
     // The next preview shows September as a conflict, never merged.
     expect((await planMonthImport()).companies[0].months[0]).toMatchObject({ period: '2026-09', state: 'conflict' })
-  })
+  }, 20_000)
 
   test('a refused month stays in this browser; the others are not affected', async () => {
     await open()
@@ -245,7 +245,7 @@ describe('importing', () => {
     const outcomes = await runMonthImport(plan, defaultMonthChoices(plan))
     expect(outcomes.every((o) => o.ok)).toBe(true)
     expect(hub.state.months.get('C00000001|2026-09').revision).toBe(1)
-  })
+  }, 20_000)
 })
 
 describe('when an earlier answer was lost (seen against the real database: a slow first save)', () => {
@@ -263,7 +263,7 @@ describe('when an earlier answer was lost (seen against the real database: a slo
     expect(writes().map((w) => w.period)).toEqual(['2026-10'])
     expect(hub.state.months.get('C00000001|2026-09').revision).toBe(1)
     expect(Object.keys(JSON.parse(localStorage.getItem(IMPORTED_KEY)).months['company-fake'])).toEqual(['2026-09', '2026-10'])
-  })
+  }, 20_000)
 
   test('a read-back the dashboard does not answer is asked again before giving up', async () => {
     const waitMs = READ_BACK.waitMs

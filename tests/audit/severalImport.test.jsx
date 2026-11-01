@@ -139,7 +139,7 @@ describe('reading the file', () => {
       ['C00000003', 'Third Fake Ltd', [['2026-09', octoberEmployees.length - 2]]],
     ])
     expect(file.companies.every((c) => c.problems.length === 0)).toBe(true)
-  })
+  }, 20_000)
 
   test('anything else is refused before anything is asked: a single-company export, a text file', async () => {
     const single = buildExportPlan({
@@ -178,7 +178,7 @@ describe('reading the file', () => {
     hidden.getCell(4, 2).value = ''
     const again = readCompaniesFile(new Uint8Array(await wb.xlsx.writeBuffer()))
     expect(again.companies[2].problems).toContain('It has no BRN in the file.')
-  })
+  }, 20_000)
 })
 
 describe('the preview', () => {
@@ -195,7 +195,7 @@ describe('the preview', () => {
       ['C00000003', 'existing', 'Third Fake Ltd'],
     ])
     expect(made.newCompanies).toEqual([])
-  })
+  }, 20_000)
 
   test('months not saved are added; saved ones are kept unless Replace is chosen; an approved one is never replaced', async () => {
     const { buffer } = await exported()
@@ -488,5 +488,5 @@ describe('"Several companies…" > Import, on screen', () => {
     expect(dialog().textContent).toContain('Fake Co Ltd · BRN C00000001: Created in the dashboard. Added: September 2026, October 2026.')
     expect(dialog().textContent).toContain('Third Fake Ltd · BRN C00000003: Not added.')
     expect(hub.state.companies.map((c) => c.brn)).toEqual([OWNER.brn, A.brn, B.brn])
-  })
+  }, 20_000)
 })

@@ -157,7 +157,7 @@ describe('the History of the column setup', () => {
     expect(sent.filter((m) => m.type === 'send-data')).toEqual([])
     expect(hub.state.shared.get(SHARED_ID)).toEqual(before.shared)
     expect(hub.state.log.slice(before.log).every((m) => m.type === 'request-data')).toBe(true)
-  })
+  }, 20_000)
 
   test('restoring names the keys and formulas that change and the months that would be worked out differently, asks first, and saves a NEW revision', async () => {
     hub = createFakeSetupHub(hubSeed({ months: { [OCT]: { employees: octoberEmployees, shared_revision: 2 } } }))
@@ -232,7 +232,7 @@ describe('the History of the column setup', () => {
     await vi.waitFor(() => expect(dialog().textContent).toContain('would be worked out differently'))
     expect(button('Restore', dialog())).toBeTruthy()
     expect(sends('payroll-setup')).toEqual([])
-  })
+  }, 20_000)
 
   test('someone who may not change the Global columns sees their history, with no Restore', async () => {
     hub = createFakeSetupHub(hubSeed({ othersAttached: [{ brn: 'TEST-BRN-Z', role: null, shared_setup_id: SHARED_ID }] }))
@@ -261,7 +261,7 @@ describe('the History of the column setup', () => {
     const setup = hub.state.shared.get(SHARED_ID)
     expect(setup.revision).toBe(3)
     expect(sameJson(setup.body, theirs)).toBe(true)
-  })
+  }, 20_000)
 
   test("a company's own columns: their History, and a restore that is a new revision of that company's setup only", async () => {
     hub = createFakeSetupHub(hubSeed({ months: { [OCT]: { employees: octoberEmployees, company_revision: 2 } } }))
@@ -285,7 +285,7 @@ describe('the History of the column setup', () => {
     expect(sameJson(own.body, OWN_1)).toBe(true)
     expect(hub.state.shared.get(SHARED_ID).revision).toBe(1)
     expect(sends('payroll-setup').map((m) => m.payload.rows[0].action)).toEqual(['save-company'])
-  })
+  }, 20_000)
 })
 
 // ---------- a month ----------
@@ -461,7 +461,7 @@ describe('the read-only offline copy', () => {
     const everything = Object.keys(localStorage).map((key) => `${key}=${localStorage.getItem(key)}`).join('\n')
     expect(everything).not.toContain('Testeur')
     expect(everything).not.toContain('19115')
-  })
+  }, 20_000)
 
   test('"Try the dashboard again" goes back to the dashboard once it answers', async () => {
     await loadOnceThenGoOffline()

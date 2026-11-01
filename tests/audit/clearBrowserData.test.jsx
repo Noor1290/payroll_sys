@@ -270,7 +270,7 @@ describe('the dialog', () => {
     // And the downloaded file brings back what was there.
     expect(restoreBackup(backup)).toEqual({ ok: true })
     expect(everything()).toEqual(without(before, [OFFLINE_KEY]))
-  })
+  }, 20_000)
 
   test('"Clear columns only" keeps the companies on screen, with no columns', async () => {
     seed()
