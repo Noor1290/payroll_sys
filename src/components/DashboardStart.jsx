@@ -7,8 +7,8 @@ import { formatLoadedAt } from '../lib/offlineCopy'
 // Inside the dashboard, before the app can be used: while the column setup is
 // loading, when it could not be loaded, or when the selected company has no
 // setup in the dashboard yet.
-//   mode         'starting' | 'failed' | 'empty'
-//   problem      why it failed (mode 'failed')
+//   mode         'starting' | 'failed' | 'empty' | 'no-company'
+//   problem      why it failed (mode 'failed'), or the dashboard's sentence (mode 'no-company')
 //   canImport    this browser holds companies that are not imported yet
 //   offlineCopies  the column setups last loaded from the dashboard, kept in this
 //                browser: [{ brn, label, loadedAt }], offered read-only (mode 'failed')
@@ -52,6 +52,15 @@ export default function DashboardStart({ mode, problem, canImport, onRetry, onIm
             </div>
           )}
           <p className="text-xs text-muted">Opened on its own, outside the dashboard, the payroll app works from this browser's own copy.</p>
+        </div>
+      )}
+
+      {mode === 'no-company' && (
+        <div role="alert" className="flex max-w-lg flex-col items-center gap-3">
+          <span className="icon-tile icon-tile-neutral" aria-hidden="true">
+            <CircleAlert />
+          </span>
+          <p className="text-base font-semibold text-fg">{problem}</p>
         </div>
       )}
 

@@ -140,6 +140,10 @@ export default function App() {
       // A dashboard that does not keep payroll setups yet: this browser, as before.
       resetDataStore()
       setMode('browser')
+    } else if (result.code === 'no-company') {
+      resetDataStore()
+      setStartProblem(result.error)
+      setMode('no-company')
     } else {
       resetDataStore()
       setStartProblem(result.error || 'The dashboard could not be reached.')

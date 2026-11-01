@@ -8,12 +8,13 @@
 //   { ok: true, result }                               a save was stored
 //   { ok: false, code, error }                         it was not; `code` says why:
 //     stale, forbidden, wrong-company, invalid, not-found, too-large, unavailable,
+//     no-company     the signed-in account belongs to no company
 //     locked         the dashboard's password gate is locked (months only)
 //     denied         the user turned the dashboard's question down
 //     no-answer      the dashboard did not answer at all
 //     not-supported  a dashboard that does not keep payroll setups yet
 
-const KNOWN_CODES = ['stale', 'forbidden', 'wrong-company', 'invalid', 'not-found', 'too-large', 'unavailable', 'locked', 'denied']
+const KNOWN_CODES = ['stale', 'forbidden', 'wrong-company', 'invalid', 'not-found', 'too-large', 'unavailable', 'no-company', 'locked', 'denied']
 
 export const SETUP = 'payroll-setup'
 export const MONTH = 'payroll-month'

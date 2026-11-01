@@ -3,8 +3,9 @@
 Items 1 to 6 were found during the visual redesign (October 2026) and left unfixed on
 the `redesign` branch, which changed appearance only; later items were found during the
 migration and the backlog fixes. Each item says whether it is still open, fixed (with the
-date and the proving test) or obsolete. As of 17 October 2026: open are 1, 2, 8 and 9 (and
-the grand-total idea); 3, 4, 5 and 6 are fixed; 7 is obsolete.
+date and the proving test) or obsolete. As of 17 October 2026: open are 1, 2, 8 and 9; 3, 4,
+5 and 6 are fixed; 7 is obsolete. The on-screen grand total was added on 1 November 2026
+(`tests/audit/totalsTotalRow.test.jsx`).
 All evidence below uses the fake data in `tests/safetyNet/fixture.js`.
 
 ## 1. A total can differ by 0.01 from the sum of the figures shown beside it
@@ -215,7 +216,15 @@ gives 4% for exactly 30,000"); it passes only while the bug is there.
 also holds for its figure. Fixing it changes figures for any column with that shape, so it needs
 the same treatment as M1 (fixed on save, flagged until then).
 
-## Possible later feature: on-screen grand total
+## The text check stops working once the month changes
+
+Found 1 November 2026, open. `tests/textCheck/collectEmbedded.textcheck.jsx` waits for
+"October 2026" on the screen, and the app opens on the current month, so
+`scripts/text-check.mjs` fails from November on, with or without any change: "expected ... to
+contain 'October 2026'". The check itself is sound: run with the clock set to October 2026 it
+works. Freezing the date in that test would fix it.
+
+## Possible later feature: on-screen grand total (done 1 November 2026)
 
 The Totals screen shows one row per employee and no grand-total row; only the Excel
 export has a TOTAL row. If a grand total is added on screen, it should reuse the

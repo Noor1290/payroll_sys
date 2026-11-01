@@ -38,6 +38,26 @@ export function findSharedIds(periods, idFieldKey) {
   return shared
 }
 
+// The TOTAL row under the Totals table, the same figures the Totals export
+// ends with: by column key, { sum } for a figure column, { error: true } when
+// any row of it is in error (never counted as 0), { ticked } for a checkbox
+// column; a Text or Date column has no entry, it cannot be added up.
+export function grandTotal(employees, columns, computedGrid) {
+  const out = {}
+  for (const col of columns) {
+    if (col.valueType === 'text' || col.valueType === 'date') continue
+    const cells = employees.map((emp) => computedGrid[emp.id]?.[col.key])
+    if (col.valueType === 'checkbox') {
+      out[col.key] = { ticked: cells.filter((cell) => cell?.value === 1).length }
+    } else if (cells.some(isErrorCell)) {
+      out[col.key] = { error: true }
+    } else {
+      out[col.key] = { sum: cells.reduce((sum, cell) => sum + (typeof cell?.value === 'number' && !Number.isNaN(cell.value) ? cell.value : 0), 0) }
+    }
+  }
+  return out
+}
+
 export function computeTotals(periods, effectiveColumns, columnsByKey, idFieldKey) {
   const isFixedColumn = (c) => c.valueType === 'text' || c.valueType === 'checkbox' || c.valueType === 'date'
   const numericColumns = effectiveColumns.filter((c) => (c.type === 'input' || c.type === 'formula') && !isFixedColumn(c))

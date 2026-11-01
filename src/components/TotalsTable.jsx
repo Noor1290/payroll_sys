@@ -4,6 +4,7 @@ import { getOrderedEffectiveColumns, getCategoryGroups, labelColumnsForHelper } 
 import { formatDecimal } from '../lib/format'
 import { ERROR_TEXT, isErrorCell } from '../lib/exportErrors'
 import { showDate } from '../lib/dates'
+import { grandTotal } from '../lib/totals'
 
 // Sticky header cells: a solid background (rows scroll underneath) and the
 // bottom rule drawn as an inset shadow, since a collapsed border doesn't
@@ -21,6 +22,7 @@ export default function TotalsTable({ identityFields, idFieldKey, effectiveColum
   const orderedColumns = useMemo(() => getOrderedEffectiveColumns(effectiveColumns), [effectiveColumns])
   const categoryGroups = useMemo(() => getCategoryGroups(orderedColumns), [orderedColumns])
   const labeledColumns = useMemo(() => labelColumnsForHelper(orderedColumns), [orderedColumns])
+  const total = useMemo(() => grandTotal(employees, orderedColumns, computedGrid), [employees, orderedColumns, computedGrid])
 
   return (
     // The table scrolls inside its card; no backdrop blur on a large scrolling area.
@@ -118,6 +120,33 @@ export default function TotalsTable({ identityFields, idFieldKey, effectiveColum
               </tr>
             ))}
           </tbody>
+          {employees.length > 0 && (
+            <tfoot>
+              <tr data-testid="totals-grand-total" className="sticky bottom-0 z-10 bg-elevated font-semibold shadow-[inset_0_1px_0_var(--line)]">
+                {identityFields.map((field, index) => (
+                  <td key={field.key} className="px-3 py-2.5 text-fg">
+                    {index === 0 ? 'TOTAL' : ''}
+                  </td>
+                ))}
+                {orderedColumns.map((col) => {
+                  const cell = total[col.key]
+                  if (!cell) return <td key={col.key} />
+                  if (cell.error) {
+                    return (
+                      <td key={col.key} className="num px-3 py-2.5 text-right text-danger">
+                        {ERROR_TEXT}
+                      </td>
+                    )
+                  }
+                  return (
+                    <td key={col.key} className="num px-3 py-2.5 text-right text-fg">
+                      {cell.ticked !== undefined ? `${cell.ticked} ticked` : formatDecimal(cell.sum, col.decimals ?? 2)}
+                    </td>
+                  )
+                })}
+              </tr>
+            </tfoot>
+          )}
         </table>
       </div>
 

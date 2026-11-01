@@ -39,6 +39,19 @@ describe('"Tick all" on a checkbox column (audit M13)', () => {
   })
 })
 
+describe('The TOTAL row of the Totals tab (MRA rehearsal, P9)', () => {
+  test('stays under the table, with the sum of every number column', async () => {
+    const seed = seededState()
+    const { context, page } = await openSeeded(app, seed)
+    await tab(page, 'Totals').click()
+    const total = page.getByTestId('totals-grand-total')
+    await total.waitFor()
+    expect(await total.locator('td').first().textContent()).toBe('TOTAL')
+    if (process.env.MRA_SHOTS) await page.screenshot({ path: `${process.env.MRA_SHOTS}/1-P9-totals-TOTAL-row.png` })
+    await context.close()
+  })
+})
+
 describe('Totals with two employees sharing an ID in one month (audit R7)', () => {
   test('the row adds them together, as before, and a warning says so', async () => {
     const seed = seededState()
