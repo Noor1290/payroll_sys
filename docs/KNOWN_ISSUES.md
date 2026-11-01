@@ -240,4 +240,4 @@ were not changed.
 
 ## Tests that drive the whole app could pass the 5-second limit (fixed 1 November 2026)
 
-In a full `npm test`, a changing few tests timed out at 5 seconds. They are slow by nature, not wrong: each mounts the whole app in jsdom and re-renders it on every click, and some wait 1.3 seconds of real time for the auto-save. One takes 4 seconds alone, 8 in a full run, and still 5.6 with 4 workers, so fewer workers is no cure. Tests of this kind already carried their own limit; the 41 that were measured over 1.5 seconds without one now have `20_000` too. The limit of every other test stays 5 seconds.
+In a full `npm test`, a changing few tests timed out at 5 seconds. They are slow by nature, not wrong: each mounts the whole app in jsdom and re-renders it on every click, and some wait 1.3 seconds of real time for the auto-save. One takes 4 seconds alone, 8 in a full run, and still 5.6 with 4 workers, so fewer workers is no cure. Tests of this kind already carried their own limit; the 42 that were measured over 1.5 seconds without one now have `20_000` too. The limit of every other test stays 5 seconds.
