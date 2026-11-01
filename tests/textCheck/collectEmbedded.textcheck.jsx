@@ -197,7 +197,13 @@ async function startMonthsImport(hub) {
 }
 const startDashboard = (hub, waitFor) => (KNOWS_SETUPS ? start({ hub, waitFor }) : start())
 
+// The screens open on the current month: always the same day here, so the
+// text check does not depend on when it is run.
+const FIXED_DAY = new Date('2026-10-20T08:00:00.000Z')
+
 test('collect every visible string (inside the dashboard)', async () => {
+  vi.useFakeTimers({ toFake: ['Date'] })
+  vi.setSystemTime(FIXED_DAY)
   await start()
   snap('60 embedded: employee table with Send to dashboard')
 
@@ -261,8 +267,10 @@ test('collect every visible string (inside the dashboard)', async () => {
   if (KNOWS_SETUPS) {
     const hub = createFakeSetupHub({ companies: [FAKE], selectedBrn: FAKE.brn })
     await start({ hub, waitFor: 'no column setup in the dashboard yet' })
-    await vi.waitFor(() => expect(document.body.textContent).toContain('Start with new, empty Global columns'))
+    await vi.waitFor(() => expect(document.body.textContent).toContain('Start a separate column setup for this company'))
     snap('71 embedded: no column setup in the dashboard yet')
+    await click('Start a separate column setup for this company')
+    snap('71b embedded: a separate column setup')
 
     await click('Import to the dashboard')
     snapDialog('72 embedded: import, backup first')
@@ -489,7 +497,7 @@ test('collect every visible string (inside the dashboard)', async () => {
     snapDialog('96c embedded: column setup NOT cleared')
     setupHub.state.down = false
     anchorClick.mockRestore()
-    vi.useRealTimers()
+    vi.setSystemTime(FIXED_DAY)
   }
 
   // ---------- Several companies in one Excel file ----------

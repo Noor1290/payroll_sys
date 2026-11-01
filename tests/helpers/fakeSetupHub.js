@@ -194,6 +194,13 @@ export function createFakeSetupHub(seed = {}) {
         }
         return answer(rows)
       }
+      case 'copy-source': {
+        const source = member(params.company_brn)
+        if (source?.role !== 'admin') return refuse('forbidden', 'Only an admin of that company can copy its columns.')
+        const own = state.setups.get(norm(params.company_brn))
+        if (!own) return refuse('not-found', 'This company has no column setup in the dashboard yet.')
+        return answer([{ shared_body: state.shared.get(own.shared_setup_id).body, company_body: own.body }])
+      }
       case 'companies':
         return answer(
           state.companies

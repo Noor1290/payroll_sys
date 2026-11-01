@@ -696,14 +696,26 @@ export async function startOptions() {
     if (!row.shared_setup_id) continue
     bySetup.set(row.shared_setup_id, [...(bySetup.get(row.shared_setup_id) ?? []), row.name])
   }
-  return { ok: true, options: [...bySetup].map(([sharedSetupId, companies]) => ({ sharedSetupId, companies })) }
+  // The companies whose setup a separate one can be copied from.
+  const copyFrom = answer.rows.filter((row) => row.shared_setup_id && !row.selected).map(({ brn, name }) => ({ brn, name }))
+  return { ok: true, options: [...bySetup].map(([sharedSetupId, companies]) => ({ sharedSetupId, companies })), copyFrom }
+}
+
+// What a separate setup copied from that company starts with: its Global and
+// Company columns. Never its company details: those belong to that company.
+export async function copyOfSetup(brn) {
+  const answer = await askHub({ action: 'copy-source', company_brn: brn })
+  if (!answer.ok) return answer
+  const [source] = answer.rows
+  return { ok: true, newShared: source.shared_body, newCompany: { columns: source.company_body.columns ?? [], customFields: [] } }
 }
 
 const emptyCompanyBody = () => ({ columns: [], customFields: [] })
 
 // Attaches the selected company to a shared setup, with no columns of its own
-// yet; or, with no shared setup given, to a new one holding `newShared`.
-export async function startSetup({ sharedSetupId = null, newShared = null }) {
+// yet; or, with no shared setup given, to a new one holding `newShared`, with
+// `newCompany` as its own columns when given.
+export async function startSetup({ sharedSetupId = null, newShared = null, newCompany = null }) {
   const meta = company
   if (!meta) return fail('unavailable', 'The dashboard is not connected.')
   let setupId = sharedSetupId
@@ -719,7 +731,7 @@ export async function startSetup({ sharedSetupId = null, newShared = null }) {
     })
     if (!created.ok && !uncertain(created)) return created
   }
-  const attached = await sendHub({ action: 'attach-company', brn: meta.brn, shared_setup_id: setupId, body: emptyCompanyBody() })
+  const attached = await sendHub({ action: 'attach-company', brn: meta.brn, shared_setup_id: setupId, body: newCompany ?? emptyCompanyBody() })
   // Whatever the answer, what counts is what the dashboard now holds.
   const result = await connectDashboard()
   if (!result.ok) return result

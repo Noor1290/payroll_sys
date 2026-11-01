@@ -216,13 +216,12 @@ gives 4% for exactly 30,000"); it passes only while the bug is there.
 also holds for its figure. Fixing it changes figures for any column with that shape, so it needs
 the same treatment as M1 (fixed on save, flagged until then).
 
-## The text check stops working once the month changes
+## The text check stopped working once the month changed (fixed 1 November 2026)
 
-Found 1 November 2026, open. `tests/textCheck/collectEmbedded.textcheck.jsx` waits for
-"October 2026" on the screen, and the app opens on the current month, so
-`scripts/text-check.mjs` fails from November on, with or without any change: "expected ... to
-contain 'October 2026'". The check itself is sound: run with the clock set to October 2026 it
-works. Freezing the date in that test would fix it.
+The text check waited for "October 2026" on the screen, and the app opens on the current month, so
+`scripts/text-check.mjs` failed from November on. `tests/textCheck/collect.textcheck.jsx` and
+`collectEmbedded.textcheck.jsx` now run on a fixed day (`FIXED_DAY`), so the result does not depend
+on when it is run. Passes with the clock of 1 November 2026.
 
 ## Possible later feature: on-screen grand total (done 1 November 2026)
 
@@ -238,3 +237,7 @@ difference in issue 1.
 styling-only change (the table now has an explicit width, so the browser applies each
 column's width). The Excel export's own column widths are computed separately and
 were not changed.
+
+## Some dashboard tests can pass the 5-second limit
+
+Found 1 November 2026, open. In a full `npm test`, up to three tests of `tests/audit/dashboardApp.test.jsx` sometimes fail with "Test timed out in 5000ms" ("opening and saving every column with no change", "a real change is one new revision", "nothing changes, and after an import"). A different number each run, also without the separate-setup change, and the whole file passes on its own or with `--testTimeout=30000`. They are slow, not wrong: they open every column in turn. A longer limit on those tests would fix it.

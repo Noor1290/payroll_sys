@@ -142,14 +142,61 @@ describe('inside the dashboard', () => {
     expect(dialog().querySelector('[aria-label="Value"]').readOnly).toBe(true)
   })
 
+  // B has no setup of its own; A keeps its shared setup.
+  const bWithoutSetup = () => {
+    const seed = attachedSeed({ selectedBrn: B.brn })
+    delete seed.setups[B.brn]
+    return seed
+  }
+  const sentActions = () => hub.state.log.filter((m) => m.type === 'send-data').map((m) => m.action)
+
+  test('a separate setup is always offered, next to the shared columns of the other companies', async () => {
+    await startInDashboard(bWithoutSetup())
+    await vi.waitFor(() => expect(button('Start a separate column setup for this company')).toBeTruthy())
+    expect(button(`Use the shared columns of ${A.name}`)).toBeTruthy()
+    expect(sentActions()).toEqual([])
+  })
+
+  test('a separate setup, empty: a new shared setup of its own; the other company is untouched', async () => {
+    await startInDashboard(bWithoutSetup())
+    await vi.waitFor(() => expect(button('Start a separate column setup for this company')).toBeTruthy())
+    const before = JSON.stringify(hub.state.shared.get(SHARED_ID))
+    await click(button('Start a separate column setup for this company'))
+    await click(button('Start empty'))
+    await vi.waitFor(() => expect(text()).toContain('kept in the dashboard'))
+    expect(sentActions()).toEqual(['save-shared', 'attach-company'])
+    const own = hub.state.setups.get(B.brn)
+    expect(own.shared_setup_id).not.toBe(SHARED_ID)
+    expect(hub.state.shared.get(own.shared_setup_id).body.globalColumns).toEqual([])
+    expect(JSON.stringify(hub.state.shared.get(SHARED_ID))).toBe(before)
+  })
+
+  test('a separate setup, copied: the columns of the company chosen, never its company details', async () => {
+    await startInDashboard(bWithoutSetup())
+    await vi.waitFor(() => expect(button('Start a separate column setup for this company')).toBeTruthy())
+    const before = JSON.stringify(hub.state.shared.get(SHARED_ID))
+    await click(button('Start a separate column setup for this company'))
+    await click(button('Start with a copy'))
+    await vi.waitFor(() => expect(text()).toContain('kept in the dashboard'))
+    expect(sentActions()).toEqual(['save-shared', 'attach-company'])
+    const own = hub.state.setups.get(B.brn)
+    expect(own.shared_setup_id).not.toBe(SHARED_ID)
+    expect(hub.state.shared.get(own.shared_setup_id).body).toEqual(hub.state.shared.get(SHARED_ID).body)
+    expect(own.body.columns).toEqual(hub.state.setups.get(A.brn).body.columns)
+    expect(own.body.customFields).toEqual([])
+    expect(JSON.stringify(hub.state.shared.get(SHARED_ID))).toBe(before)
+  })
+
   test('a company with no setup yet: import is offered, or new Global columns; nothing is made by itself', async () => {
     await startInDashboard({ companies: [A], selectedBrn: A.brn })
     expect(text()).toContain('Fake Co Ltd has no column setup in the dashboard yet')
     expect(button('Import to the dashboard')).toBeTruthy()
-    await vi.waitFor(() => expect(button('Start with new, empty Global columns')).toBeTruthy())
+    await vi.waitFor(() => expect(button('Start a separate column setup for this company')).toBeTruthy())
     expect(hub.state.log.filter((m) => m.type === 'send-data')).toEqual([])
 
-    await click(button('Start with new, empty Global columns'))
+    await click(button('Start a separate column setup for this company'))
+    expect(button('Start with a copy')).toBeUndefined()
+    await click(button('Start empty'))
     await vi.waitFor(() => expect(text()).toContain('kept in the dashboard'))
     expect(hub.state.log.filter((m) => m.type === 'send-data').map((m) => m.action)).toEqual(['save-shared', 'attach-company'])
     expect(hub.state.setups.get('C00000001').body).toEqual({ columns: [], customFields: [] })

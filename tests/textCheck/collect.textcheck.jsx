@@ -174,7 +174,13 @@ function externalWorkbook() {
   return XLSX.write(workbook, { type: 'array', bookType: 'xlsx' })
 }
 
+// The screens open on the current month: always the same day here, so the
+// text check does not depend on when it is run.
+const FIXED_DAY = new Date('2026-10-20T08:00:00.000Z')
+
 test('collect every visible string', async () => {
+  vi.useFakeTimers({ toFake: ['Date'] })
+  vi.setSystemTime(FIXED_DAY)
   // ---------- No company ----------
   localStorage.clear()
   await start()
@@ -602,7 +608,7 @@ test('collect every visible string', async () => {
   anchorClick.mockRestore()
   URL.createObjectURL = realCreateObjectURL
   URL.revokeObjectURL = realRevokeObjectURL
-  vi.useRealTimers()
+  vi.setSystemTime(FIXED_DAY)
 
   // ---------- A save the browser refuses ----------
   // Only the dialog: the base version has none and says nothing.

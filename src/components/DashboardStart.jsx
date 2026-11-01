@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
 import { CircleAlert, Cloud, CloudOff, CloudUpload, Files, LoaderCircle, RotateCw } from 'lucide-react'
 import { defaultIdentityFields } from '../lib/model'
-import { dashboardCompany, startOptions, startSetup } from '../lib/dashboardSetup'
+import { copyOfSetup, dashboardCompany, startOptions, startSetup } from '../lib/dashboardSetup'
 import { formatLoadedAt } from '../lib/offlineCopy'
 
 // Inside the dashboard, before the app can be used: while the column setup is
@@ -74,6 +74,9 @@ export default function DashboardStart({ mode, problem, canImport, onRetry, onIm
 function EmptyStart({ company, canImport, onImport, onSeveralCompanies }) {
   const admin = company.role === 'admin'
   const [options, setOptions] = useState(null) // [{ sharedSetupId, companies }] | null while loading
+  const [copyFrom, setCopyFrom] = useState([]) // [{ brn, name }]: the companies a setup can be copied from
+  const [separate, setSeparate] = useState(false)
+  const [source, setSource] = useState('')
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState(null)
 
@@ -82,8 +85,11 @@ function EmptyStart({ company, canImport, onImport, onSeveralCompanies }) {
     let live = true
     startOptions().then((answer) => {
       if (!live) return
-      if (answer.ok) setOptions(answer.options)
-      else setError(answer.error)
+      if (answer.ok) {
+        setOptions(answer.options)
+        setCopyFrom(answer.copyFrom)
+        setSource(answer.copyFrom[0]?.brn ?? '')
+      } else setError(answer.error)
     })
     return () => {
       live = false
@@ -103,6 +109,15 @@ function EmptyStart({ company, canImport, onImport, onSeveralCompanies }) {
   function startNew() {
     const identityFields = defaultIdentityFields()
     void start({ newShared: { identityFields, idFieldKey: identityFields[0].key, globalColumns: [] } })
+  }
+
+  async function startCopy() {
+    setBusy(true)
+    setError(null)
+    const copy = await copyOfSetup(source)
+    if (copy.ok) return start(copy)
+    setBusy(false)
+    setError(copy.error || 'The dashboard could not read those columns.')
   }
 
   return (
@@ -130,10 +145,38 @@ function EmptyStart({ company, canImport, onImport, onSeveralCompanies }) {
               Use the shared columns of {option.companies.join(', ')}
             </button>
           ))}
-          {options?.length === 0 && (
-            <button onClick={startNew} disabled={busy} className="btn btn-secondary">
-              Start with new, empty Global columns
+          {options && !separate && (
+            <button onClick={() => setSeparate(true)} disabled={busy} className="btn btn-secondary">
+              Start a separate column setup for this company
             </button>
+          )}
+          {options && separate && (
+            <div className="flex flex-col items-center gap-2 rounded-lg border border-line p-3">
+              <p className="text-sm text-muted">
+                Its columns will not be shared with any other company. Changing one setup never changes the other.
+              </p>
+              <button onClick={startNew} disabled={busy} className="btn btn-secondary">
+                Start empty
+              </button>
+              {copyFrom.length > 0 && (
+                <>
+                  <label className="flex flex-wrap items-center justify-center gap-2 text-sm text-muted">
+                    Or copy the columns of
+                    <select value={source} onChange={(event) => setSource(event.target.value)} disabled={busy} className="input">
+                      {copyFrom.map((one) => (
+                        <option key={one.brn} value={one.brn}>
+                          {one.name}
+                        </option>
+                      ))}
+                    </select>
+                  </label>
+                  <button onClick={() => void startCopy()} disabled={busy} className="btn btn-secondary">
+                    Start with a copy
+                  </button>
+                  <p className="text-xs text-muted">Only the columns are copied: no employees, months or company details.</p>
+                </>
+              )}
+            </div>
           )}
           {onSeveralCompanies && (
             <>
