@@ -3667,6 +3667,506 @@
     {
       "text": "text: This browser holds companies and columns that are not in the dashboard yet.",
       "why": "approved by the owner 1 Nov 2026 (MRA fixes P3): the separate column setup"
+    },
+    {
+      "text": "text: Automatic copy: Off",
+      "why": "approved 4 Nov 2026 (automatic copy): new wording, see COMPANIES_AUTOCOPY_SHOTS/partB/NEW_TEXTS.md"
+    },
+    {
+      "text": "title: When I open a month with no employees yet",
+      "why": "approved 4 Nov 2026 (automatic copy): new wording, see COMPANIES_AUTOCOPY_SHOTS/partB/NEW_TEXTS.md"
+    },
+    {
+      "text": "text: Basic Salary",
+      "why": "not wording: the fake employees, column names and buttons now shown on the automatic copy screens (80) and dialogs, which the base version shows empty or not at all",
+      "onlyOn": [
+        "70c date fields, import mapping",
+        "80d automatic copy setting, ask me",
+        "80e automatic copy setting, automatically"
+      ]
+    },
+    {
+      "text": "text: Govt Increment",
+      "why": "not wording: the fake employees, column names and buttons now shown on the automatic copy screens (80) and dialogs, which the base version shows empty or not at all",
+      "onlyOn": [
+        "70c date fields, import mapping",
+        "80d automatic copy setting, ask me",
+        "80e automatic copy setting, automatically"
+      ]
+    },
+    {
+      "text": "text: Full time / Part time",
+      "why": "not wording: the fake employees, column names and buttons now shown on the automatic copy screens (80) and dialogs, which the base version shows empty or not at all",
+      "onlyOn": [
+        "70c date fields, import mapping",
+        "80d automatic copy setting, ask me",
+        "80e automatic copy setting, automatically"
+      ]
+    },
+    {
+      "text": "text: Allowances",
+      "why": "not wording: the fake employees, column names and buttons now shown on the automatic copy screens (80) and dialogs, which the base version shows empty or not at all",
+      "onlyOn": [
+        "70c date fields, import mapping",
+        "80d automatic copy setting, ask me",
+        "80e automatic copy setting, automatically"
+      ]
+    },
+    {
+      "text": "text: Travelling",
+      "why": "not wording: the fake employees, column names and buttons now shown on the automatic copy screens (80) and dialogs, which the base version shows empty or not at all",
+      "onlyOn": [
+        "70c date fields, import mapping",
+        "80d automatic copy setting, ask me",
+        "80e automatic copy setting, automatically"
+      ]
+    },
+    {
+      "text": "text: Age 60+",
+      "why": "not wording: the fake employees, column names and buttons now shown on the automatic copy screens (80) and dialogs, which the base version shows empty or not at all",
+      "onlyOn": [
+        "70c date fields, import mapping",
+        "80d automatic copy setting, ask me",
+        "80e automatic copy setting, automatically"
+      ]
+    },
+    {
+      "text": "text: EDF",
+      "why": "not wording: the fake employees, column names and buttons now shown on the automatic copy screens (80) and dialogs, which the base version shows empty or not at all",
+      "onlyOn": [
+        "70c date fields, import mapping",
+        "80d automatic copy setting, ask me",
+        "80e automatic copy setting, automatically"
+      ]
+    },
+    {
+      "text": "text: Internal Note",
+      "why": "not wording: the fake employees, column names and buttons now shown on the automatic copy screens (80) and dialogs, which the base version shows empty or not at all",
+      "onlyOn": [
+        "70c date fields, import mapping",
+        "80d automatic copy setting, ask me",
+        "80e automatic copy setting, automatically"
+      ]
+    },
+    {
+      "text": "text: Save",
+      "why": "not wording: the fake employees, column names and buttons now shown on the automatic copy screens (80) and dialogs, which the base version shows empty or not at all",
+      "onlyOn": [
+        "70e date fields, add identity field, Date",
+        "70f date fields, edit the ID field",
+        "70g date fields, add column, Date",
+        "70h date fields, a formula using a Date column",
+        "70i date fields, a column formulas use made a Date",
+        "80d automatic copy setting, ask me",
+        "80e automatic copy setting, automatically",
+        "66 embedded: company details from the dashboard"
+      ]
+    },
+    {
+      "text": "text: General",
+      "why": "not wording: the fake employees, column names and buttons now shown on the automatic copy screens (80) and dialogs, which the base version shows empty or not at all",
+      "onlyOn": [
+        "70g date fields, add column, Date",
+        "70h date fields, a formula using a Date column",
+        "70i date fields, a column formulas use made a Date",
+        "80d automatic copy setting, ask me",
+        "80e automatic copy setting, automatically"
+      ]
+    },
+    {
+      "text": "text: Other Deductions",
+      "why": "not wording: the fake employees, column names and buttons now shown on the automatic copy screens (80) and dialogs, which the base version shows empty or not at all",
+      "onlyOn": [
+        "70g date fields, add column, Date",
+        "70h date fields, a formula using a Date column",
+        "70i date fields, a column formulas use made a Date",
+        "80d automatic copy setting, ask me",
+        "80e automatic copy setting, automatically"
+      ]
+    },
+    {
+      "text": "text: 0",
+      "why": "not wording: the fake employees, column names and buttons now shown on the automatic copy screens (80) and dialogs, which the base version shows empty or not at all",
+      "onlyOn": [
+        "70h date fields, a formula using a Date column",
+        "80 automatic copy, an empty month copied from the previous one"
+      ]
+    },
+    {
+      "text": "text: fx",
+      "why": "not wording: the fake employees, column names and buttons now shown on the automatic copy screens (80) and dialogs, which the base version shows empty or not at all",
+      "onlyOn": [
+        "80 automatic copy, an empty month copied from the previous one"
+      ]
+    },
+    {
+      "text": "text: Automatic copy: On",
+      "why": "approved 4 Nov 2026 (automatic copy): new wording, see COMPANIES_AUTOCOPY_SHOTS/partB/NEW_TEXTS.md"
+    },
+    {
+      "text": "text: Copied 6 employees from October 2026 (Basic Salary, Govt Increment, Allowances).",
+      "why": "approved 4 Nov 2026 (automatic copy): new wording, here for the fake company",
+      "onlyOn": [
+        "80 automatic copy, an empty month copied from the previous one"
+      ]
+    },
+    {
+      "text": "text: Undo",
+      "why": "approved 4 Nov 2026 (automatic copy): new wording, see COMPANIES_AUTOCOPY_SHOTS/partB/NEW_TEXTS.md"
+    },
+    {
+      "text": "title: Click to see calculation breakdown",
+      "why": "not wording: the fake employees, column names and buttons now shown on the automatic copy screens (80) and dialogs, which the base version shows empty or not at all",
+      "onlyOn": [
+        "80 automatic copy, an empty month copied from the previous one"
+      ]
+    },
+    {
+      "text": "text: 18,115.00",
+      "why": "not wording: the fake employees, column names and buttons now shown on the automatic copy screens (80) and dialogs, which the base version shows empty or not at all",
+      "onlyOn": [
+        "80 automatic copy, an empty month copied from the previous one"
+      ]
+    },
+    {
+      "text": "text: 20,115.00",
+      "why": "not wording: the fake employees, column names and buttons now shown on the automatic copy screens (80) and dialogs, which the base version shows empty or not at all",
+      "onlyOn": [
+        "80 automatic copy, an empty month copied from the previous one"
+      ]
+    },
+    {
+      "text": "text: 19,612.13",
+      "why": "not wording: the fake employees, column names and buttons now shown on the automatic copy screens (80) and dialogs, which the base version shows empty or not at all",
+      "onlyOn": [
+        "80 automatic copy, an empty month copied from the previous one"
+      ]
+    },
+    {
+      "text": "text: 201.15",
+      "why": "not wording: the fake employees, column names and buttons now shown on the automatic copy screens (80) and dialogs, which the base version shows empty or not at all",
+      "onlyOn": [
+        "80 automatic copy, an empty month copied from the previous one"
+      ]
+    },
+    {
+      "text": "text: 502.88",
+      "why": "not wording: the fake employees, column names and buttons now shown on the automatic copy screens (80) and dialogs, which the base version shows empty or not at all",
+      "onlyOn": [
+        "80 automatic copy, an empty month copied from the previous one"
+      ]
+    },
+    {
+      "text": "text: 301.725",
+      "why": "not wording: the fake employees, column names and buttons now shown on the automatic copy screens (80) and dialogs, which the base version shows empty or not at all",
+      "onlyOn": [
+        "80 automatic copy, an empty month copied from the previous one"
+      ]
+    },
+    {
+      "text": "text: 905.18",
+      "why": "not wording: the fake employees, column names and buttons now shown on the automatic copy screens (80) and dialogs, which the base version shows empty or not at all",
+      "onlyOn": [
+        "80 automatic copy, an empty month copied from the previous one"
+      ]
+    },
+    {
+      "text": "text: 0.00",
+      "why": "not wording: the fake employees, column names and buttons now shown on the automatic copy screens (80) and dialogs, which the base version shows empty or not at all",
+      "onlyOn": [
+        "80 automatic copy, an empty month copied from the previous one"
+      ]
+    },
+    {
+      "text": "text: Delete",
+      "why": "not wording: the fake employees, column names and buttons now shown on the automatic copy screens (80) and dialogs, which the base version shows empty or not at all",
+      "onlyOn": [
+        "80 automatic copy, an empty month copied from the previous one"
+      ]
+    },
+    {
+      "text": "text: 48,500.00",
+      "why": "not wording: the fake employees, column names and buttons now shown on the automatic copy screens (80) and dialogs, which the base version shows empty or not at all",
+      "onlyOn": [
+        "80 automatic copy, an empty month copied from the previous one"
+      ]
+    },
+    {
+      "text": "text: 50,000.00",
+      "why": "not wording: the fake employees, column names and buttons now shown on the automatic copy screens (80) and dialogs, which the base version shows empty or not at all",
+      "onlyOn": [
+        "80 automatic copy, an empty month copied from the previous one"
+      ]
+    },
+    {
+      "text": "text: 46,202.90",
+      "why": "not wording: the fake employees, column names and buttons now shown on the automatic copy screens (80) and dialogs, which the base version shows empty or not at all",
+      "onlyOn": [
+        "80 automatic copy, an empty month copied from the previous one"
+      ]
+    },
+    {
+      "text": "text: 1,500.00",
+      "why": "not wording: the fake employees, column names and buttons now shown on the automatic copy screens (80) and dialogs, which the base version shows empty or not at all",
+      "onlyOn": [
+        "80 automatic copy, an empty month copied from the previous one"
+      ]
+    },
+    {
+      "text": "text: 297.10",
+      "why": "not wording: the fake employees, column names and buttons now shown on the automatic copy screens (80) and dialogs, which the base version shows empty or not at all",
+      "onlyOn": [
+        "80 automatic copy, an empty month copied from the previous one"
+      ]
+    },
+    {
+      "text": "text: 2,000",
+      "why": "not wording: the fake employees, column names and buttons now shown on the automatic copy screens (80) and dialogs, which the base version shows empty or not at all",
+      "onlyOn": [
+        "80 automatic copy, an empty month copied from the previous one"
+      ]
+    },
+    {
+      "text": "text: 3,797.10",
+      "why": "not wording: the fake employees, column names and buttons now shown on the automatic copy screens (80) and dialogs, which the base version shows empty or not at all",
+      "onlyOn": [
+        "80 automatic copy, an empty month copied from the previous one"
+      ]
+    },
+    {
+      "text": "text: 1,000.000",
+      "why": "not wording: the fake employees, column names and buttons now shown on the automatic copy screens (80) and dialogs, which the base version shows empty or not at all",
+      "onlyOn": [
+        "80 automatic copy, an empty month copied from the previous one"
+      ]
+    },
+    {
+      "text": "text: 2,250.00",
+      "why": "not wording: the fake employees, column names and buttons now shown on the automatic copy screens (80) and dialogs, which the base version shows empty or not at all",
+      "onlyOn": [
+        "80 automatic copy, an empty month copied from the previous one"
+      ]
+    },
+    {
+      "text": "text: 7,047.10",
+      "why": "not wording: the fake employees, column names and buttons now shown on the automatic copy screens (80) and dialogs, which the base version shows empty or not at all",
+      "onlyOn": [
+        "80 automatic copy, an empty month copied from the previous one"
+      ]
+    },
+    {
+      "text": "text: 250,000.00",
+      "why": "not wording: the fake employees, column names and buttons now shown on the automatic copy screens (80) and dialogs, which the base version shows empty or not at all",
+      "onlyOn": [
+        "80 automatic copy, an empty month copied from the previous one"
+      ]
+    },
+    {
+      "text": "text: 260,000.56",
+      "why": "not wording: the fake employees, column names and buttons now shown on the automatic copy screens (80) and dialogs, which the base version shows empty or not at all",
+      "onlyOn": [
+        "80 automatic copy, an empty month copied from the previous one"
+      ]
+    },
+    {
+      "text": "text: 207,903.33",
+      "why": "not wording: the fake employees, column names and buttons now shown on the automatic copy screens (80) and dialogs, which the base version shows empty or not at all",
+      "onlyOn": [
+        "80 automatic copy, an empty month copied from the previous one"
+      ]
+    },
+    {
+      "text": "text: 7,800.02",
+      "why": "not wording: the fake employees, column names and buttons now shown on the automatic copy screens (80) and dialogs, which the base version shows empty or not at all",
+      "onlyOn": [
+        "80 automatic copy, an empty month copied from the previous one"
+      ]
+    },
+    {
+      "text": "text: 44,000",
+      "why": "not wording: the fake employees, column names and buttons now shown on the automatic copy screens (80) and dialogs, which the base version shows empty or not at all",
+      "onlyOn": [
+        "80 automatic copy, an empty month copied from the previous one"
+      ]
+    },
+    {
+      "text": "text: 52,097.23",
+      "why": "not wording: the fake employees, column names and buttons now shown on the automatic copy screens (80) and dialogs, which the base version shows empty or not at all",
+      "onlyOn": [
+        "80 automatic copy, an empty month copied from the previous one"
+      ]
+    },
+    {
+      "text": "text: 1,500.000",
+      "why": "not wording: the fake employees, column names and buttons now shown on the automatic copy screens (80) and dialogs, which the base version shows empty or not at all",
+      "onlyOn": [
+        "80 automatic copy, an empty month copied from the previous one"
+      ]
+    },
+    {
+      "text": "text: 53,597.23",
+      "why": "not wording: the fake employees, column names and buttons now shown on the automatic copy screens (80) and dialogs, which the base version shows empty or not at all",
+      "onlyOn": [
+        "80 automatic copy, an empty month copied from the previous one"
+      ]
+    },
+    {
+      "text": "text: 30,635.01",
+      "why": "not wording: the fake employees, column names and buttons now shown on the automatic copy screens (80) and dialogs, which the base version shows empty or not at all",
+      "onlyOn": [
+        "80 automatic copy, an empty month copied from the previous one"
+      ]
+    },
+    {
+      "text": "text: 29,814.88",
+      "why": "not wording: the fake employees, column names and buttons now shown on the automatic copy screens (80) and dialogs, which the base version shows empty or not at all",
+      "onlyOn": [
+        "80 automatic copy, an empty month copied from the previous one"
+      ]
+    },
+    {
+      "text": "text: 459.53",
+      "why": "not wording: the fake employees, column names and buttons now shown on the automatic copy screens (80) and dialogs, which the base version shows empty or not at all",
+      "onlyOn": [
+        "80 automatic copy, an empty month copied from the previous one"
+      ]
+    },
+    {
+      "text": "text: 64",
+      "why": "not wording: the fake employees, column names and buttons now shown on the automatic copy screens (80) and dialogs, which the base version shows empty or not at all",
+      "onlyOn": [
+        "80 automatic copy, an empty month copied from the previous one"
+      ]
+    },
+    {
+      "text": "text: 820.13",
+      "why": "not wording: the fake employees, column names and buttons now shown on the automatic copy screens (80) and dialogs, which the base version shows empty or not at all",
+      "onlyOn": [
+        "80 automatic copy, an empty month copied from the previous one"
+      ]
+    },
+    {
+      "text": "text: 459.525",
+      "why": "not wording: the fake employees, column names and buttons now shown on the automatic copy screens (80) and dialogs, which the base version shows empty or not at all",
+      "onlyOn": [
+        "80 automatic copy, an empty month copied from the previous one"
+      ]
+    },
+    {
+      "text": "text: 1,378.58",
+      "why": "not wording: the fake employees, column names and buttons now shown on the automatic copy screens (80) and dialogs, which the base version shows empty or not at all",
+      "onlyOn": [
+        "80 automatic copy, an empty month copied from the previous one"
+      ]
+    },
+    {
+      "text": "text: 2,658.23",
+      "why": "not wording: the fake employees, column names and buttons now shown on the automatic copy screens (80) and dialogs, which the base version shows empty or not at all",
+      "onlyOn": [
+        "80 automatic copy, an empty month copied from the previous one"
+      ]
+    },
+    {
+      "text": "text: 5,000.00",
+      "why": "not wording: the fake employees, column names and buttons now shown on the automatic copy screens (80) and dialogs, which the base version shows empty or not at all",
+      "onlyOn": [
+        "80 automatic copy, an empty month copied from the previous one"
+      ]
+    },
+    {
+      "text": "text: 4,875.00",
+      "why": "not wording: the fake employees, column names and buttons now shown on the automatic copy screens (80) and dialogs, which the base version shows empty or not at all",
+      "onlyOn": [
+        "80 automatic copy, an empty month copied from the previous one"
+      ]
+    },
+    {
+      "text": "text: 75.00",
+      "why": "not wording: the fake employees, column names and buttons now shown on the automatic copy screens (80) and dialogs, which the base version shows empty or not at all",
+      "onlyOn": [
+        "80 automatic copy, an empty month copied from the previous one"
+      ]
+    },
+    {
+      "text": "text: 50.00",
+      "why": "not wording: the fake employees, column names and buttons now shown on the automatic copy screens (80) and dialogs, which the base version shows empty or not at all",
+      "onlyOn": [
+        "80 automatic copy, an empty month copied from the previous one"
+      ]
+    },
+    {
+      "text": "text: 125.00",
+      "why": "not wording: the fake employees, column names and buttons now shown on the automatic copy screens (80) and dialogs, which the base version shows empty or not at all",
+      "onlyOn": [
+        "80 automatic copy, an empty month copied from the previous one"
+      ]
+    },
+    {
+      "text": "text: 0.000",
+      "why": "not wording: the fake employees, column names and buttons now shown on the automatic copy screens (80) and dialogs, which the base version shows empty or not at all",
+      "onlyOn": [
+        "80 automatic copy, an empty month copied from the previous one"
+      ]
+    },
+    {
+      "text": "text: The copy was undone: this month is empty again.",
+      "why": "approved 4 Nov 2026 (automatic copy): new wording, see COMPANIES_AUTOCOPY_SHOTS/partB/NEW_TEXTS.md"
+    },
+    {
+      "text": "text: Nothing was copied: October 2026 has no employees.",
+      "why": "approved 4 Nov 2026 (automatic copy): new wording, see COMPANIES_AUTOCOPY_SHOTS/partB/NEW_TEXTS.md"
+    },
+    {
+      "text": "text: When I open a month with no employees yet",
+      "why": "approved 4 Nov 2026 (automatic copy): new wording, see COMPANIES_AUTOCOPY_SHOTS/partB/NEW_TEXTS.md"
+    },
+    {
+      "text": "text: For Fake Co Ltd.",
+      "why": "approved 4 Nov 2026 (automatic copy): new wording, here for the fake company",
+      "onlyOn": [
+        "80d automatic copy setting, ask me",
+        "80e automatic copy setting, automatically"
+      ]
+    },
+    {
+      "text": "text: Ask me",
+      "why": "approved 4 Nov 2026 (automatic copy): new wording, see COMPANIES_AUTOCOPY_SHOTS/partB/NEW_TEXTS.md"
+    },
+    {
+      "text": "text: Nothing is copied by itself. Use Copy from Previous Month when you need it.",
+      "why": "approved 4 Nov 2026 (automatic copy): new wording, see COMPANIES_AUTOCOPY_SHOTS/partB/NEW_TEXTS.md"
+    },
+    {
+      "text": "text: Copy from the previous month automatically",
+      "why": "approved 4 Nov 2026 (automatic copy): new wording, see COMPANIES_AUTOCOPY_SHOTS/partB/NEW_TEXTS.md"
+    },
+    {
+      "text": "text: The first time a month with no employees is opened, every employee of the month before is copied with their identity fields and the columns ticked below. The other columns stay empty; calculated columns are worked out as usual. A month that has employees is never changed.",
+      "why": "approved 4 Nov 2026 (automatic copy): new wording, here for the fake company",
+      "onlyOn": [
+        "80d automatic copy setting, ask me",
+        "80e automatic copy setting, automatically"
+      ]
+    },
+    {
+      "text": "text: Input columns to copy",
+      "why": "approved 4 Nov 2026 (automatic copy): new wording, see COMPANIES_AUTOCOPY_SHOTS/partB/NEW_TEXTS.md"
+    },
+    {
+      "text": "text: Tick all",
+      "why": "approved 4 Nov 2026 (automatic copy): new wording, see COMPANIES_AUTOCOPY_SHOTS/partB/NEW_TEXTS.md"
+    },
+    {
+      "text": "text: Untick all",
+      "why": "approved 4 Nov 2026 (automatic copy): new wording, see COMPANIES_AUTOCOPY_SHOTS/partB/NEW_TEXTS.md"
+    },
+    {
+      "text": "text: A column added later starts unticked.",
+      "why": "approved 4 Nov 2026 (automatic copy): new wording, see COMPANIES_AUTOCOPY_SHOTS/partB/NEW_TEXTS.md"
+    },
+    {
+      "text": "title: Only an admin of this company can change this.",
+      "why": "approved 4 Nov 2026 (automatic copy): new wording, see COMPANIES_AUTOCOPY_SHOTS/partB/NEW_TEXTS.md"
     }
   ],
   "removed": [
