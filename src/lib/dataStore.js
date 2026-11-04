@@ -15,6 +15,7 @@
 //                                                  when the month cannot be read (nothing to show, nothing to save)
 //   savePeriod(companyId, year, month, data)       true when saved, false when it was refused
 //   periodHasEmployees(companyId, year, month)     whether a saved month has anyone in it
+//   periodIsSaved(companyId, year, month)          whether a month was ever saved, even empty (auto-copy)
 //   deletePeriodsForCompany(companyId)             removes every saved month of a company
 //   countPeriodsHoldingKey(companyIds, key)        { periods, companies } holding a value under that key
 //   renameValueKeyInPeriods(companyIds, old, new)  moves those values; false if any write was refused
@@ -30,6 +31,7 @@ export const STORE_OPERATIONS = [
   'loadPeriod',
   'savePeriod',
   'periodHasEmployees',
+  'periodIsSaved',
   'deletePeriodsForCompany',
   'countPeriodsHoldingKey',
   'renameValueKeyInPeriods',

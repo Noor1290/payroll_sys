@@ -51,6 +51,7 @@ function memoryStore() {
       return true
     }),
     periodHasEmployees: record('periodHasEmployees', (id, year, month) => (periods.get(`${id}:${year}-${month}`)?.employees.length ?? 0) > 0),
+    periodIsSaved: record('periodIsSaved', (id, year, month) => periods.has(`${id}:${year}-${month}`)),
     deletePeriodsForCompany: record('deletePeriodsForCompany', () => {}),
     countPeriodsHoldingKey: record('countPeriodsHoldingKey', () => ({ periods: 0, companies: 0 })),
     renameValueKeyInPeriods: record('renameValueKeyInPeriods', () => true),
@@ -103,13 +104,14 @@ describe('one way in', () => {
     expect(importing.sort()).toEqual(allowed)
   })
 
-  test('the interface is exactly the operations the browser store has always had, whether a month has anyone in it, and the values saved under a key (before a field becomes a Date)', () => {
+  test('the interface is exactly the operations the browser store has always had, whether a month has anyone in it, whether a month was ever saved (automatic copy), and the values saved under a key (before a field becomes a Date)', () => {
     expect(STORE_OPERATIONS).toEqual([
       'loadState',
       'saveState',
       'loadPeriod',
       'savePeriod',
       'periodHasEmployees',
+      'periodIsSaved',
       'deletePeriodsForCompany',
       'countPeriodsHoldingKey',
       'renameValueKeyInPeriods',

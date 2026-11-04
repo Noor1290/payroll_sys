@@ -32,6 +32,7 @@
 // on its own.
 
 import * as browserStore from './storage'
+import { autoCopyToKeep } from './autoCopy'
 import { getCurrentPeriod } from './periods'
 import { askHub, asJson, MONTH, normaliseBrn, sameJson, sendHub } from './hubWire'
 import {
@@ -108,7 +109,13 @@ export function periodIdFor(brn) {
 export const sharedBodyOf = (state) =>
   asJson({ identityFields: state.identityFields, idFieldKey: state.idFieldKey, globalColumns: state.globalColumns })
 
-export const companyBodyOf = (company) => asJson({ columns: company.columns, customFields: company.details?.customFields ?? [] })
+// The company's own setup. "When I open a month with no employees yet" goes with
+// it only once chosen (autoCopy.js), so a company that never chose keeps the
+// very body it has always had.
+export const companyBodyOf = (company) => {
+  const autoCopy = autoCopyToKeep(company.autoCopy)
+  return asJson({ columns: company.columns, customFields: company.details?.customFields ?? [], ...(autoCopy ? { autoCopy } : {}) })
+}
 
 const isList = Array.isArray
 
@@ -233,6 +240,7 @@ function assemble(companyRows, sharedBody) {
       viewYear: Number.isInteger(own.viewYear) ? own.viewYear : year,
       viewMonth: Number.isInteger(own.viewMonth) ? own.viewMonth : month,
       details: { address: row.address ?? '', brn: row.brn, customFields: row.body.customFields ?? [] },
+      ...(autoCopyToKeep(row.body.autoCopy) ? { autoCopy: autoCopyToKeep(row.body.autoCopy) } : {}),
     }
   })
   const selected = companies[companyRows.findIndex((row) => row.selected)]
@@ -770,6 +778,7 @@ export const dashboardStore = {
   loadPeriod: months('loadPeriod'),
   savePeriod: months('savePeriod'),
   periodHasEmployees: months('periodHasEmployees'),
+  periodIsSaved: months('periodIsSaved'),
   deletePeriodsForCompany: months('deletePeriodsForCompany'),
   countPeriodsHoldingKey: months('countPeriodsHoldingKey'),
   renameValueKeyInPeriods: months('renameValueKeyInPeriods'),

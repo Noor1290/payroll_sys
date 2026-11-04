@@ -43,6 +43,16 @@ An Input column, or an identity field, can be a **Date** (`src/lib/dates.js`). I
 - **Move to identity fields** (a Global Text or Date column, in its row): it becomes an identity field with the same key, so no saved value moves or changes; only the setup does, in one save (inside the dashboard, one revision that History > Restore undoes). It shows first the name and type it will have, how many months hold a value, and, as a Date, the saved values that are not clear dates. Refused while a formula uses the column. An identity field is always in the Excel exports.
 - A date is never added up (Totals and the totals row show the first month's, like a text column), and never used in a formula: the column form says so, and a column a formula uses cannot become a Date. The ID field is always text.
 
+## Copying last month
+
+"Copy from Previous Month" brings chosen employees and columns of the month before into the month on screen, after a preview (`src/lib/copyPreviousMonth.js`). It never changes the previous month.
+
+"Automatic copy" next to it sets, per company, **When I open a month with no employees yet** (`src/lib/autoCopy.js`):
+
+- **Ask me** (the default): nothing is copied by itself, as before.
+- **Copy from the previous month automatically**, with the input columns ticked there (a column added later starts unticked): the first time a month is opened that was never saved and has no one in it, every employee of the month right before is copied, with their identity fields and the ticked columns; the other columns stay empty and calculated columns are worked out as usual. A month that has employees, or was ever saved (even empty), is never copied into. When the month before has no employees, a short note says so and nothing is copied. A banner says what was copied, with **Undo** while nothing else has been typed: Undo empties the month again (inside the dashboard a new revision of the month, with History and Restore as usual), and it is not copied again. (Inside the dashboard, an Undo within the second before the copy is saved means nothing was saved at all: the month is then still new, and is copied again the next time it is opened.)
+- The setting is kept with the company's own column setup: inside the dashboard it is saved there (a new revision of the company's columns, so it is the same on every laptop) and only an admin of the company can change it; on its own, in this browser. "Restore this version" of the company's columns keeps the setting as it is now. A company that never chose keeps exactly the setup it had.
+
 ## Where the data is read and saved
 
 Screens never touch the browser's storage themselves. They call the operations in `src/lib/dataStore.js`, and a store carries them out. Opened on its own, the store is the browser (`src/lib/storage.js`), so the app behaves as it always has. Inside the Payroll Hub dashboard it is the dashboard (`src/lib/dashboardSetup.js` for the column setup, `src/lib/dashboardMonths.js` for the months, behind the dashboard's password gate); see `docs/MIGRATION_PLAN.md` in the payroll_hub repository. `tests/audit/dataStore.test.jsx` fails if a screen reaches past the interface.

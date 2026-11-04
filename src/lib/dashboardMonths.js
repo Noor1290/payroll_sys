@@ -276,6 +276,16 @@ export function periodHasEmployees(companyId, year, month) {
   return (lists.get(normaliseBrn(brn))?.get(period)?.employee_count ?? 0) > 0
 }
 
+// Whether the dashboard has ever saved a month, even with no one in it.
+export function periodIsSaved(companyId, year, month) {
+  const brn = brnOf(companyId)
+  if (!brn) return false
+  const period = periodKey(year, month)
+  const held = months.get(keyOf(brn, period))
+  if (held) return held.revision > 0
+  return lists.get(normaliseBrn(brn))?.has(period) ?? false
+}
+
 // How many months, across these companies, hold a value under `key`: what a
 // change of that key would move. `unknown` when some company's months could not
 // be listed (the dashboard was locked when the app opened).
@@ -689,6 +699,7 @@ export const monthOperations = {
   loadPeriod,
   savePeriod,
   periodHasEmployees,
+  periodIsSaved,
   countPeriodsHoldingKey,
   renameValueKeyInPeriods,
   readSavedValues,

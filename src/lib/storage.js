@@ -244,6 +244,12 @@ export function periodHasEmployees(companyId, year, month) {
   return loadPeriod(companyId, year, month).employees.length > 0
 }
 
+// Whether a month was ever saved in this browser, even with no one in it.
+// Asked when a month is opened, before the screen saves it.
+export function periodIsSaved(companyId, year, month) {
+  return localStorage.getItem(periodStorageKey(companyId, year, month)) !== null
+}
+
 // Removes every month of employee data saved for a company - used when the
 // company itself is deleted, so nothing of it is left behind in the browser.
 export function deletePeriodsForCompany(companyId) {

@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState, useSyncExternalStore } from 'react'
-import { Building2, CircleAlert, CloudOff, Copy, History, LoaderCircle, LockKeyhole, Menu, RotateCw, Trash2, Upload, X } from 'lucide-react'
+import { Building2, CircleAlert, CloudOff, Copy, CopyCheck, History, Info, LoaderCircle, LockKeyhole, Menu, RotateCw, Trash2, Upload, X } from 'lucide-react'
 import Sidebar from './components/Sidebar'
 import ColumnManager from './components/ColumnManager'
 import IdentityFieldsManager from './components/IdentityFieldsManager'
@@ -15,6 +15,8 @@ import SendToDashboardButton from './components/SendToDashboardButton'
 import ConfirmDialog from './components/ConfirmDialog'
 import CompanyDetailsModal from './components/CompanyDetailsModal'
 import CopyPreviousMonthModal from './components/CopyPreviousMonthModal'
+import AutoCopySettingsModal from './components/AutoCopySettingsModal'
+import { AUTO, copyFromPrevious, readAutoCopy, renameKeyInAutoCopy, untouchedSinceCopy } from './lib/autoCopy'
 import ExportErrorsDialog from './components/ExportErrorsDialog'
 import SaveFailedDialog from './components/SaveFailedDialog'
 import BackupMessage from './components/BackupMessage'
@@ -78,6 +80,7 @@ const {
   loadPeriod,
   savePeriod,
   periodHasEmployees,
+  periodIsSaved,
   deletePeriodsForCompany,
   countPeriodsHoldingKey,
   renameValueKeyInPeriods,
@@ -280,6 +283,14 @@ function PayrollApp({ onRestored, inDashboard = false, offline = null, onReloadD
   const [confirmingDeleteAll, setConfirmingDeleteAll] = useState(false)
   const [detailsCompanyId, setDetailsCompanyId] = useState(null)
   const [copyPreviousMonthData, setCopyPreviousMonthData] = useState(null) // { employees, year, month } | null
+  // "When I open a month with no employees yet": the settings dialog, the month
+  // that opened never saved (only such a month is copied into), the months already
+  // handled this session, and what the banner says: { key, from, count, columnNames,
+  // employees } after a copy, or { key, note }.
+  const [autoCopyOpen, setAutoCopyOpen] = useState(false)
+  const [newMonthKey, setNewMonthKey] = useState(null)
+  const autoCopyHandled = useRef(new Set())
+  const [autoCopied, setAutoCopied] = useState(null)
   const [loaded, setLoaded] = useState(false)
   // Display only: the message shown when an Excel file can't be read, and
   // whether the company list is open as a drawer (narrow widths).
@@ -404,6 +415,8 @@ function PayrollApp({ onRestored, inDashboard = false, offline = null, onReloadD
         return
       }
       setMonthBlocked(null)
+      // Asked before the screen saves the month: only a month never saved is copied into.
+      setNewMonthKey(result.employees.length === 0 && !periodIsSaved(activeCompanyId, selectedYear, selectedMonth) ? key : null)
       setPeriodEmployees(result.employees)
       setLoadedPeriodKey(key)
     }
@@ -497,6 +510,65 @@ function PayrollApp({ onRestored, inDashboard = false, offline = null, onReloadD
   }, [columnsByKey])
 
   const computedGrid = useComputedGrid(periodEmployees, effectiveColumns)
+
+  // Copy from the previous month automatically: once, into a month just opened
+  // that was never saved and has no one in it, when the company asks for it and
+  // the user may change it. The previous month is only read.
+  const autoCopy = useMemo(() => readAutoCopy(activeCompany?.autoCopy), [activeCompany?.autoCopy])
+  const latest = useRef({ key: null, employees: [] })
+  useEffect(() => {
+    latest.current = { key: currentPeriodKey, employees: periodEmployees }
+  })
+  useEffect(() => {
+    const key = currentPeriodKey
+    if (!key || loadedPeriodKey !== key || newMonthKey !== key || !monthReady || companyReadOnly) return
+    if (autoCopy.mode !== AUTO || periodEmployees.length > 0 || autoCopyHandled.current.has(key)) return
+    autoCopyHandled.current.add(key)
+    const prev = shiftPeriod(selectedYear, selectedMonth, -1)
+    const from = formatPeriodLabel(prev.year, prev.month)
+    const apply = (result) => {
+      // Moved on, or something was typed meanwhile: nothing is copied.
+      if (result.blocked || latest.current.key !== key || latest.current.employees.length > 0) return
+      if (result.employees.length === 0) {
+        setAutoCopied({ key, note: `Nothing was copied: ${from} has no employees.` })
+        return
+      }
+      const copy = copyFromPrevious({ previousEmployees: result.employees, identityFields, setting: autoCopy, effectiveColumns })
+      setPeriodEmployees(copy.employees)
+      setAutoCopied({ key, from, count: copy.employees.length, columnNames: copy.columnNames, employees: copy.employees })
+    }
+    const result = loadPeriod(activeCompanyId, prev.year, prev.month)
+    if (isPending(result)) void result.then(apply)
+    else apply(result)
+  }, [
+    currentPeriodKey,
+    loadedPeriodKey,
+    newMonthKey,
+    monthReady,
+    companyReadOnly,
+    autoCopy,
+    periodEmployees.length,
+    selectedYear,
+    selectedMonth,
+    activeCompanyId,
+    identityFields,
+    effectiveColumns,
+  ])
+
+  function handleUndoAutoCopy() {
+    if (!autoCopied?.employees || !untouchedSinceCopy(periodEmployees, autoCopied.employees)) return
+    setPeriodEmployees([])
+    setAutoCopied({ key: autoCopied.key, note: 'The copy was undone: this month is empty again.' })
+  }
+
+  function handleSaveAutoCopy(setting) {
+    updateCompany(activeCompanyId, (c) => {
+      const { autoCopy: _previous, ...rest } = c
+      return setting ? { ...rest, autoCopy: setting } : rest
+    })
+    setAutoCopyOpen(false)
+  }
+
 
   function updateCompany(id, updater) {
     setCompanies((prev) => prev.map((c) => (c.id === id ? updater(c) : c)))
@@ -698,7 +770,16 @@ function PayrollApp({ onRestored, inDashboard = false, offline = null, onReloadD
     const rename = (columns) => columns.map((c) => renameKeyInColumn(c, oldKey, newKey))
     if (scope === 'global') setGlobalColumns(rename)
     setCompanies((prev) =>
-      prev.map((c) => (reachIds.has(c.id) ? { ...c, columns: rename(c.columns), columnWidths: renameKeyInWidths(c.columnWidths, oldKey, newKey) } : c))
+      prev.map((c) =>
+        reachIds.has(c.id)
+          ? {
+              ...c,
+              columns: rename(c.columns),
+              columnWidths: renameKeyInWidths(c.columnWidths, oldKey, newKey),
+              ...(c.autoCopy ? { autoCopy: renameKeyInAutoCopy(c.autoCopy, oldKey, newKey) } : {}),
+            }
+          : c
+      )
     )
     setPeriodEmployees((prev) => prev.map((e) => renameValueKey(e, oldKey, newKey)))
   }
@@ -984,6 +1065,15 @@ function PayrollApp({ onRestored, inDashboard = false, offline = null, onReloadD
                     Copy from Previous Month
                   </button>
                   <button
+                    onClick={() => setAutoCopyOpen(true)}
+                    disabled={companyReadOnly}
+                    title={companyReadOnly ? 'Only an admin of this company can change this.' : 'When I open a month with no employees yet'}
+                    className="btn btn-secondary"
+                  >
+                    <CopyCheck aria-hidden="true" />
+                    {autoCopy.mode === AUTO ? 'Automatic copy: On' : 'Automatic copy: Off'}
+                  </button>
+                  <button
                     onClick={() => setConfirmingDeleteAll(true)}
                     disabled={periodEmployees.length === 0 || !monthReady}
                     className="btn btn-danger"
@@ -994,6 +1084,26 @@ function PayrollApp({ onRestored, inDashboard = false, offline = null, onReloadD
                 </div>
               )}
             </div>
+
+            {activeTab === 'employees' && autoCopied && autoCopied.key === currentPeriodKey && (
+              <div role="status" className={`panel rise-in mb-4 items-center text-sm ${autoCopied.note ? '' : 'panel-accent'}`}>
+                {autoCopied.note ? <Info aria-hidden="true" /> : <CopyCheck aria-hidden="true" />}
+                <span className="min-w-0 flex-1">
+                  {autoCopied.note ??
+                    `Copied ${autoCopied.count} employee${autoCopied.count === 1 ? '' : 's'} from ${autoCopied.from} (${
+                      autoCopied.columnNames.length > 0 ? autoCopied.columnNames.join(', ') : 'identity fields only'
+                    }).`}
+                </span>
+                {autoCopied.employees && untouchedSinceCopy(periodEmployees, autoCopied.employees) && (
+                  <button onClick={handleUndoAutoCopy} className="btn btn-secondary btn-sm">
+                    Undo
+                  </button>
+                )}
+                <button onClick={() => setAutoCopied(null)} className="btn btn-ghost btn-icon btn-sm" aria-label="Dismiss">
+                  <X aria-hidden="true" />
+                </button>
+              </div>
+            )}
 
             {activeTab === 'employees' && importError && (
               <div role="alert" className="panel panel-danger rise-in mb-4 items-center text-sm">
@@ -1269,6 +1379,16 @@ function PayrollApp({ onRestored, inDashboard = false, offline = null, onReloadD
           currentPeriodLabel={formatPeriodLabel(selectedYear, selectedMonth)}
           onConfirm={handleConfirmCopyPreviousMonth}
           onCancel={() => setCopyPreviousMonthData(null)}
+        />
+      )}
+
+      {autoCopyOpen && activeCompany && (
+        <AutoCopySettingsModal
+          company={activeCompany}
+          effectiveColumns={effectiveColumns}
+          inDashboard={inDashboard}
+          onSave={handleSaveAutoCopy}
+          onCancel={() => setAutoCopyOpen(false)}
         />
       )}
 

@@ -83,6 +83,7 @@ export function offlineStore(brn) {
       loadPeriod: () => ({ employees: [], blocked: { ...OFFLINE } }),
       savePeriod: () => false,
       periodHasEmployees: () => false,
+      periodIsSaved: () => false,
       deletePeriodsForCompany: () => {},
       countPeriodsHoldingKey: () => ({ periods: 0, companies: 0, unknown: true }),
       renameValueKeyInPeriods: () => false,

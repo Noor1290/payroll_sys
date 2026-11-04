@@ -744,6 +744,33 @@ test('collect every visible string', async () => {
     while (all('[role="dialog"]').length > 0) await cancel()
   }
 
+  // "When I open a month with no employees yet" (automatic copy): November opened
+  // empty, October copied, Undo, the setting, and an October with no one in it.
+  // The base version has none of it: it just shows an empty November.
+  const november = (more = {}) => [{ ...company, viewMonth: 11, ...more }]
+  const automatic = { autoCopy: { mode: 'auto', columns: ['basicSalary', 'govtIncrement', 'allowances'] } }
+  const settle = () => act(async () => new Promise((r) => setTimeout(r, 50)))
+  const findButton = (text) => all('button').find((b) => textOf(b) === text)
+  seed({ companies: november(automatic) })
+  await start()
+  await settle()
+  snap('80 automatic copy, an empty month copied from the previous one')
+  if (findButton('Undo')) await click(findButton('Undo'))
+  snap('80b automatic copy, undone')
+  seed({ companies: november(automatic), october: [] })
+  await start()
+  await settle()
+  snap('80c automatic copy, the previous month has no employees')
+  seed({ companies: november() })
+  await start()
+  await settle()
+  if (findButton('Automatic copy: Off')) await click(findButton('Automatic copy: Off'))
+  snapTopDialog('80d automatic copy setting, ask me')
+  const automaticChoice = all('label').find((l) => textOf(l).startsWith('Copy from the previous month automatically'))
+  if (automaticChoice) await click(automaticChoice.querySelector('input'))
+  snapTopDialog('80e automatic copy setting, automatically')
+  while (all('[role="dialog"]').length > 0) await cancel()
+
   expect(OUT, 'TEXT_CHECK_OUT').toBeTruthy()
   fs.writeFileSync(OUT, JSON.stringify(collected, null, 2))
   fs.writeFileSync(OUT.replace(/\.json$/, '.unlabelled.json'), JSON.stringify([...unlabelled].sort(), null, 2))
