@@ -38,13 +38,29 @@ export function formatDecimal(value, decimals, { grouping = true } = {}) {
     return typeof value === 'string' ? value : String(value ?? '')
   }
   if (decimals === undefined || decimals === null) {
-    return roundHalfUp(value, 2).toLocaleString(undefined, { maximumFractionDigits: 2, useGrouping: grouping })
+    return numberFormat(null, grouping).format(roundHalfUp(value, 2))
   }
-  return roundHalfUp(value, decimals).toLocaleString(undefined, {
-    minimumFractionDigits: decimals,
-    maximumFractionDigits: decimals,
-    useGrouping: grouping,
-  })
+  return numberFormat(decimals, grouping).format(roundHalfUp(value, decimals))
+}
+
+// One formatter per kind of display, made once and kept. The same text as
+// value.toLocaleString(undefined, options), which builds a new formatter on
+// every call: with 200 employees that was most of the work on each keystroke.
+// `decimals` null: the loose "up to 2 places" display.
+const formatters = new Map()
+function numberFormat(decimals, grouping) {
+  const key = `${decimals}|${grouping}`
+  let format = formatters.get(key)
+  if (!format) {
+    format = new Intl.NumberFormat(
+      undefined,
+      decimals === null
+        ? { maximumFractionDigits: 2, useGrouping: grouping }
+        : { minimumFractionDigits: decimals, maximumFractionDigits: decimals, useGrouping: grouping }
+    )
+    formatters.set(key, format)
+  }
+  return format
 }
 
 // Excel number-format string for a given decimal-places count, e.g.

@@ -1,4 +1,4 @@
-import { useLayoutEffect, useMemo, useState } from 'react'
+import { memo, useLayoutEffect, useMemo, useRef, useState } from 'react'
 import { CircleAlert, TriangleAlert, Users } from 'lucide-react'
 import ConfirmDialog from './ConfirmDialog'
 import DateCell from './DateCell'
@@ -64,6 +64,144 @@ function TickAllBox({ column, employees, onSetForEveryone }) {
     />
   )
 }
+
+// One employee's row. Drawn again only when what it shows changes: its employee,
+// its figures, whether its ID is a duplicate, which of its cells has the focus,
+// or its refused dates. Typing in one cell then redraws that row, not all of
+// them. `actions` never changes (see EmployeeTable).
+const NO_REFUSALS = {}
+const EmployeeRow = memo(function EmployeeRow({ emp, row, identityFields, idFieldKey, orderedColumns, isDuplicate, focusedKey, refused, actions }) {
+  // A Date cell (a Date Input column or a Date identity field): what is typed is saved only when it is
+  // a date; anything else is refused and listed above the table.
+  function dateCell(field) {
+    const cellKey = `${emp.id}:${field.key}`
+    return (
+      <DateCell
+        value={emp.values?.[field.key] ?? ''}
+        label={field.name}
+        refused={refused[field.key]}
+        describedBy={`refused-date-${cellKey}`}
+        onCommit={(iso) => actions.update(emp.id, field.key, iso)}
+        onRefuse={(text) => actions.refuse(cellKey, { text, employeeId: emp.id, key: field.key, name: field.name })}
+        onClearRefusal={() => actions.clearRefusal(cellKey)}
+      />
+    )
+  }
+
+  return (
+    <tr key={emp.id} className="transition-colors hover:bg-surface-hover">
+      {identityFields.map((field) => (
+        <td key={field.key} className="overflow-hidden px-1.5 py-1">
+          {field.valueType === 'date' && idFieldKey !== field.key ? (
+            dateCell(field)
+          ) : (
+          <div className="flex items-center gap-1">
+            <input
+              aria-label={field.name}
+              className={`field field-cell ${idFieldKey === field.key ? 'num' : ''}`}
+              value={emp.values?.[field.key] ?? ''}
+              onChange={(e) => actions.update(emp.id, field.key, e.target.value)}
+            />
+            {idFieldKey === field.key && isDuplicate && (
+              <span title="Duplicate ID" role="img" aria-label="Duplicate ID" className="shrink-0 cursor-help text-warn">
+                <TriangleAlert className="h-4 w-4" aria-hidden="true" />
+              </span>
+            )}
+          </div>
+          )}
+        </td>
+      ))}
+      {orderedColumns.map((col) => {
+        const cell = row?.[col.key]
+        if (col.type === 'input') {
+          const raw = emp.values?.[col.key] ?? ''
+          if (col.valueType === 'checkbox') {
+            return (
+              <td key={col.key} className="overflow-hidden px-1.5 py-1 text-center">
+                <input
+                  type="checkbox"
+                  aria-label={col.name}
+                  className="h-4 w-4 align-middle accent-accent"
+                  checked={Boolean(raw)}
+                  onChange={(e) => actions.update(emp.id, col.key, e.target.checked)}
+                />
+              </td>
+            )
+          }
+          if (col.valueType === 'date') {
+            return (
+              <td key={col.key} className="overflow-hidden px-1.5 py-1">
+                {dateCell(col)}
+              </td>
+            )
+          }
+          if (col.valueType === 'text') {
+            return (
+              <td key={col.key} className="overflow-hidden px-1.5 py-1">
+                <input
+                  type="text"
+                  aria-label={col.name}
+                  className="field field-cell"
+                  value={raw}
+                  onChange={(e) => actions.update(emp.id, col.key, e.target.value)}
+                />
+              </td>
+            )
+          }
+          const cellKey = `${emp.id}:${col.key}`
+          const isFocused = focusedKey === cellKey
+          const displayValue =
+            isFocused || raw === '' || Number.isNaN(Number(raw))
+              ? raw
+              : formatDecimal(Number(raw), col.decimals ?? 2, { grouping: false })
+          return (
+            <td key={col.key} className="overflow-hidden px-1.5 py-1">
+              <input
+                type="number"
+                aria-label={col.name}
+                className="field field-cell num text-right text-[13px]"
+                value={displayValue}
+                onFocus={() => actions.focus(cellKey)}
+                onBlur={() => actions.blur(cellKey)}
+                onChange={(e) => actions.update(emp.id, col.key, e.target.value)}
+              />
+            </td>
+          )
+        }
+        const hasError = cell?.trace?.error
+        return (
+          <td key={col.key} className="overflow-hidden px-1.5 py-1">
+            <button
+              onClick={() => actions.breakdown(cell.trace)}
+              className={`flex h-8 w-full min-w-0 cursor-pointer items-center justify-between gap-1 rounded-md border px-1.5 text-[13px] transition-colors ${
+                hasError
+                  ? 'border-danger/40 bg-danger/10 text-danger hover:border-danger/70'
+                  : 'border-glow/25 bg-glow/10 text-fg hover:border-glow/60'
+              }`}
+              title="Click to see calculation breakdown"
+            >
+              {hasError ? (
+                <TriangleAlert className="h-3.5 w-3.5 shrink-0" aria-hidden="true" />
+              ) : (
+                <span className="shrink-0 text-[10px] font-semibold text-glow" aria-hidden="true">
+                  fx
+                </span>
+              )}
+              <span className="num min-w-0 flex-1 truncate text-right">
+                {hasError ? 'Error' : formatDecimal(cell?.value ?? 0, col.decimals ?? 2)}
+              </span>
+            </button>
+          </td>
+        )
+      })}
+      <td className="overflow-hidden px-1.5 py-1 text-right">
+        <button onClick={() => actions.remove(emp)} className="btn btn-ghost btn-sm text-xs hover:text-danger">
+          Delete
+        </button>
+      </td>
+    </tr>
+  )
+})
 
 export default function EmployeeTable({
   employees,
@@ -150,29 +288,40 @@ export default function EmployeeTable({
     [identityFields, orderedColumns]
   )
 
-  // A Date cell (a Date Input column or a Date identity field): what is typed is saved only when it is
-  // a date; anything else is refused and listed above the table.
-  function renderDateCell(emp, field) {
-    const cellKey = `${emp.id}:${field.key}`
-    const clear = () =>
-      setRefusedDates((prev) => {
-        if (!(cellKey in prev)) return prev
-        const next = { ...prev }
-        delete next[cellKey]
-        return next
-      })
-    return (
-      <DateCell
-        value={emp.values?.[field.key] ?? ''}
-        label={field.name}
-        refused={refusedDates[cellKey]?.text}
-        describedBy={`refused-date-${cellKey}`}
-        onCommit={(iso) => onUpdateValue(emp.id, field.key, iso)}
-        onRefuse={(text) => setRefusedDates((prev) => ({ ...prev, [cellKey]: { text, employeeId: emp.id, key: field.key, name: field.name } }))}
-        onClearRefusal={clear}
-      />
-    )
-  }
+  // What the rows do, through one object that never changes, so a row is not
+  // drawn again just because the screen around it was: it always calls the
+  // latest handlers given to the table.
+  const latest = useRef({ onUpdateValue, onOpenBreakdown })
+  useLayoutEffect(() => {
+    latest.current = { onUpdateValue, onOpenBreakdown }
+  })
+  const actions = useMemo(
+    () => ({
+      update: (empId, key, value) => latest.current.onUpdateValue(empId, key, value),
+      breakdown: (trace) => latest.current.onOpenBreakdown(trace),
+      focus: (cellKey) => setFocusedCellKey(cellKey),
+      blur: (cellKey) => setFocusedCellKey((k) => (k === cellKey ? null : k)),
+      remove: (emp) => setDeleting(emp),
+      refuse: (cellKey, refusal) => setRefusedDates((prev) => ({ ...prev, [cellKey]: refusal })),
+      clearRefusal: (cellKey) =>
+        setRefusedDates((prev) => {
+          if (!(cellKey in prev)) return prev
+          const next = { ...prev }
+          delete next[cellKey]
+          return next
+        }),
+    }),
+    []
+  )
+
+  // Each employee's refused dates, by field key, for that employee's row only.
+  const refusedByEmployee = useMemo(() => {
+    const byEmployee = new Map()
+    for (const r of Object.values(refusedDates)) {
+      byEmployee.set(r.employeeId, { ...byEmployee.get(r.employeeId), [r.key]: r.text })
+    }
+    return byEmployee
+  }, [refusedDates])
 
   // The refused dates of the employees and Date fields on screen, in table order.
   const refusedList = Object.entries(refusedDates)
@@ -308,117 +457,18 @@ export default function EmployeeTable({
               const isDuplicate = rawIdValue !== '' && duplicateIdValues.has(rawIdValue)
 
               return (
-                <tr key={emp.id} className="transition-colors hover:bg-surface-hover">
-                  {identityFields.map((field) => (
-                    <td key={field.key} className="overflow-hidden px-1.5 py-1">
-                      {field.valueType === 'date' && idFieldKey !== field.key ? (
-                        renderDateCell(emp, field)
-                      ) : (
-                      <div className="flex items-center gap-1">
-                        <input
-                          aria-label={field.name}
-                          className={`field field-cell ${idFieldKey === field.key ? 'num' : ''}`}
-                          value={emp.values?.[field.key] ?? ''}
-                          onChange={(e) => onUpdateValue(emp.id, field.key, e.target.value)}
-                        />
-                        {idFieldKey === field.key && isDuplicate && (
-                          <span title="Duplicate ID" role="img" aria-label="Duplicate ID" className="shrink-0 cursor-help text-warn">
-                            <TriangleAlert className="h-4 w-4" aria-hidden="true" />
-                          </span>
-                        )}
-                      </div>
-                      )}
-                    </td>
-                  ))}
-                  {orderedColumns.map((col) => {
-                    const cell = computedGrid[emp.id]?.[col.key]
-                    if (col.type === 'input') {
-                      const raw = emp.values?.[col.key] ?? ''
-                      if (col.valueType === 'checkbox') {
-                        return (
-                          <td key={col.key} className="overflow-hidden px-1.5 py-1 text-center">
-                            <input
-                              type="checkbox"
-                              aria-label={col.name}
-                              className="h-4 w-4 align-middle accent-accent"
-                              checked={Boolean(raw)}
-                              onChange={(e) => onUpdateValue(emp.id, col.key, e.target.checked)}
-                            />
-                          </td>
-                        )
-                      }
-                      if (col.valueType === 'date') {
-                        return (
-                          <td key={col.key} className="overflow-hidden px-1.5 py-1">
-                            {renderDateCell(emp, col)}
-                          </td>
-                        )
-                      }
-                      if (col.valueType === 'text') {
-                        return (
-                          <td key={col.key} className="overflow-hidden px-1.5 py-1">
-                            <input
-                              type="text"
-                              aria-label={col.name}
-                              className="field field-cell"
-                              value={raw}
-                              onChange={(e) => onUpdateValue(emp.id, col.key, e.target.value)}
-                            />
-                          </td>
-                        )
-                      }
-                      const cellKey = `${emp.id}:${col.key}`
-                      const isFocused = focusedCellKey === cellKey
-                      const displayValue =
-                        isFocused || raw === '' || Number.isNaN(Number(raw))
-                          ? raw
-                          : formatDecimal(Number(raw), col.decimals ?? 2, { grouping: false })
-                      return (
-                        <td key={col.key} className="overflow-hidden px-1.5 py-1">
-                          <input
-                            type="number"
-                            aria-label={col.name}
-                            className="field field-cell num text-right text-[13px]"
-                            value={displayValue}
-                            onFocus={() => setFocusedCellKey(cellKey)}
-                            onBlur={() => setFocusedCellKey((k) => (k === cellKey ? null : k))}
-                            onChange={(e) => onUpdateValue(emp.id, col.key, e.target.value)}
-                          />
-                        </td>
-                      )
-                    }
-                    const hasError = cell?.trace?.error
-                    return (
-                      <td key={col.key} className="overflow-hidden px-1.5 py-1">
-                        <button
-                          onClick={() => onOpenBreakdown(cell.trace)}
-                          className={`flex h-8 w-full min-w-0 cursor-pointer items-center justify-between gap-1 rounded-md border px-1.5 text-[13px] transition-colors ${
-                            hasError
-                              ? 'border-danger/40 bg-danger/10 text-danger hover:border-danger/70'
-                              : 'border-glow/25 bg-glow/10 text-fg hover:border-glow/60'
-                          }`}
-                          title="Click to see calculation breakdown"
-                        >
-                          {hasError ? (
-                            <TriangleAlert className="h-3.5 w-3.5 shrink-0" aria-hidden="true" />
-                          ) : (
-                            <span className="shrink-0 text-[10px] font-semibold text-glow" aria-hidden="true">
-                              fx
-                            </span>
-                          )}
-                          <span className="num min-w-0 flex-1 truncate text-right">
-                            {hasError ? 'Error' : formatDecimal(cell?.value ?? 0, col.decimals ?? 2)}
-                          </span>
-                        </button>
-                      </td>
-                    )
-                  })}
-                  <td className="overflow-hidden px-1.5 py-1 text-right">
-                    <button onClick={() => setDeleting(emp)} className="btn btn-ghost btn-sm text-xs hover:text-danger">
-                      Delete
-                    </button>
-                  </td>
-                </tr>
+                <EmployeeRow
+                  key={emp.id}
+                  emp={emp}
+                  row={computedGrid[emp.id]}
+                  identityFields={identityFields}
+                  idFieldKey={idFieldKey}
+                  orderedColumns={orderedColumns}
+                  isDuplicate={isDuplicate}
+                  focusedKey={focusedCellKey?.startsWith(`${emp.id}:`) ? focusedCellKey : null}
+                  refused={refusedByEmployee.get(emp.id) ?? NO_REFUSALS}
+                  actions={actions}
+                />
               )
             })}
 

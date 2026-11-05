@@ -158,9 +158,41 @@ export function detectCircularReference(targetKey, targetExpr, columnsByKey) {
 export function evaluateFormula(expr, values) {
   const keys = Object.keys(values)
   const args = keys.map((k) => values[k])
-  // eslint-disable-next-line no-new-func
-  const fn = new Function(...keys, `"use strict"; return (${expr});`)
-  return fn(...args)
+  return compiledFormula(expr, keys)(...args)
+}
+
+// Each formula is turned into a function once, for the names it is given, and
+// kept: the same function as before, made once instead of once per employee and
+// per figure. A formula that does not compile throws, as before, and is not kept.
+const compiled = new Map()
+const MOST_KEPT = 5000
+function compiledFormula(expr, keys) {
+  const id = `${keys.join(',')}\u0000${expr}`
+  let fn = compiled.get(id)
+  if (!fn) {
+    // eslint-disable-next-line no-new-func
+    fn = new Function(...keys, `"use strict"; return (${expr});`)
+    if (compiled.size >= MOST_KEPT) compiled.clear()
+    compiled.set(id, fn)
+  }
+  return fn
+}
+
+// The columns a formula column uses, worked out once per set of columns (and
+// per column object) instead of for every employee.
+const dependenciesKept = new WeakMap()
+function dependenciesOf(key, col, columnsByKey) {
+  let byKey = dependenciesKept.get(columnsByKey)
+  if (!byKey) {
+    byKey = new Map()
+    dependenciesKept.set(columnsByKey, byKey)
+  }
+  const kept = byKey.get(key)
+  if (kept && kept.col === col && kept.formula === col.formula) return kept.deps
+  const availableKeys = Object.keys(columnsByKey)
+  const deps = getDependencies(col.formula, availableKeys.filter((k) => k !== key))
+  byKey.set(key, { col, formula: col.formula, deps })
+  return deps
 }
 
 // Replaces each dependency key in the expression with its resolved numeric
@@ -237,8 +269,7 @@ export function computeCell(key, employee, columnsByKey, memo, visiting = new Se
 
   // formula column
   visiting.add(key)
-  const availableKeys = Object.keys(columnsByKey)
-  const deps = getDependencies(col.formula, availableKeys.filter((k) => k !== key))
+  const deps = dependenciesOf(key, col, columnsByKey)
 
   const depValues = {}
   const depTraces = []
@@ -367,13 +398,16 @@ export function computeCell(key, employee, columnsByKey, memo, visiting = new Se
 // (each period's employees computed independently before summing).
 export function computeGridForEmployees(employees, effectiveColumns, columnsByKey) {
   const grid = {}
-  for (const employee of employees) {
-    const memo = new Map()
-    const row = {}
-    for (const col of effectiveColumns) {
-      row[col.key] = computeCell(col.key, employee, columnsByKey, memo)
-    }
-    grid[employee.id] = row
-  }
+  for (const employee of employees) grid[employee.id] = computeRowForEmployee(employee, effectiveColumns, columnsByKey)
   return grid
+}
+
+// One employee's row of the grid: { [columnKey]: { value, trace } }.
+export function computeRowForEmployee(employee, effectiveColumns, columnsByKey) {
+  const memo = new Map()
+  const row = {}
+  for (const col of effectiveColumns) {
+    row[col.key] = computeCell(col.key, employee, columnsByKey, memo)
+  }
+  return row
 }
