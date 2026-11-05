@@ -31,8 +31,8 @@ afterEach(() => {
   host?.remove()
   root = null
 })
-function GridProbe({ employees, columns, seen }) {
-  seen.grid = useComputedGrid(employees, columns)
+function GridProbe({ employees, columns, onGrid }) {
+  onGrid(useComputedGrid(employees, columns))
   return null
 }
 /** A live grid: `show(employees, columns)` renders (again) and returns the grid on screen. */
@@ -40,10 +40,10 @@ function liveGrid() {
   host = document.createElement('div')
   document.body.appendChild(host)
   root = createRoot(host)
-  const seen = {}
+  let grid = null
   return (employees, columns) => {
-    act(() => root.render(<GridProbe employees={employees} columns={columns} seen={seen} />))
-    return seen.grid
+    act(() => root.render(<GridProbe employees={employees} columns={columns} onGrid={(g) => (grid = g)} />))
+    return grid
   }
 }
 
