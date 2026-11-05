@@ -10,7 +10,7 @@
 // export, and the company's column setup. Each sheet is matched to a company
 // by its BRN, never by its name.
 
-import * as XLSX from 'xlsx'
+import { loadXLSX } from './excelLibraries'
 import { convertImportValue, getImportableSystemFields } from './excelImport'
 import { isoToExcelSerial } from './dates'
 import { ERROR_TEXT, isErrorCell } from './exportErrors'
@@ -58,7 +58,7 @@ function readHiddenRow(cells) {
 }
 
 // The sheet's rows exactly where the export put them, as raw cells (an Excel date is its serial number).
-function sheetRows(workbook, name) {
+function sheetRows(XLSX, workbook, name) {
   const sheet = workbook.Sheets[name]
   if (!sheet) return null
   return XLSX.utils.sheet_to_json(sheet, { header: 1, raw: true, defval: '', blankrows: true })
@@ -99,11 +99,12 @@ function sheetProblem(rows, entry, monthColumn) {
 //   { ok: true, from, to, months, companies: [...] } | { ok: false, error }
 //   each company: { sheet, brn, name, address, setup, columnKeys, columnNames, months: [{ period,
 //     cells: [[raw, ...], ...], excludedValues }], problems: [text] }
-export function readCompaniesFile(buffer) {
+export async function readCompaniesFile(buffer) {
   const bytes = new Uint8Array(ArrayBuffer.isView(buffer) ? buffer.buffer.slice(buffer.byteOffset, buffer.byteOffset + buffer.byteLength) : buffer)
   if (bytes.length < 4 || !ZIP_SIGNATURE.every((b, i) => bytes[i] === b)) {
     return { ok: false, error: 'Could not read that file. Please make sure it is a valid .xlsx file.' }
   }
+  const XLSX = await loadXLSX()
   let workbook
   try {
     workbook = XLSX.read(bytes, { type: 'array' })
@@ -152,7 +153,7 @@ export function readCompaniesFile(buffer) {
       problems.push('Its months are not the months of the file.')
       return company
     }
-    const rows = sheetRows(workbook, entry.sheet)
+    const rows = sheetRows(XLSX, workbook, entry.sheet)
     if (!rows) {
       problems.push(`Its sheet "${entry.sheet}" is not in the file.`)
       return company

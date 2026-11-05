@@ -95,7 +95,7 @@ async function target(seed) {
 }
 
 async function plan(buffer) {
-  const file = readCompaniesFile(buffer)
+  const file = await readCompaniesFile(buffer)
   expect(file.ok, file.error).toBe(true)
   const answer = await checkCompanies(file)
   expect(answer.ok, answer.error).toBe(true)
@@ -131,7 +131,7 @@ afterEach(() => {
 describe('reading the file', () => {
   test('a file made by Export is read by its hidden sheet: the companies, their months and every row', async () => {
     const { buffer } = await exported()
-    const file = readCompaniesFile(buffer)
+    const file = await readCompaniesFile(buffer)
     expect(file).toMatchObject({ ok: true, from: '2026-09', to: '2026-10' })
     expect(file.companies.map((c) => [c.brn, c.name, c.months.map((m) => [m.period, m.cells.length])])).toEqual([
       ['C00000001', 'Fake Co Ltd', [['2026-09', september.length], ['2026-10', octoberEmployees.length]]],
@@ -152,8 +152,8 @@ describe('reading the file', () => {
       effectiveColumns: [...globalColumns, ...company.columns],
       computedGrid: octoberGrid,
     })
-    expect(readCompaniesFile(await buildWorkbookBuffer(single))).toEqual({ ok: false, error: NOT_OURS })
-    expect(readCompaniesFile(new TextEncoder().encode('not a workbook'))).toEqual({
+    expect(await readCompaniesFile(await buildWorkbookBuffer(single))).toEqual({ ok: false, error: NOT_OURS })
+    expect(await readCompaniesFile(new TextEncoder().encode('not a workbook'))).toEqual({
       ok: false,
       error: 'Could not read that file. Please make sure it is a valid .xlsx file.',
     })
@@ -169,14 +169,14 @@ describe('reading the file', () => {
     // Third Fake Ltd's BRN changed to Second Fake Ltd's, in the hidden sheet.
     const hidden = wb.getWorksheet(HIDDEN_SHEET)
     hidden.getCell(4, 2).value = 'C00000002'
-    const file = readCompaniesFile(new Uint8Array(await wb.xlsx.writeBuffer()))
+    const file = await readCompaniesFile(new Uint8Array(await wb.xlsx.writeBuffer()))
     expect(file.companies.map((c) => c.problems)).toEqual([
       ['Its sheet does not match the hidden part of the file: rows were added under its TOTAL row.'],
       ['Its BRN is on more than one sheet of the file.'],
       ['Its BRN is on more than one sheet of the file.', 'Its sheet does not match the hidden part of the file: its BRN on the sheet is not the one in the hidden part of the file.'],
     ])
     hidden.getCell(4, 2).value = ''
-    const again = readCompaniesFile(new Uint8Array(await wb.xlsx.writeBuffer()))
+    const again = await readCompaniesFile(new Uint8Array(await wb.xlsx.writeBuffer()))
     expect(again.companies[2].problems).toContain('It has no BRN in the file.')
   }, 20_000)
 })

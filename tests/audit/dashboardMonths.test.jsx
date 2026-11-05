@@ -109,11 +109,44 @@ describe('which store keeps the months', () => {
   test('months asked for together are read in one load (a Totals range)', async () => {
     await open()
     const before = monthMessages().filter((m) => m.payload.params?.action === 'load').length
-    const months = await Promise.all([9, 10, 11].map((m) => dashboardStore.loadPeriod(A_ID, 2026, m)))
-    expect(months.map((m) => m.employees.length)).toEqual([septemberEmployees.length, octoberEmployees.length, 0])
+    const months = await Promise.all([8, 9, 10].map((m) => dashboardStore.loadPeriod(A_ID, 2026, m)))
+    expect(months.map((m) => m.employees.length)).toEqual([0, septemberEmployees.length, octoberEmployees.length])
     const loads = monthMessages().filter((m) => m.payload.params?.action === 'load')
     expect(loads).toHaveLength(before + 1)
-    expect(loads.at(-1).payload.params.periods).toEqual(['2026-09', '2026-10', '2026-11'])
+    expect(loads.at(-1).payload.params.periods).toEqual(['2026-08', '2026-09', '2026-10'])
+  })
+
+  test('on opening, the month on screen is read together with the lists of months, not after them', async () => {
+    hub = createFakeSetupHub(seed())
+    hub.state.delayMs = 50
+    sent = installFakeBridge(hub)
+    const asked = []
+    let answering = 0
+    let mostAtOnce = 0
+    const handle = hub.handle
+    hub.handle = async (type, payload) => {
+      if (payload.dataType === 'payroll-month' && type === 'request-data') {
+        asked.push(payload.params.action)
+        answering += 1
+        mostAtOnce = Math.max(mostAtOnce, answering)
+      }
+      try {
+        return await handle(type, payload)
+      } finally {
+        if (payload.dataType === 'payroll-month' && type === 'request-data') answering -= 1
+      }
+    }
+    const opening = connectDashboard()
+    await vi.advanceTimersByTimeAsync(1000)
+    expect((await opening).ok).toBe(true)
+    // The gate first; then both companies' lists and the month on screen at the same time.
+    expect(asked).toEqual(['gate', 'list', 'list', 'load'])
+    expect(mostAtOnce).toBe(3)
+    // That month is held: the screen gets it without asking again.
+    const { viewYear, viewMonth } = dashboardStore.loadState().companies.find((c) => c.id === A_ID)
+    const shown = dashboardStore.loadPeriod(A_ID, viewYear, viewMonth)
+    expect(shown).not.toBeInstanceOf(Promise)
+    expect(asked).toHaveLength(4)
   })
 })
 
@@ -306,7 +339,10 @@ describe('a change of key', () => {
     await open()
     expect(dashboardStore.countPeriodsHoldingKey([A_ID, B_ID], 'basicSalary')).toEqual({ periods: 3, companies: 2 })
     expect(dashboardStore.countPeriodsHoldingKey([A_ID], 'basicSalary')).toEqual({ periods: 2, companies: 1 })
-    expect(monthMessages().filter((m) => m.payload.params?.action === 'load')).toEqual([])
+    // Only the month the screen opens on was read (on opening); nothing for the counts.
+    const loads = monthMessages().filter((m) => m.payload.params?.action === 'load')
+    expect(loads).toHaveLength(1)
+    expect(loads[0].payload.params.periods).toHaveLength(1)
   })
 
   test('a Global key: ONE save of the setup and every month it reaches, in both companies; this browser untouched', async () => {

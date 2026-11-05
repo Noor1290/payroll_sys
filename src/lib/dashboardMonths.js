@@ -129,9 +129,11 @@ export const gateState = () => gate
 // ---------- connecting ----------
 
 // Asks whether the dashboard keeps months, and whether its gate is open; then
-// lists the months of every company of the user's here that they administer.
+// lists the months of every company of the user's here that they administer,
+// all at once, and at the same time reads the month about to be shown
+// (`first`: { brn, year, month }), so that it is held when the screen asks.
 //   { ok: true, supported }
-export async function connectMonths() {
+export async function connectMonths(first = null) {
   // What was typed and is not saved yet is kept; everything else is read again.
   for (const [key, entry] of months) {
     if (!pending(entry) && !entry.problem && !entry.saving) {
@@ -150,21 +152,33 @@ export async function connectMonths() {
   supported = true
   gate = answer.rows[0]?.unlocked === true ? 'open' : 'locked'
   publish()
-  if (gate === 'open') await refreshLists()
+  if (gate === 'open') {
+    const reading = first && adminOf(first.brn) ? fetchMonth(first.brn, periodKey(first.year, first.month)) : null
+    await Promise.all([refreshLists(), reading])
+  }
   return { ok: true, supported: true }
 }
 
+// At most this many lists asked for at once.
+const LISTS_AT_ONCE = 6
+
 async function refreshLists() {
-  for (const company of heldCompanies()) {
-    if (company.role !== 'admin') continue
-    const answer = await askHub({ action: 'list', brn: selectedBrn(), ...companyParam(company.brn) }, { dataType: MONTH })
-    if (answer.ok) {
-      lists.set(normaliseBrn(company.brn), new Map(answer.rows.map((row) => [row.period, row])))
-    } else if (answer.code === 'locked') {
-      noteGate(false)
-      return
+  const admin = heldCompanies().filter((company) => company.role === 'admin')
+  let next = 0
+  let locked = false
+  const one = async () => {
+    while (next < admin.length && !locked) {
+      const company = admin[next++]
+      const answer = await askHub({ action: 'list', brn: selectedBrn(), ...companyParam(company.brn) }, { dataType: MONTH })
+      if (answer.ok) {
+        lists.set(normaliseBrn(company.brn), new Map(answer.rows.map((row) => [row.period, row])))
+      } else if (answer.code === 'locked' && !locked) {
+        locked = true
+        noteGate(false)
+      }
     }
   }
+  await Promise.all(Array.from({ length: Math.min(LISTS_AT_ONCE, admin.length) }, one))
 }
 
 // The dashboard said its gate opened or locked (pushed to the app, or found out

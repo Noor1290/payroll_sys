@@ -26,7 +26,7 @@ export default function SeveralCompaniesImport({ onWorking, onClose, onImported 
   async function read(buffer) {
     setStep('reading')
     setFailure(null)
-    const file = readCompaniesFile(buffer)
+    const file = await readCompaniesFile(buffer)
     if (!file.ok) {
       setFailure({ error: file.error })
       setStep('failed')

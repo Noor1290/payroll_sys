@@ -1,4 +1,4 @@
-import * as XLSX from 'xlsx'
+import { loadXLSX } from './excelLibraries'
 import { labelColumnsForHelper } from './categories'
 import { readExcelDateCell } from './dates'
 
@@ -101,6 +101,7 @@ function isZipFile(buffer) {
 export async function parseWorkbookFile(file, knownNames = []) {
   const buffer = await file.arrayBuffer()
   if (!isZipFile(buffer)) throw new Error('Not an .xlsx workbook: it does not start with the ZIP signature.')
+  const XLSX = await loadXLSX()
   const workbook = XLSX.read(buffer, { type: 'array' })
   const meta = extractSystemMeta(workbook)
   const sheetName = workbook.SheetNames.find((n) => n !== META_SHEET_NAME) ?? workbook.SheetNames[0]

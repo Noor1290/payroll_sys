@@ -1,4 +1,4 @@
-import ExcelJS from 'exceljs'
+import { loadExcelJS } from './excelLibraries'
 import { getOrderedEffectiveColumns, getCategoryGroups } from './categories'
 import { excelNumberFormat } from './format'
 import { translateFormulaToExcel, excelColumnLetter } from './excelFormulaTranslator'
@@ -320,6 +320,7 @@ function computeColumnWidths(plan) {
 // be downloaded. Also embeds a hidden _meta sheet identifying this as a
 // system export, for automatic recognition on re-import.
 export async function buildWorkbookBuffer(plan) {
+  const ExcelJS = await loadExcelJS()
   const wb = new ExcelJS.Workbook()
   writePlanSheet(wb, 'Payroll', plan)
 

@@ -21,7 +21,7 @@
 //
 // Nothing here talks to the dashboard or touches the browser's storage.
 
-import ExcelJS from 'exceljs'
+import { loadExcelJS } from './excelLibraries'
 import { buildExportPlan, writePlanSheet } from './excelExport'
 import { ERROR_TEXT, findErrorCells } from './exportErrors'
 import { computeGridForEmployees } from './formulaEngine'
@@ -408,6 +408,7 @@ function writeHidden(wb, companies, sheetOf, { from, to, exportedAt }) {
 // The workbook, as an ArrayBuffer, and the sheet each company got.
 //   companies: what companyForFile gave, in the order chosen
 export async function buildCompaniesWorkbook({ from, to, exportedAt, companies }) {
+  const ExcelJS = await loadExcelJS()
   const wb = new ExcelJS.Workbook()
   const withSheets = companies.filter((c) => c.status === 'sheet')
   const names = sheetNamesFor(withSheets.map((c) => c.name))

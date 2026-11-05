@@ -300,7 +300,9 @@ export async function connectDashboard() {
   })
   keepOfflineCopy(company, sharedRow, companyRows.find((row) => row.selected))
   publish()
-  await connectMonths()
+  // The month the screen opens on is read together with the lists of months.
+  const shown = current.companies.find((c) => c.id === current.activeCompanyId)
+  await connectMonths(shown ? { brn: held.get(shown.id).brn, year: shown.viewYear, month: shown.viewMonth } : null)
   return { ok: true, company, empty: false }
 }
 
