@@ -61,6 +61,19 @@ describe('findSendWarnings', () => {
     expect(findSendWarnings(emps, buildPdfFillColumns(ids, extra), grid, ids).empty).toEqual([])
   })
 
+  // Owner's choice after Stage 2: realistic months leave Allowances, EDF, Govt Increment or
+  // Travelling empty on purpose, so only an empty Basic Salary is worth a word. Negative figures
+  // are still listed in every column.
+  test('an empty required input other than Basic Salary is not listed; a negative one still is', () => {
+    const travelling = columns.find((c) => c.name === 'Travelling')
+    const emps = [{ id: 'e3', values: filled({ id: 'TST003', surname: 'Gamma', basicSalary: 18000, [travelling.key]: '' }) }]
+    expect(findSendWarnings(emps, buildPdfFillColumns(ids, columns), gridOf(emps), ids).empty).toEqual([])
+    const minus = [{ id: 'e3', values: filled({ id: 'TST003', surname: 'Gamma', basicSalary: 18000, [travelling.key]: -50 }) }]
+    expect(findSendWarnings(minus, buildPdfFillColumns(ids, columns), gridOf(minus), ids).negatives).toEqual([
+      { column: 'Travelling', entries: [{ employee: 'TST003 Gamma', value: -50 }] },
+    ])
+  })
+
   test('-0.004 rounds to 0.00, so it is not negative', () => {
     const emps = [{ id: 'e1', values: filled({ id: 'TST001', surname: 'Alpha', basicSalary: -0.004 }) }]
     expect(findSendWarnings(emps, buildPdfFillColumns(ids, columns), gridOf(emps), ids).negatives).toEqual([])
