@@ -15,12 +15,15 @@ export function formatNum(n, decimals) {
   return formatDecimal(num, decimals)
 }
 
-// Four tier operators. "from" is kept as the >= equivalent for backward
-// compatibility with tiers created before "equal"/"above" existed.
+// Five tier operators. "from" is kept as the >= equivalent for backward
+// compatibility with tiers created before "equal"/"above" existed;
+// "atOrBelow" (<=, "up to and including") came in November 2026 (TODO C6).
 function testTierCondition(operator, threshold, value) {
   switch (operator) {
     case 'below':
       return value < threshold
+    case 'atOrBelow':
+      return value <= threshold
     case 'equal':
       return value === threshold
     case 'above':
@@ -35,6 +38,8 @@ function tierConditionExpr(operator, baseKey, threshold) {
   switch (operator) {
     case 'below':
       return `${baseKey} < ${threshold}`
+    case 'atOrBelow':
+      return `${baseKey} <= ${threshold}`
     case 'equal':
       return `${baseKey} === ${threshold}`
     case 'above':
@@ -50,6 +55,8 @@ function tierConditionText(operator, threshold, decimals) {
   switch (operator) {
     case 'below':
       return `below ${t}`
+    case 'atOrBelow':
+      return `${t} or below`
     case 'equal':
       return `equal to ${t}`
     case 'above':
@@ -65,7 +72,7 @@ function tierConditionText(operator, threshold, decimals) {
 // 50,000). Tie-break so the more specific comparison wins: an exact "equal"
 // tier beats a general "from"/"above" one, and "above"/"below" never
 // actually overlap with each other so their relative order doesn't matter.
-const OPERATOR_TIE_PRIORITY = { equal: 0, above: 1, below: 1, from: 2 }
+const OPERATOR_TIE_PRIORITY = { equal: 0, above: 1, below: 1, atOrBelow: 1, from: 2 }
 
 // The order tiers were evaluated in before October 2026: highest threshold
 // first, then by the tie-break priority above. Kept for columns saved with
@@ -85,11 +92,17 @@ function priorityOrderBeforeFix(tiers) {
 // one is meant. The "Below" tiers keep the places the other order gave them,
 // so nothing changes for a rule with one "Below" tier. Kept for columns
 // saved with it (see outdatedRules.js).
+// An "At or below" tier (November 2026, so in no column saved before) is
+// placed as a "Below" tier is: "Below 50,000" before "50,000 or below",
+// both before "Below 100,000".
+const BELOW_LIKE = new Set(['below', 'atOrBelow'])
 function priorityOrderBeforeEqualFix(tiers) {
   const ordered = priorityOrderBeforeFix(tiers)
-  const belowAscending = ordered.filter((t) => t.operator === 'below').sort((a, b) => (Number(a.threshold) || 0) - (Number(b.threshold) || 0))
+  const belowAscending = ordered
+    .filter((t) => BELOW_LIKE.has(t.operator))
+    .sort((a, b) => (Number(a.threshold) || 0) - (Number(b.threshold) || 0) || (a.operator === 'below' ? 0 : 1) - (b.operator === 'below' ? 0 : 1))
   let next = 0
-  return ordered.map((t) => (t.operator === 'below' ? belowAscending[next++] : t))
+  return ordered.map((t) => (BELOW_LIKE.has(t.operator) ? belowAscending[next++] : t))
 }
 
 // Tiers can be entered in any order / with any thresholds. To pick which
@@ -208,6 +221,13 @@ export function equalTierShadowed({ tiers, cap }, older) {
 
 // Thresholds that no tier covers although tiers apply just below and just
 // above them, e.g. exactly 50,000 with "Below 50,000" + "Above 50,000".
+// Whether a figure is one of those: the rule summary warns about it, and the
+// table and the breakdown say so for an employee on it (TODO C6).
+export function inTierGap(tiers, cap, value) {
+  if (isFlatRateWithCap(tiers, cap)) return false
+  return uncoveredThresholds(tiers).includes(value)
+}
+
 function uncoveredThresholds(tiers) {
   const thresholds = [...new Set(tiers.map((t) => Number(t.threshold) || 0))].sort((a, b) => a - b)
   return thresholds.filter(
@@ -299,6 +319,8 @@ export function buildTieredExplanation(tieredConfig, baseValue, baseName, result
 
   if (tiers.length > 1 && matched) {
     parts.push(`This is ${tierConditionText(matched.operator, matched.threshold, baseDecimals)} → rate: ${rate}%.`)
+  } else if (tiers.length > 1) {
+    parts.push('This matches no tier → rate: 0%.')
   }
 
   if (isCapped) {
@@ -319,6 +341,8 @@ export function buildTieredExplanation(tieredConfig, baseValue, baseName, result
     appliedValue,
     rate,
     resultValue,
+    // On a threshold no tier covers, though tiers hold just below and above it.
+    inGap: !matched && !flat && inTierGap(tiers, cap, baseValue),
   }
 }
 

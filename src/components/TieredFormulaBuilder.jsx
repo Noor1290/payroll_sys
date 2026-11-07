@@ -74,6 +74,7 @@ export default function TieredFormulaBuilder({ availableColumns, baseKey, tiers,
                 className="field w-auto max-w-full"
               >
                 <option value="below">Below</option>
+                <option value="atOrBelow">At or below</option>
                 <option value="equal">Equal to</option>
                 <option value="above">Above</option>
                 <option value="from">From</option>

@@ -169,6 +169,8 @@ const EmployeeRow = memo(function EmployeeRow({ emp, row, identityFields, idFiel
           )
         }
         const hasError = cell?.trace?.error
+        // TODO C6: on a threshold no tier covers, the figure is 0 because no tier holds - said here, not only in the column form.
+        const noTier = !hasError && cell?.trace?.tiered?.inGap
         return (
           <td key={col.key} className="overflow-hidden px-1.5 py-1">
             <button
@@ -176,12 +178,19 @@ const EmployeeRow = memo(function EmployeeRow({ emp, row, identityFields, idFiel
               className={`flex h-8 w-full min-w-0 cursor-pointer items-center justify-between gap-1 rounded-md border px-1.5 text-[13px] transition-colors ${
                 hasError
                   ? 'border-danger/40 bg-danger/10 text-danger hover:border-danger/70'
-                  : 'border-glow/25 bg-glow/10 text-fg hover:border-glow/60'
+                  : noTier
+                    ? 'border-warn/40 bg-warn/10 text-fg hover:border-warn/70'
+                    : 'border-glow/25 bg-glow/10 text-fg hover:border-glow/60'
               }`}
-              title="Click to see calculation breakdown"
+              title={noTier ? 'Matches no tier, so the rate is 0%. Click to see calculation breakdown' : 'Click to see calculation breakdown'}
             >
               {hasError ? (
                 <TriangleAlert className="h-3.5 w-3.5 shrink-0" aria-hidden="true" />
+              ) : noTier ? (
+                <>
+                  <TriangleAlert className="h-3.5 w-3.5 shrink-0 text-warn" aria-hidden="true" />
+                  <span className="sr-only">Matches no tier, so the rate is 0%.</span>
+                </>
               ) : (
                 <span className="shrink-0 text-[10px] font-semibold text-glow" aria-hidden="true">
                   fx
