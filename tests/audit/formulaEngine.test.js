@@ -14,8 +14,8 @@ import {
   computeGridForEmployees,
 } from '../../src/lib/formulaEngine'
 import { formatDecimal, roundHalfUp } from '../../src/lib/format'
-import { compileTieredFormula, compileTieredFormulaBeforeFix, describeTieredRule, resolveMatchedTier } from '../../src/lib/tieredFormula'
-import { OUTDATED_RULE_NOTES, outdatedTieredRule } from '../../src/lib/outdatedRules'
+import { compileTieredFormula, compileTieredFormulaBeforeEqualFix, compileTieredFormulaBeforeFix, describeTieredRule, resolveMatchedTier } from '../../src/lib/tieredFormula'
+import { OUTDATED_RULE_NOTES, outdatedTieredRule, savedTieredRule } from '../../src/lib/outdatedRules'
 import { compileExemptionWrapper } from '../../src/lib/exemptionCondition'
 import { input, simple, tiered, compare, progressive, checkboxExemption, computeValues, computeRow } from './build'
 
@@ -301,15 +301,36 @@ describe('tiered rules at and around a threshold', () => {
     expect(ruleAt(column, 30000)).toBe(900)
   })
 
-  // BUG (found with backlog batch A, KNOWN_ISSUES.md no. 9, not fixed): an "Equal to" tier is
-  // never reached when a "Below" tier with a higher threshold also holds for its figure, because
-  // tiers are tried highest threshold first. 30,000 gets the Below rate, 3%, not 4%.
-  test.fails('BUG: "Equal to 30,000 at 4%" next to "Below 50,000 at 3%" gives 4% for exactly 30,000', () => {
-    const column = thresholdColumn([
+  // Was known issue 9 (fixed November 2026): an "Equal to" tier was never reached when a "Below"
+  // tier with a higher threshold also held for its figure, because tiers were tried highest
+  // threshold first. 30,000 got the Below rate, 3% (900.00), not 4% (1,200.00).
+  test('"Equal to 30,000 at 4%" next to "Below 50,000 at 3%" gives 4% for exactly 30,000, and 3% next to it', () => {
+    const tiers = [
       { operator: 'equal', threshold: 30000, rate: 4 },
       { operator: 'below', threshold: 50000, rate: 3 },
-    ])
+    ]
+    const column = thresholdColumn(tiers)
     expect(ruleAt(column, 30000)).toBe(1200)
+    expect(ruleAt(column, 29999)).toBeCloseTo(899.97, 10)
+    expect(ruleAt(column, 30001)).toBeCloseTo(900.03, 10)
+    expect(resolveMatchedTier(tiers, 30000)).toEqual(tiers[0])
+    expect(computeRow([basic(), column], { basicSalary: '30000' }).rule.trace.tiered.sentence).toContain('This is equal to 30,000.00 → rate: 4%.')
+  })
+
+  test('"Equal to" also wins over a wider "Above" or "From" tier, and at its own threshold over "From"', () => {
+    const above = thresholdColumn([
+      { operator: 'above', threshold: 10000, rate: 2 },
+      { operator: 'equal', threshold: 20000, rate: 0 },
+    ])
+    expect(ruleAt(above, 20000)).toBe(0)
+    expect(ruleAt(above, 20001)).toBeCloseTo(400.02, 10)
+    const from = thresholdColumn([
+      { operator: 'from', threshold: 0, rate: 1 },
+      { operator: 'equal', threshold: 0, rate: 5 },
+      { operator: 'equal', threshold: 15000, rate: 3 },
+    ])
+    expect(ruleAt(from, 15000)).toBe(450)
+    expect(ruleAt(from, 15001)).toBeCloseTo(150.01, 10)
   })
 
   test('three "Below" tiers and a "From": each figure gets the narrowest tier it is in, in any order of entry', () => {
@@ -428,7 +449,71 @@ describe('a tiered column saved before the M1 / M2 fixes', () => {
     expect(OUTDATED_RULE_NOTES).toEqual({
       below: "Figures use the old rule, which picked the wrong 'Below' tier. Open and save this column to apply the corrected rule. Its figures will change.",
       cap: "Figures use the old rule, which ignored this tier's condition because of the cap. Open and save this column to apply the corrected rule. Its figures will change.",
+      equal: "Figures use the old rule, which let a wider tier win over an 'Equal to' tier. Open and save this column to apply the corrected rule. Its figures will change.",
     })
+  })
+})
+
+describe('a tiered column saved before the "Equal to" fix (known issue 9)', () => {
+  // As it was stored from October to November 2026: the tiers, and the formula that rule compiled.
+  const savedBeforeEqualFix = (tiers, cap = null) => {
+    const state = { baseKey: 'basicSalary', tiers, cap }
+    return { ...tiered('Rule', 'rule', state), formula: compileTieredFormulaBeforeEqualFix(state) }
+  }
+  const shadowed = [
+    { operator: 'equal', threshold: 30000, rate: 4 },
+    { operator: 'below', threshold: 50000, rate: 3 },
+  ]
+
+  test('keeps its figure, is flagged, and its breakdown explains the rule the figure came from', () => {
+    const column = savedBeforeEqualFix(shadowed)
+    expect(savedTieredRule(column)).toEqual({ rule: 'beforeEqualFix', reason: 'equal' })
+    expect(outdatedTieredRule(column)).toBe('equal')
+    const row = computeRow([basic(), column], { basicSalary: '30000' })
+    expect(row.rule.value).toBe(900)
+    expect(row.rule.trace.tiered.sentence).toContain('This is below 50,000.00 → rate: 3%.')
+  })
+
+  test('saved before October too, it is flagged for the "Equal to" tier when nothing else changed', () => {
+    // 1.1% was written 0.011000000000000001 by the rule before October, so that formula is its own.
+    const tiers = [
+      { operator: 'equal', threshold: 30000, rate: 4 },
+      { operator: 'below', threshold: 50000, rate: 1.1 },
+    ]
+    const state = { baseKey: 'basicSalary', tiers, cap: null }
+    const column = { ...tiered('Rule', 'rule', state), formula: compileTieredFormulaBeforeFix(state) }
+    expect(column.formula).not.toBe(compileTieredFormulaBeforeEqualFix(state))
+    expect(savedTieredRule(column)).toEqual({ rule: 'beforeFix', reason: 'equal' })
+    const row = computeRow([basic(), column], { basicSalary: '30000' })
+    expect(row.rule.value).toBeCloseTo(330, 10)
+    expect(row.rule.trace.tiered.sentence).toContain('This is below 50,000.00 → rate: 1.1%.')
+  })
+
+  test('saved again, it gets 4% for exactly 30,000 and is no longer flagged', () => {
+    const column = thresholdColumn(shadowed)
+    expect(savedTieredRule(column)).toBeNull()
+    expect(ruleAt(column, 30000)).toBe(1200)
+  })
+
+  test('an "Equal to" tier nothing else covers, or at the same rate, is never flagged', () => {
+    const alone = [
+      { operator: 'equal', threshold: 30000, rate: 4 },
+      { operator: 'above', threshold: 50000, rate: 3 },
+    ]
+    const sameRate = [
+      { operator: 'equal', threshold: 30000, rate: 3 },
+      { operator: 'below', threshold: 50000, rate: 3 },
+    ]
+    expect(outdatedTieredRule(savedBeforeEqualFix(alone))).toBeNull()
+    expect(outdatedTieredRule(savedBeforeEqualFix(sameRate))).toBeNull()
+    expect(outdatedTieredRule(savedBeforeEqualFix([{ operator: 'from', threshold: 0, rate: 1 }], 29710))).toBeNull()
+  })
+
+  test('the figures change only for the exact figure of the "Equal to" tier', () => {
+    const before = savedBeforeEqualFix(shadowed)
+    const after = thresholdColumn(shadowed)
+    for (const value of [0, 1, 29999.99, 30000.01, 49999, 50000, 80000]) expect(ruleAt(after, value)).toBe(ruleAt(before, value))
+    expect([ruleAt(before, 30000), ruleAt(after, 30000)]).toEqual([900, 1200])
   })
 })
 

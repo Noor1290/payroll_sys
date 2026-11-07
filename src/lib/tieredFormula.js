@@ -79,19 +79,32 @@ function priorityOrderBeforeFix(tiers) {
   })
 }
 
-// Tiers can be entered in any order / with any thresholds. To pick which
-// tier applies to a given value unambiguously, tiers are evaluated
-// highest-threshold-first, then by the tie-break priority above - except
-// that among "Below" tiers the narrowest (lowest threshold) is evaluated
-// first: "Below 50,000" and "Below 100,000" both hold for 30,000, and the
-// narrower one is meant. The "Below" tiers keep the places the other order
-// gave them, so nothing changes for a rule with one "Below" tier.
-export function resolvePriorityOrder(tiers) {
+// The order from October to November 2026: the order above, except that
+// among "Below" tiers the narrowest (lowest threshold) is evaluated first:
+// "Below 50,000" and "Below 100,000" both hold for 30,000, and the narrower
+// one is meant. The "Below" tiers keep the places the other order gave them,
+// so nothing changes for a rule with one "Below" tier. Kept for columns
+// saved with it (see outdatedRules.js).
+function priorityOrderBeforeEqualFix(tiers) {
   const ordered = priorityOrderBeforeFix(tiers)
   const belowAscending = ordered.filter((t) => t.operator === 'below').sort((a, b) => (Number(a.threshold) || 0) - (Number(b.threshold) || 0))
   let next = 0
   return ordered.map((t) => (t.operator === 'below' ? belowAscending[next++] : t))
 }
+
+// Tiers can be entered in any order / with any thresholds. To pick which
+// tier applies to a given value unambiguously, an "Equal to" tier is tried
+// first: it names one exact figure, so it is meant for that figure even when
+// a wider "Below", "Above" or "From" tier also holds for it (known issue 9).
+// The other tiers follow in the order above.
+export function resolvePriorityOrder(tiers) {
+  const ordered = priorityOrderBeforeEqualFix(tiers)
+  return [...ordered.filter((t) => t.operator === 'equal'), ...ordered.filter((t) => t.operator !== 'equal')]
+}
+
+// The tier orders a saved column can still be calculated with: 'now', or
+// the older ones its saved formula may still hold (see outdatedRules.js).
+const ORDERS = { now: resolvePriorityOrder, beforeEqualFix: priorityOrderBeforeEqualFix, beforeFix: priorityOrderBeforeFix }
 
 function matchInOrder(ordered, value) {
   for (const tier of ordered) {
@@ -127,11 +140,21 @@ function isFlatRateWithCap(tiers, cap) {
 
 // Compiles { baseKey, tiers, cap } into a plain JS-like expression, e.g.
 // "(Math.min(basicSalary, 29710)) * (basicSalary >= 0 ? 0.01 : 0)"
-export function compileTieredFormula({ baseKey, tiers, cap }) {
+export function compileTieredFormula(state) {
+  return compileInOrder(state, resolvePriorityOrder)
+}
+
+// The formula as compiled from October to November 2026, exactly: only to
+// recognise a column still saved with it (see outdatedRules.js).
+export function compileTieredFormulaBeforeEqualFix(state) {
+  return compileInOrder(state, priorityOrderBeforeEqualFix)
+}
+
+function compileInOrder({ baseKey, tiers, cap }, order) {
   const valueExpr = hasCapValue(cap) ? `Math.min(${baseKey}, ${Number(cap)})` : baseKey
   if (isFlatRateWithCap(tiers, cap)) return `(${valueExpr}) * (${rateFraction(tiers[0].rate)})`
 
-  const ordered = resolvePriorityOrder(tiers)
+  const ordered = order(tiers)
   let rateExpr = '0'
   for (let i = ordered.length - 1; i >= 0; i--) {
     const tier = ordered[i]
@@ -170,6 +193,17 @@ export function oldRuleShape({ tiers, cap }) {
   if (differ((t) => t.threshold) && differ((t) => t.rate)) return 'below'
   if (tiers.length === 1 && hasCapValue(cap) && !isFlatRateWithCap(tiers, cap)) return 'cap'
   return null
+}
+
+// Whether an older order ('beforeFix' or 'beforeEqualFix') gives some
+// "Equal to" tier's own figure another rate than the order now: a wider tier
+// that also holds for that figure was tried first (known issue 9).
+export function equalTierShadowed({ tiers, cap }, older) {
+  if (isFlatRateWithCap(tiers, cap)) return false
+  const rateAt = (order, value) => Number(matchInOrder(order(tiers), value)?.rate) || 0
+  return tiers
+    .filter((t) => t.operator === 'equal')
+    .some((t) => rateAt(ORDERS[older], Number(t.threshold) || 0) !== rateAt(resolvePriorityOrder, Number(t.threshold) || 0))
 }
 
 // Thresholds that no tier covers although tiers apply just below and just
@@ -243,18 +277,20 @@ export function describeTieredRule(baseName, tiers, cap) {
 // column's own configured decimal places, respectively, so each value in
 // the sentence rounds to its own column's setting.
 //
-// beforeFix: the column is still saved with the formula of the old rule
-// (see outdatedRules.js), so it is explained by that rule, the one its
-// figure comes from.
-export function buildTieredExplanation(tieredConfig, baseValue, baseName, resultValue, baseDecimals = 2, resultDecimals = 2, beforeFix = false) {
+// savedRule: 'now', or the older rule the column is still saved with
+// ('beforeFix' or 'beforeEqualFix', see outdatedRules.js), so it is
+// explained by that rule, the one its figure comes from.
+// (true and false, as passed before November 2026, mean 'beforeFix' and 'now'.)
+export function buildTieredExplanation(tieredConfig, baseValue, baseName, resultValue, baseDecimals = 2, resultDecimals = 2, saved = 'now') {
+  const savedRule = saved === true ? 'beforeFix' : saved === false ? 'now' : saved
   const { tiers, cap } = tieredConfig
   const hasCap = hasCapValue(cap)
   // Mirrors compileTieredFormula's own special case: a flat rate + a cap
   // always applies that tier's rate (the cap only limits the base), so the
   // breakdown must resolve the rate the same way the compiled expression
   // actually did, not via the normal below/above tier lookup.
-  const flat = beforeFix ? tiers.length === 1 && hasCap : isFlatRateWithCap(tiers, cap)
-  const matched = flat ? tiers[0] : matchInOrder(beforeFix ? priorityOrderBeforeFix(tiers) : resolvePriorityOrder(tiers), baseValue)
+  const flat = savedRule === 'beforeFix' ? tiers.length === 1 && hasCap : isFlatRateWithCap(tiers, cap)
+  const matched = flat ? tiers[0] : matchInOrder((ORDERS[savedRule] ?? resolvePriorityOrder)(tiers), baseValue)
   const isCapped = hasCap && baseValue > Number(cap)
   const appliedValue = isCapped ? Number(cap) : baseValue
   const rate = matched ? Number(matched.rate) || 0 : 0

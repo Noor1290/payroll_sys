@@ -10,7 +10,7 @@ import { createRoot } from 'react-dom/client'
 import { afterEach, expect, test, vi } from 'vitest'
 import ColumnManager from '../../src/components/ColumnManager'
 import { getColumnsByKey } from '../../src/lib/model'
-import { compileTieredFormulaBeforeFix } from '../../src/lib/tieredFormula'
+import { compileTieredFormulaBeforeEqualFix, compileTieredFormulaBeforeFix } from '../../src/lib/tieredFormula'
 import { input, simple, tiered } from './build'
 
 globalThis.IS_REACT_ACT_ENVIRONMENT = true
@@ -76,6 +76,23 @@ test('a Tiered column still saved with the old rule is flagged in the column lis
     "Old CappedFigures use the old rule, which ignored this tier's condition because of the cap. Open and save this column to apply the corrected rule. Its figures will change."
   )
   for (const name of ['Basic Salary', 'New Levy', 'NSF Like']) expect(rowOf(name).querySelector('td:nth-child(2)').textContent).toBe(name)
+})
+
+test('a Tiered column still saved with an "Equal to" tier that a wider tier hid is flagged; saved again, it is not (known issue 9)', async () => {
+  const shadowed = [
+    { operator: 'equal', threshold: 30000, rate: 4 },
+    { operator: 'below', threshold: 50000, rate: 3 },
+  ]
+  const state = { baseKey: 'basicSalary', tiers: shadowed, cap: null }
+  await showColumns([
+    input('Basic Salary', 'basicSalary'),
+    { ...tiered('Old Equal', 'oldEqual', state), formula: compileTieredFormulaBeforeEqualFix(state) },
+    tiered('New Equal', 'newEqual', state),
+  ])
+  expect(rowOf('Old Equal').querySelector('td:nth-child(2)').textContent).toBe(
+    "Old EqualFigures use the old rule, which let a wider tier win over an 'Equal to' tier. Open and save this column to apply the corrected rule. Its figures will change."
+  )
+  expect(rowOf('New Equal').querySelector('td:nth-child(2)').textContent).toBe('New Equal')
 })
 
 function typeInto(field, value) {

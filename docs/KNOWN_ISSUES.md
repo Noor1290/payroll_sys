@@ -200,7 +200,7 @@ again, alone and in full, it passed.
 **To decide.** If it times out again, make the test faster (for example fewer columns opened per
 run, or a shorter save delay under test). Do not raise the limit, and do not cut what it checks.
 
-## 9. An "Equal to" tier can be shadowed by a "Below" tier with a higher threshold
+## 9. An "Equal to" tier can be shadowed by a "Below" tier with a higher threshold (fixed 7 November 2026)
 
 Found while fixing audit M1 (16 October 2026); not part of that fix, so not changed.
 
@@ -215,6 +215,17 @@ gives 4% for exactly 30,000"); it passes only while the bug is there.
 **To decide.** Whether an "Equal to" tier should always win over a "Below" or "Above" tier that
 also holds for its figure. Fixing it changes figures for any column with that shape, so it needs
 the same treatment as M1 (fixed on save, flagged until then).
+
+**Fixed (7 November 2026, branch `cleanup`, the owner's choice).** An "Equal to" tier is now tried
+first, so it always wins for its own figure; the other tiers keep their order. A column saved
+before keeps its figures until it is opened and saved again, and until then it is flagged in the
+column list ("Figures use the old rule, which let a wider tier win over an 'Equal to' tier. ...")
+and its breakdown explains the rule its figure came from, as for M1. Only the exact figure of
+such an "Equal to" tier changes: in the example, 30,000 goes from 900.00 to 1,200.00 once saved
+again; 29,999.99 and 30,000.01 do not change. No column of the fake data has this shape, so no
+recorded figure changed. Tests: `tests/audit/formulaEngine.test.js` (the marked failing test is now
+a normal one, and "a tiered column saved before the "Equal to" fix") and
+`tests/audit/tierFixScreens.test.jsx`.
 
 ## The text check stopped working once the month changed (fixed 1 November 2026)
 

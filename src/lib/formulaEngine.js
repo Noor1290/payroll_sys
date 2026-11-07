@@ -6,7 +6,7 @@ import { buildTieredExplanation, buildCompareExplanation } from './tieredFormula
 import { buildProgressiveExplanation } from './progressiveFormula'
 import { evaluateExemptionCondition, buildExemptionExplanation } from './exemptionCondition'
 import { formatDecimal } from './format'
-import { outdatedTieredRule } from './outdatedRules'
+import { savedTieredRule } from './outdatedRules'
 import { dateValue } from './dates'
 
 // Identifiers that are safe to leave unresolved in an expression (global
@@ -360,7 +360,7 @@ export function computeCell(key, employee, columnsByKey, memo, visiting = new Se
         const baseValue = depValues[col.tiered.baseKey] ?? 0
         const baseName = columnsByKey[col.tiered.baseKey]?.name ?? col.tiered.baseKey
         const baseDecimals = columnsByKey[col.tiered.baseKey]?.decimals ?? 2
-        tiered = buildTieredExplanation(col.tiered, baseValue, baseName, value, baseDecimals, decimals, outdatedTieredRule(col) !== null)
+        tiered = buildTieredExplanation(col.tiered, baseValue, baseName, value, baseDecimals, decimals, savedTieredRule(col)?.rule ?? 'now')
       }
     } else if (col.builderMode === 'progressive' && col.progressive) {
       const baseValue = depValues[col.progressive.baseKey] ?? 0
