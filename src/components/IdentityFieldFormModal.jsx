@@ -97,6 +97,12 @@ export default function IdentityFieldFormModal({ initial, existingKeys, isIdFiel
             aria-label="Key"
             placeholder="employeeCode"
           />
+          {/* TODO C18 (rehearsal L1): a renamed field keeps its key, and nothing said so. */}
+          {isEdit && name.trim() !== initial.name && key.trim() === initial.key && (
+            <p data-testid="key-kept" className="hint">
+              Renaming keeps the key &ldquo;{initial.key}&rdquo;, so the saved values stay where they are. Change the key too only if you want it to match the new name.
+            </p>
+          )}
         </div>
 
         <div>
