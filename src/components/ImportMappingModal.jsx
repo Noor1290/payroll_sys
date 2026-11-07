@@ -71,6 +71,8 @@ function ImportSummary({ plan, monthCount, idFieldName, removeMissing, onRemoveM
 export default function ImportMappingModal({
   headers,
   rows,
+  // Each row's number in Excel (TODO C9), so the summary names the rows Excel shows.
+  rowNumbers = null,
   systemFields,
   initialMapping,
   recognized,
@@ -87,8 +89,8 @@ export default function ImportMappingModal({
   const plan = useMemo(() => {
     let n = 0
     const makeId = () => `preview-${++n}`
-    return planMonthImport({ rows, systemFields, mapping, meta, existing: existingEmployees, idFieldKey, identityFields, makeId })
-  }, [rows, systemFields, mapping, meta, existingEmployees, idFieldKey, identityFields])
+    return planMonthImport({ rows, rowNumbers, systemFields, mapping, meta, existing: existingEmployees, idFieldKey, identityFields, makeId })
+  }, [rows, rowNumbers, systemFields, mapping, meta, existingEmployees, idFieldKey, identityFields])
   const idFieldName = identityFields.find((f) => f.key === idFieldKey)?.name ?? 'ID'
   const removing = removeMissing ? plan.removals.length : 0
   const changes = plan.updates.length + plan.additions.length + removing
@@ -111,7 +113,7 @@ export default function ImportMappingModal({
 
   // Number cells in the WHOLE file (not just the previewed rows) that cannot
   // be read as numbers. They are left blank on import, never written as 0.
-  const unreadable = useMemo(() => findUnreadableValues({ rows, systemFields, mapping, meta }), [rows, systemFields, mapping, meta])
+  const unreadable = useMemo(() => findUnreadableValues({ rows, rowNumbers, systemFields, mapping, meta }), [rows, rowNumbers, systemFields, mapping, meta])
   const unreadableNumbers = unreadable.filter((u) => !u.date)
   const unreadableDates = unreadable.filter((u) => u.date)
 

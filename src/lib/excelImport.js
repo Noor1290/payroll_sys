@@ -107,6 +107,8 @@ export async function parseWorkbookFile(file, knownNames = []) {
   const sheetName = workbook.SheetNames.find((n) => n !== META_SHEET_NAME) ?? workbook.SheetNames[0]
   const sheet = workbook.Sheets[sheetName]
   const allRows = XLSX.utils.sheet_to_json(sheet, { header: 1, raw: true, defval: '' })
+  // The sheet's first row as Excel numbers it: allRows[0] is Excel row firstRow (TODO C9).
+  const firstRow = sheet?.['!ref'] ? XLSX.utils.decode_range(sheet['!ref']).s.r + 1 : 1
 
   const headerRowIndex = (meta && SYSTEM_EXPORT_HEADER_ROW_INDEX[meta.version]) ?? findHeaderRowIndex(allRows, knownNames)
   const headerRow = allRows[headerRowIndex] ?? []
@@ -127,10 +129,14 @@ export async function parseWorkbookFile(file, knownNames = []) {
   // one of those.
   const dataStart = headerRowIndex + 1
   const rowCount = Number.isInteger(meta?.rowCount) && meta.rowCount >= 0 ? meta.rowCount : null
-  const rows = allRows
+  const read = allRows
     .slice(dataStart, rowCount === null ? undefined : dataStart + rowCount)
-    .filter((r) => r.some(isNonEmptyCell))
-    .filter((r) => !(meta && rowCount === null && r[0] === 'TOTAL'))
+    .map((cells, i) => ({ cells, excelRow: firstRow + dataStart + i }))
+    .filter(({ cells }) => cells.some(isNonEmptyCell))
+    .filter(({ cells }) => !(meta && rowCount === null && cells[0] === 'TOTAL'))
+  const rows = read.map((r) => r.cells)
+  // Each row's number in Excel, so that a message names the row Excel shows (TODO C9).
+  const rowNumbers = read.map((r) => r.excelRow)
 
   if (import.meta.env.DEV) {
     const sample = rows.slice(0, 3).map((row) => Object.fromEntries(headers.map((h, i) => [h, row[i]])))
@@ -138,7 +144,7 @@ export async function parseWorkbookFile(file, knownNames = []) {
     console.debug('[excelImport] first parsed rows (as objects):', sample)
   }
 
-  return { headers, rows, meta }
+  return { headers, rows, meta, rowNumbers }
 }
 
 // Builds the system-field list a company can import into: every identity
@@ -347,7 +353,7 @@ function rawValuesForRow(row, rowIndex, systemFields, mapping, meta) {
 // Every Number cell in the file that cannot be read as a number, as
 // [{ rowIndex, employee, field, raw }] - shown in the import preview before
 // anything is imported, and again in the summary afterwards.
-export function findUnreadableValues({ rows, systemFields, mapping, meta }) {
+export function findUnreadableValues({ rows, rowNumbers = null, systemFields, mapping, meta }) {
   const identity = systemFields.filter((f) => f.kind === 'identity')
   const found = []
   projectRows(rows, systemFields, mapping).forEach((row, rowIndex) => {
@@ -361,7 +367,7 @@ export function findUnreadableValues({ rows, systemFields, mapping, meta }) {
       if (convertImportValue(field, raw[field.key]).unreadable) {
         found.push({
           rowIndex,
-          employee: who || `Row ${rowIndex + 1}`,
+          employee: who || `Row ${rowNumbers?.[rowIndex] ?? rowIndex + 1}`,
           field: field.label ?? field.name,
           raw: String(raw[field.key]),
           ...(field.valueType === 'date' ? { date: true } : {}),
@@ -422,8 +428,9 @@ export function describeEmployee(values, identityFields) {
 //     no ID, or a second row with an ID used earlier in the file;
 //   - notUpdated: IDs that are in the month twice already, so it is not clear which to update.
 // Without an ID field nobody can be matched: every row is an addition (totals lines still skipped).
-// Row numbers are the file rows' positions among the rows read (1 = first row under the headers).
-export function planMonthImport({ rows, systemFields, mapping, meta, existing, idFieldKey, identityFields, makeId }) {
+// Row numbers are the rows' numbers in Excel (`rowNumbers`, from parseWorkbookFile); without them,
+// their positions among the rows read (1 = first row under the headers).
+export function planMonthImport({ rows, rowNumbers = null, systemFields, mapping, meta, existing, idFieldKey, identityFields, makeId }) {
   const projected = projectRows(rows, systemFields, mapping)
   const imported = buildImportedEmployees({ rows, systemFields, mapping, makeId, meta })
   const mappedKeys = systemFields
@@ -441,7 +448,7 @@ export function planMonthImport({ rows, systemFields, mapping, meta, existing, i
   const plan = { updates: [], additions: [], removals: [], skipped: [], notUpdated: [], mappedKeys }
   const seenInFile = new Map()
   imported.forEach((employee, rowIndex) => {
-    const row = rowIndex + 1
+    const row = rowNumbers?.[rowIndex] ?? rowIndex + 1
     if (isTotalsRow(rows[rowIndex])) return plan.skipped.push({ row, reason: 'total', label: 'TOTAL' })
     if (!idFieldKey) return plan.additions.push({ row, employee, label: name(employee.values) || `Row ${row}` })
     const id = idOf(projected[rowIndex])

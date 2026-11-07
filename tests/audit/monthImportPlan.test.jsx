@@ -13,6 +13,7 @@ import EmployeeTable from '../../src/components/EmployeeTable'
 import ImportMappingModal from '../../src/components/ImportMappingModal'
 import { applyMonthImport, getImportableSystemFields, guessMapping, parseWorkbookFile, planMonthImport } from '../../src/lib/excelImport'
 import { computeGridForEmployees } from '../../src/lib/formulaEngine'
+import { buildExportPlan, buildWorkbookBuffer, SHEET_ROWS } from '../../src/lib/excelExport'
 import { getColumnsByKey } from '../../src/lib/model'
 import { identityFields, idFieldKey, input } from './build'
 
@@ -45,10 +46,10 @@ const octoberFile = () =>
   ])
 
 async function planFor(bytes, existing, opts = {}) {
-  const { headers, rows, meta } = await parseWorkbookFile(asFile(bytes), fields.map((f) => f.name))
+  const { headers, rows, meta, rowNumbers } = await parseWorkbookFile(asFile(bytes), fields.map((f) => f.name))
   let n = 0
   const mapping = { ...guessMapping(fields, headers), ...(opts.mapping ?? {}) }
-  return { rows, mapping, meta, plan: planMonthImport({ rows, systemFields: fields, mapping, meta, existing, idFieldKey, identityFields, makeId: () => `new-${++n}` }) }
+  return { rows, mapping, meta, plan: planMonthImport({ rows, rowNumbers, systemFields: fields, mapping, meta, existing, idFieldKey, identityFields, makeId: () => `new-${++n}` }) }
 }
 
 describe('Import from Excel into a month that has employees (rehearsal fix F2)', () => {
@@ -60,7 +61,8 @@ describe('Import from Excel into a month that has employees (rehearsal fix F2)',
     ])
     expect(plan.additions.map((a) => a.label)).toEqual(['TST009 Nueve'])
     expect(plan.removals.map((r) => r.label)).toEqual(['TST008 Ocho'])
-    expect(plan.skipped).toEqual([{ row: 4, reason: 'total', label: 'TOTAL' }])
+    // Row 6 in Excel: the banner is row 1 and the headers row 2 (TODO C9: it said "row 4").
+    expect(plan.skipped).toEqual([{ row: 6, reason: 'total', label: 'TOTAL' }])
   })
 
   test('applied: same people in place, changed figures updated, unmapped values kept, the new person added; the leaver stays unless asked', async () => {
@@ -88,9 +90,9 @@ describe('Import from Excel into a month that has employees (rehearsal fix F2)',
     ])
     const { plan } = await planFor(bytes, month())
     expect(plan.skipped).toEqual([
-      { row: 2, reason: 'no-id', label: 'Nadie' },
-      { row: 3, reason: 'repeated', label: 'TST001 Uno', firstRow: 1 },
-      { row: 4, reason: 'total', label: 'TOTAL' },
+      { row: 3, reason: 'no-id', label: 'Nadie' },
+      { row: 4, reason: 'repeated', label: 'TST001 Uno', firstRow: 2 },
+      { row: 5, reason: 'total', label: 'TOTAL' },
     ])
     expect(plan.updates.map((u) => u.patch.basicSalary)).toEqual([19000])
   })
@@ -98,11 +100,41 @@ describe('Import from Excel into a month that has employees (rehearsal fix F2)',
   test('an ID that is in the month twice already is not updated (which copy?); a totals line in an empty month is skipped too', async () => {
     const twice = [...month(), { id: 'm4', values: { id: 'TST001', name: 'Uno', surname: 'Copy', basicSalary: 18000 } }]
     const { plan } = await planFor(octoberFile(), twice)
-    expect(plan.notUpdated).toEqual([{ row: 1, id: 'TST001', label: 'TST001 Uno', copies: 2 }])
+    expect(plan.notUpdated).toEqual([{ row: 3, id: 'TST001', label: 'TST001 Uno', copies: 2 }])
     expect(plan.updates.map((u) => u.label)).toEqual(['TST002 Dos'])
     const empty = await planFor(octoberFile(), [])
     expect(empty.plan.additions.map((a) => a.label)).toEqual(['TST001 Uno', 'TST002 Dos', 'TST009 Nueve'])
     expect(empty.plan.skipped.map((s) => s.reason)).toEqual(['total'])
+  })
+
+  test('rows are named by their number in Excel, past an empty row and when the sheet does not start at A1 (TODO C9)', async () => {
+    const wb = XLSX.utils.book_new()
+    const sheet = XLSX.utils.aoa_to_sheet(
+      [
+        ['ID', 'Name', 'Surname', 'Basic Salary'],
+        ['TST001', 'Uno', 'Tester', 19000],
+        [],
+        ['', 'Nadie', 'Tester', 5000],
+        ['Total', '', '', 24000],
+      ],
+      { origin: 'B3' }
+    )
+    XLSX.utils.book_append_sheet(wb, sheet, 'October')
+    const { plan } = await planFor(XLSX.write(wb, { type: 'array', bookType: 'xlsx' }), month())
+    expect(plan.updates.map((u) => u.row)).toEqual([4])
+    expect(plan.skipped).toEqual([
+      { row: 6, reason: 'no-id', label: 'Nadie' },
+      { row: 7, reason: 'total', label: 'TOTAL' },
+    ])
+  })
+
+  test('the rows of a file this app exported are named by their number in Excel too', async () => {
+    const people = month()
+    const plan = buildExportPlan({ title: 'TEST Co A', companyId: 'test-co-a', employees: people, identityFields, effectiveColumns: columns, computedGrid: computeGridForEmployees(people, columns, getColumnsByKey(columns)) })
+    const bytes = await buildWorkbookBuffer(plan)
+    const { rowNumbers, rows } = await parseWorkbookFile(asFile(bytes), fields.map((f) => f.name))
+    expect(rows.map((r) => r[0])).toEqual(['TST001', 'TST002', 'TST008'])
+    expect(rowNumbers).toEqual([SHEET_ROWS.dataStart, SHEET_ROWS.dataStart + 1, SHEET_ROWS.dataStart + 2])
   })
 })
 
@@ -122,12 +154,13 @@ async function show(element) {
 const text = (el) => el.textContent.replace(/\s+/g, ' ').trim()
 
 test('the import dialog says what it will do before anything changes, and removes the leaver only when ticked (F2)', async () => {
-  const { headers, rows, meta } = await parseWorkbookFile(asFile(octoberFile()), fields.map((f) => f.name))
+  const { headers, rows, meta, rowNumbers } = await parseWorkbookFile(asFile(octoberFile()), fields.map((f) => f.name))
   const onConfirm = vi.fn()
   await show(
     <ImportMappingModal
       headers={headers}
       rows={rows}
+      rowNumbers={rowNumbers}
       systemFields={fields}
       meta={meta}
       existingEmployees={month()}
@@ -140,7 +173,7 @@ test('the import dialog says what it will do before anything changes, and remove
   const summary = document.querySelector('[data-testid="import-summary"]')
   expect([...summary.children].map(text).join(' ')).toBe(
     'This month already has 3 employees. People are matched by ID. Update 2 existing: TST001 Uno, TST002 Dos. Add 1 new: TST009 Nueve. ' +
-      'Also remove 1 not in the file: TST008 Ocho. Not imported: row 4 (“TOTAL”, a totals line).'
+      'Also remove 1 not in the file: TST008 Ocho. Not imported: row 6 (“TOTAL”, a totals line).'
   )
   const removeBox = summary.querySelector('input[type=checkbox]')
   expect(removeBox.checked).toBe(false)

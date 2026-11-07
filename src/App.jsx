@@ -829,12 +829,12 @@ function PayrollApp({ onRestored, inDashboard = false, offline = null, onReloadD
     if (!file || !activeCompanyId) return
     try {
       const systemFields = getImportableSystemFields(identityFields, effectiveColumns)
-      const { headers, rows, meta } = await parseWorkbookFile(file, systemFields.flatMap((f) => [f.name, f.label]))
+      const { headers, rows, meta, rowNumbers } = await parseWorkbookFile(file, systemFields.flatMap((f) => [f.name, f.label]))
       const allCurrentKeys = new Set([...identityFields.map((f) => f.key), ...effectiveColumns.map((c) => c.key)])
       const recognized = isRecognizedExport(meta, activeCompanyId, allCurrentKeys)
       const initialMapping = resolveImportMapping(systemFields, headers, meta)
       const autoNote = recognized ? null : describeUnrecognizedMeta(meta, activeCompanyId, allCurrentKeys)
-      setImportData({ headers, rows, systemFields, initialMapping, recognized, autoNote, meta })
+      setImportData({ headers, rows, rowNumbers, systemFields, initialMapping, recognized, autoNote, meta })
     } catch (err) {
       console.error('Failed to read Excel file:', err)
       setImportError('Could not read that file. Please make sure it is a valid .xlsx file.')
@@ -849,6 +849,7 @@ function PayrollApp({ onRestored, inDashboard = false, offline = null, onReloadD
     const planFor = (existing) =>
       planMonthImport({
         rows: importData.rows,
+        rowNumbers: importData.rowNumbers,
         systemFields: importData.systemFields,
         mapping,
         meta: importData.meta,
@@ -862,6 +863,7 @@ function PayrollApp({ onRestored, inDashboard = false, offline = null, onReloadD
     // 0 - the same list the preview showed, repeated here after the import.
     const unreadable = findUnreadableValues({
       rows: importData.rows,
+      rowNumbers: importData.rowNumbers,
       systemFields: importData.systemFields,
       mapping,
       meta: importData.meta,
@@ -1307,6 +1309,7 @@ function PayrollApp({ onRestored, inDashboard = false, offline = null, onReloadD
         <ImportMappingModal
           headers={importData.headers}
           rows={importData.rows}
+          rowNumbers={importData.rowNumbers}
           systemFields={importData.systemFields}
           initialMapping={importData.initialMapping}
           recognized={importData.recognized}
