@@ -84,10 +84,12 @@ export function formatCompanyDetailsLine(details) {
 // see `hiddenColumns`/`excludedValues` below and buildWorkbookBuffer.
 export function buildExportPlan({
   title,
+  companyNameForFile = null,
   companyId,
   companyDetails,
   kind = 'period',
   exportMode = 'values',
+  months = null,
   employees,
   identityFields,
   effectiveColumns,
@@ -228,6 +230,7 @@ export function buildExportPlan({
 
   return {
     companyName: title || 'Company',
+    fileName: exportFileName({ companyName: companyNameForFile ?? title, kind, exportMode, months }),
     exportDateLabel,
     companyDetails: companyDetails ?? null,
     showCompanyDetails: false,
@@ -542,8 +545,19 @@ function downloadBuffer(buffer, filename) {
   URL.revokeObjectURL(url)
 }
 
+// The name of a downloaded file: the company, the kind, the month (or
+// months) and, for one month, whether its figures are values or live
+// formulas (audit L5), e.g. "ABC Co Ltd - Payroll 2026-09 (values).xlsx"
+// or "ABC Co Ltd - Totals 2026-01 to 2026-03.xlsx". `months` is
+// { from, to } as "YYYY-MM"; without it the name has no month.
+export function exportFileName({ companyName, kind = 'period', exportMode = 'values', months = null }) {
+  const safeName = String(companyName || 'company').replace(/[^a-z0-9_\- ]/gi, '').replace(/\s+/g, ' ').trim() || 'company'
+  const span = months ? (months.from === months.to ? ` ${months.from}` : ` ${months.from} to ${months.to}`) : ''
+  if (kind === 'totals') return `${safeName} - Totals${span}.xlsx`
+  return `${safeName} - Payroll${span} (${exportMode === 'formulas' ? 'formulas' : 'values'}).xlsx`
+}
+
 export async function downloadExportPlan(plan) {
   const buffer = await buildWorkbookBuffer(plan)
-  const safeName = (plan.companyName || 'company').replace(/[^a-z0-9_\- ]/gi, '').trim() || 'company'
-  downloadBuffer(buffer, `${safeName}-payroll.xlsx`)
+  downloadBuffer(buffer, plan.fileName ?? exportFileName({ companyName: plan.companyName, exportMode: plan.exportMode }))
 }

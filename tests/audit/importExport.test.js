@@ -10,7 +10,7 @@ import * as XLSX from 'xlsx'
 import { beforeAll, describe, expect, test } from 'vitest'
 import { getColumnsByKey, makeId } from '../../src/lib/model'
 import { computeGridForEmployees } from '../../src/lib/formulaEngine'
-import { buildExportPlan, buildWorkbookBuffer, columnsWrittenAsFigures, formatCompanyDetailsLine } from '../../src/lib/excelExport'
+import { buildExportPlan, buildWorkbookBuffer, columnsWrittenAsFigures, exportFileName, formatCompanyDetailsLine } from '../../src/lib/excelExport'
 import {
   parseWorkbookFile,
   getImportableSystemFields,
@@ -872,5 +872,27 @@ describe('Export for PDF fill', () => {
     )
     // With one of them left out, nothing clashes.
     expect(findClashingHeaders(pdfFillHeaders(pick('ID'), resolved.slice(0, 1)))).toEqual([])
+  })
+})
+
+// Audit L5 (TODO C2): every export was "<company>-payroll.xlsx", whatever its month and kind.
+describe('the name of a downloaded Excel file', () => {
+  const base = { title: 'TEST Co A', companyId: COMPANY_ID, employees: [], identityFields: [], effectiveColumns: [], computedGrid: {} }
+
+  test('names the company, the month and whether the figures are values or formulas', () => {
+    expect(buildExportPlan({ ...base, months: { from: '2026-09', to: '2026-09' } }).fileName).toBe('TEST Co A - Payroll 2026-09 (values).xlsx')
+    expect(buildExportPlan({ ...base, exportMode: 'formulas', months: { from: '2026-09', to: '2026-09' } }).fileName).toBe('TEST Co A - Payroll 2026-09 (formulas).xlsx')
+  })
+
+  test('a totals export names its months, and not the title shown in the sheet', () => {
+    const plan = buildExportPlan({ ...base, title: 'TEST Co A — Totals (January 2026 to March 2026)', companyNameForFile: 'TEST Co A', kind: 'totals', months: { from: '2026-01', to: '2026-03' } })
+    expect(plan.companyName).toBe('TEST Co A — Totals (January 2026 to March 2026)')
+    expect(plan.fileName).toBe('TEST Co A - Totals 2026-01 to 2026-03.xlsx')
+    expect(exportFileName({ companyName: 'TEST Co A', kind: 'totals', months: { from: '2026-05', to: '2026-05' } })).toBe('TEST Co A - Totals 2026-05.xlsx')
+  })
+
+  test('keeps only the characters a file name can hold', () => {
+    expect(exportFileName({ companyName: 'TEST / Co: "A"  Ltd', months: { from: '2026-09', to: '2026-09' } })).toBe('TEST Co A Ltd - Payroll 2026-09 (values).xlsx')
+    expect(exportFileName({ companyName: '***' })).toBe('company - Payroll (values).xlsx')
   })
 })

@@ -68,6 +68,12 @@ export default function TotalsView({ company, identityFields, idFieldKey, effect
       : `${formatPeriodLabel(first.year, first.month)} to ${formatPeriodLabel(last.year, last.month)}`
   }, [periodsList])
 
+  const rangeMonths = useMemo(() => {
+    const first = periodsList[0]
+    const last = periodsList[periodsList.length - 1]
+    return { from: periodKey(first.year, first.month), to: periodKey(last.year, last.month) }
+  }, [periodsList])
+
   const totals = useMemo(
     () => (range?.periodsWithData ? computeTotals(range.periodsWithData, effectiveColumns, columnsByKey, idFieldKey) : null),
     [range, effectiveColumns, columnsByKey, idFieldKey]
@@ -90,7 +96,7 @@ export default function TotalsView({ company, identityFields, idFieldKey, effect
         </label>
         <span className="pb-3 text-xs text-muted">Summing {rangeLabel}</span>
         <div className="flex-1" />
-        <button onClick={() => onExport(employees, computedGrid, rangeLabel)} disabled={!totals} className="btn btn-primary mb-0.5">
+        <button onClick={() => onExport(employees, computedGrid, rangeLabel, rangeMonths)} disabled={!totals} className="btn btn-primary mb-0.5">
           <FileSpreadsheet aria-hidden="true" />
           Export to Excel
         </button>

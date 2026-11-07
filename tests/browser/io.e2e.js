@@ -86,7 +86,7 @@ describe('Export to Excel', () => {
     expect(previewGroups).toEqual(['Identifiers', 'General', 'Employee Contribution', 'Employer Contribution', 'Other Deductions'])
 
     const file = await download(page, () => preview.getByRole('button', { name: 'Download .xlsx' }).click())
-    expect(file.name).toBe('TEST Co A-payroll.xlsx')
+    expect(file.name).toMatch(/^TEST Co A - Payroll \d{4}-\d{2} \(values\)\.xlsx$/)
 
     const sheet = (await openWorkbook(file.bytes)).getWorksheet('Payroll')
     expect(sheet.getCell('A1').value).toBe('TEST Co A')
@@ -820,7 +820,7 @@ describe('Company Details', () => {
     // The exports carry the new name.
     await tab(page, 'Employee Table').click()
     const file = await downloadExcel(page, 'values')
-    expect(file.name).toBe('TEST Co A Renamed-payroll.xlsx')
+    expect(file.name).toMatch(/^TEST Co A Renamed - Payroll \d{4}-\d{2} \(values\)\.xlsx$/)
     expect((await openWorkbook(file.bytes)).getWorksheet('Payroll').getCell('A1').value).toBe('TEST Co A Renamed')
     await context.close()
   })

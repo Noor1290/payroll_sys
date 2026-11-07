@@ -886,6 +886,7 @@ function PayrollApp({ onRestored, inDashboard = false, offline = null, onReloadD
       companyDetails: activeCompany.details,
       kind: 'period',
       exportMode,
+      months: { from: periodKey(selectedYear, selectedMonth), to: periodKey(selectedYear, selectedMonth) },
       employees: periodEmployees,
       identityFields,
       effectiveColumns,
@@ -895,10 +896,12 @@ function PayrollApp({ onRestored, inDashboard = false, offline = null, onReloadD
     exportUnlessErrors(errors, () => setExportPlan(plan))
   }
 
-  function handleOpenTotalsExportPreview(totalsEmployees, totalsGrid, rangeLabel) {
+  function handleOpenTotalsExportPreview(totalsEmployees, totalsGrid, rangeLabel, months) {
     if (!activeCompany) return
     const plan = buildExportPlan({
       title: `${activeCompany.name} — Totals (${rangeLabel})`,
+      companyNameForFile: activeCompany.name,
+      months,
       companyId: activeCompany.id,
       companyDetails: activeCompany.details,
       kind: 'totals',
