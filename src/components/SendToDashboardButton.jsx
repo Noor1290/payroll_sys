@@ -13,6 +13,8 @@ import { findErrorCells } from '../lib/exportErrors'
 import { checkRequiredNames } from '../lib/requiredNames'
 import { employmentDateHeader, withIsoEmploymentDates } from '../lib/employmentDate'
 import { describeEmployee } from '../lib/excelImport'
+import { formatDecimal } from '../lib/format'
+import { findSendWarnings, listNames } from '../lib/sendChecks'
 import Modal from './Modal'
 import RequiredNamesNote from './RequiredNamesNote'
 
@@ -78,7 +80,8 @@ export default function SendToDashboardButton({
   function handleClick() {
     const names = checkRequiredNames(buildPdfFillColumns(identityFields, effectiveColumns).map((c) => c.name))
     const dates = rowsToSend().unreadable.map((u) => ({ ...u, who: describeEmployee(employees[u.index]?.values, identityFields) || `Row ${u.index + 1}` }))
-    if (names.length > 0 || dates.length > 0) setAskFirst({ names, dates })
+    const { negatives, empty } = findSendWarnings(employees, buildPdfFillColumns(identityFields, effectiveColumns), computedGrid, identityFields)
+    if (names.length > 0 || dates.length > 0 || negatives.length > 0 || empty.length > 0) setAskFirst({ names, dates, negatives, empty })
     else void handleSend()
   }
 
@@ -126,6 +129,28 @@ export default function SendToDashboardButton({
                 <p className="font-medium">Dates of employment that can&rsquo;t be read</p>
                 <p>{askFirst.dates.map((d) => `${d.who} (“${d.raw}”)`).join(', ')}.</p>
                 <p>These are not sent. Write the date as DD/MM/YYYY, for example 01/08/2026, or send anyway without them.</p>
+              </div>
+            )}
+            {askFirst.negatives.length > 0 && (
+              <div data-testid="negative-figures" role="note" className="note note-warn space-y-1 text-sm">
+                <p className="font-medium">Negative figures</p>
+                {askFirst.negatives.map((n) => (
+                  <p key={n.column}>
+                    {n.column}: {listNames(n.entries.map((e) => `${e.employee} (${formatDecimal(e.value, 2)})`))}.
+                  </p>
+                ))}
+                <p>Check that they are meant, or send anyway.</p>
+              </div>
+            )}
+            {askFirst.empty.length > 0 && (
+              <div data-testid="empty-required" role="note" className="note note-warn space-y-1 text-sm">
+                <p className="font-medium">Required figures left empty</p>
+                {askFirst.empty.map((e) => (
+                  <p key={e.column}>
+                    {e.column}: {listNames(e.employees)}.
+                  </p>
+                ))}
+                <p>An empty cell counts as 0. Fill them in, or send anyway.</p>
               </div>
             )}
             <div className="flex justify-end gap-2">

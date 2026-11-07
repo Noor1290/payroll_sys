@@ -14,7 +14,7 @@ export function isErrorCell(cell) {
   return typeof cell.value === 'number' && !Number.isFinite(cell.value)
 }
 
-function isFigureColumn(col) {
+export function isFigureColumn(col) {
   const kind = col.kind ?? col.type
   return kind !== 'identity' && col.valueType !== 'text' && col.valueType !== 'checkbox' && col.valueType !== 'date'
 }

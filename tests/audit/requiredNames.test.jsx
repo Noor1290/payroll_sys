@@ -162,7 +162,8 @@ describe('"Send to dashboard" with the names checked first', () => {
     const send = bridge()
     const allNames = REQUIRED_NAMES.filter((n) => !['ID', 'Surname'].includes(n.name)).map((n, i) => input(n.name, `c${i}`, n.name === 'Age 60+' ? { valueType: 'checkbox' } : {}))
     const ids = [{ id: 'f1', name: 'ID', key: 'id' }, { id: 'f2', name: 'Surname', key: 'surname' }]
-    const emps = [{ id: 'e1', values: { id: 'T001', surname: 'Tester' } }]
+    // Every input filled in, so nothing else is asked either (TODO C3: an empty required input is warned about).
+    const emps = [{ id: 'e1', values: { id: 'T001', surname: 'Tester', ...Object.fromEntries(allNames.map((c) => [c.key, c.valueType === 'checkbox' ? 0 : 1000])) } }]
     await show(<SendToDashboardButton {...props(allNames, emps)} identityFields={ids} />)
     await act(async () => button('Send to dashboard').click())
     expect(document.querySelector('[data-testid="required-names"]')).toBeNull()
