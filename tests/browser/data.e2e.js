@@ -278,10 +278,11 @@ describe('Copy from Previous Month', () => {
     const badges = await box.locator('.grid > div').nth(0).locator('label').allTextContents()
     expect(badges.map((t) => t.trim())).toEqual(['TST001 Alpha TesterExists', 'TST002 Beta TesterNew', 'TST003 Gamma TesterNew'])
 
+    // Every employee starts ticked; no column, as October has employees (TODO C15).
     const copyButton = box.getByRole('button', { name: /^Copy \d+ Employee/ })
+    expect(await copyButton.textContent()).toBe('Copy 3 Employees')
     expect(await copyButton.isDisabled()).toBe(true)
-    await box.getByLabel(/^TST001/).check()
-    await box.getByLabel(/^TST002/).check()
+    await box.getByLabel(/^TST003/).uncheck()
     await box.getByLabel('Basic Salary', { exact: true }).check()
     await box.getByLabel('Status', { exact: true }).check()
     expect(await copyButton.textContent()).toBe('Copy 2 Employees')
@@ -305,10 +306,12 @@ describe('Copy from Previous Month', () => {
     const { context, page } = await openSeeded(app, seed())
     await page.getByRole('button', { name: 'Copy from Previous Month' }).click()
     const box = dialog(page, 'Copy from Previous Month')
-    await box.getByRole('button', { name: 'Select All' }).click()
+    // Every employee starts ticked (TODO C15).
     expect(await box.getByRole('button', { name: /^Copy \d+ Employee/ }).textContent()).toBe('Copy 3 Employees')
-    await box.getByRole('button', { name: 'Clear All' }).click()
+    await box.getByRole('button', { name: 'Clear All', exact: true }).click()
     expect(await box.getByRole('button', { name: /^Copy \d+ Employee/ }).textContent()).toBe('Copy 0 Employees')
+    await box.getByRole('button', { name: 'Select All', exact: true }).click()
+    expect(await box.getByRole('button', { name: /^Copy \d+ Employee/ }).textContent()).toBe('Copy 3 Employees')
     await box.getByRole('button', { name: 'Cancel', exact: true }).click()
     expect((await storedPeriod(page, A, '2026-10'))).toHaveLength(1)
     await context.close()

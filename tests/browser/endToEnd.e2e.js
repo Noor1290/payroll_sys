@@ -464,7 +464,7 @@ describe('a second month with one change', () => {
     await goToMonth(page, /October →/)
     await page.getByRole('button', { name: 'Copy from Previous Month' }).click()
     const box = dialog(page, 'Copy from Previous Month')
-    await box.getByRole('button', { name: 'Select All' }).click()
+    await box.getByRole('button', { name: 'Select All', exact: true }).click()
     for (const tick of await box.locator('.grid > div').nth(1).locator('input[type="checkbox"]').all()) await tick.check()
     await box.getByRole('button', { name: 'Copy 3 Employees' }).click()
     await box.waitFor({ state: 'hidden' })

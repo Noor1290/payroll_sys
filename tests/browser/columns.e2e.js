@@ -131,7 +131,9 @@ describe('global columns, built in the forms', () => {
         await form.getByLabel('Tiers').nth(1).selectOption({ label: 'Above' })
         await form.getByLabel('amount', { exact: true }).nth(1).fill('50000')
         await form.getByLabel('rate', { exact: true }).nth(1).fill('3')
-        expect(await form.locator('.note-accent').textContent()).toBe('If New Basic is above 50,000, apply 3%. If New Basic is below 50,001, apply 1.5%.')
+        expect(await form.locator('.note-accent').textContent()).toBe(
+          'If New Basic is above 50,000, apply 3%. If New Basic is below 50,001, apply 1.5%. Where "above 50,000" and "below 50,001" both hold, "below 50,001" applies.'
+        )
       },
     })
     expect(saved.key).toBe('csg')

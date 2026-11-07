@@ -459,7 +459,9 @@ describe('Export for PDF fill', () => {
     await box.getByLabel('Address', { exact: true }).check()
     const file = await download(page, () => box.getByRole('button', { name: 'Export CSV' }).click())
     expect(file.name).toBe('TEST Co A-pdf-fill-2026-09.csv')
+    // A byte order mark first, so that Excel reads it as UTF-8 (TODO C21).
     expect(file.bytes.toString('utf8')).toBe(
+      '\uFEFF' +
       [
         'ID,Name,New Basic,Status,Age 60+,PAYE,Address',
         'TST001,Alpha,18750,Full Time,No,0,"1 Test Street\nTestville"',
@@ -495,7 +497,8 @@ describe('Export for PDF fill', () => {
     await box.getByLabel('CSG (Employee Contribution)', { exact: true }).check()
     await box.getByLabel('CSG (Employer Contribution)', { exact: true }).check()
     const csv = await download(page, () => box.getByRole('button', { name: 'Export CSV' }).click())
-    expect(csv.bytes.toString('utf8').split('\r\n')).toEqual([
+    expect(csv.bytes.toString('utf8').startsWith('\uFEFF')).toBe(true)
+    expect(csv.bytes.toString('utf8').slice(1).split('\r\n')).toEqual([
       'ID,CSG (Employee Contribution),CSG (Employer Contribution)',
       'TST001,281.25,562.5',
       'TST002,3000,6000',
@@ -632,7 +635,7 @@ describe('a figure in error is never exported as a number', () => {
     await box.getByLabel('After Check', { exact: true }).check()
     await box.getByRole('button', { name: 'Export CSV' }).click()
     const csv = await download(page, () => dialog(page, '3 figures are in error').getByRole('button', { name: 'Export anyway', exact: true }).click())
-    expect(csv.bytes.toString('utf8')).toBe('ID,After Check\r\nTST001,Error\r\nTST002,Error\r\nTST003,Error')
+    expect(csv.bytes.toString('utf8')).toBe('\uFEFFID,After Check\r\nTST001,Error\r\nTST002,Error\r\nTST003,Error')
     await context.close()
   })
 
