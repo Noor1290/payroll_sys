@@ -4167,6 +4167,289 @@
     {
       "text": "title: Only an admin of this company can change this.",
       "why": "approved 4 Nov 2026 (automatic copy): new wording, see COMPANIES_AUTOCOPY_SHOTS/partB/NEW_TEXTS.md"
+    },
+    {
+      "text": "aria-label: Clear all columns",
+      "why": "approved 7 Nov 2026, cleanup Stage 2: C15, Select All / Clear All for the columns to copy"
+    },
+    {
+      "text": "aria-label: Move Age 60+ down",
+      "why": "approved 7 Nov 2026, cleanup Stage 2: C19, Move up / Move down buttons beside each column"
+    },
+    {
+      "text": "aria-label: Move Age 60+ up",
+      "why": "approved 7 Nov 2026, cleanup Stage 2: C19, Move up / Move down buttons beside each column"
+    },
+    {
+      "text": "aria-label: Move Allowances down",
+      "why": "approved 7 Nov 2026, cleanup Stage 2: C19, Move up / Move down buttons beside each column"
+    },
+    {
+      "text": "aria-label: Move Allowances up",
+      "why": "approved 7 Nov 2026, cleanup Stage 2: C19, Move up / Move down buttons beside each column"
+    },
+    {
+      "text": "aria-label: Move Basic Salary down",
+      "why": "approved 7 Nov 2026, cleanup Stage 2: C19, Move up / Move down buttons beside each column"
+    },
+    {
+      "text": "aria-label: Move Basic Salary up",
+      "why": "approved 7 Nov 2026, cleanup Stage 2: C19, Move up / Move down buttons beside each column"
+    },
+    {
+      "text": "aria-label: Move CSG down",
+      "why": "approved 7 Nov 2026, cleanup Stage 2: C19, Move up / Move down buttons beside each column"
+    },
+    {
+      "text": "aria-label: Move CSG up",
+      "why": "approved 7 Nov 2026, cleanup Stage 2: C19, Move up / Move down buttons beside each column"
+    },
+    {
+      "text": "aria-label: Move EDF (monthly) down",
+      "why": "approved 7 Nov 2026, cleanup Stage 2: C19, Move up / Move down buttons beside each column"
+    },
+    {
+      "text": "aria-label: Move EDF (monthly) up",
+      "why": "approved 7 Nov 2026, cleanup Stage 2: C19, Move up / Move down buttons beside each column"
+    },
+    {
+      "text": "aria-label: Move EDF down",
+      "why": "approved 7 Nov 2026, cleanup Stage 2: C19, Move up / Move down buttons beside each column"
+    },
+    {
+      "text": "aria-label: Move EDF up",
+      "why": "approved 7 Nov 2026, cleanup Stage 2: C19, Move up / Move down buttons beside each column"
+    },
+    {
+      "text": "aria-label: Move Emoluments down",
+      "why": "approved 7 Nov 2026, cleanup Stage 2: C19, Move up / Move down buttons beside each column"
+    },
+    {
+      "text": "aria-label: Move Emoluments up",
+      "why": "approved 7 Nov 2026, cleanup Stage 2: C19, Move up / Move down buttons beside each column"
+    },
+    {
+      "text": "aria-label: Move Full time / Part time down",
+      "why": "approved 7 Nov 2026, cleanup Stage 2: C19, Move up / Move down buttons beside each column"
+    },
+    {
+      "text": "aria-label: Move Full time / Part time up",
+      "why": "approved 7 Nov 2026, cleanup Stage 2: C19, Move up / Move down buttons beside each column"
+    },
+    {
+      "text": "aria-label: Move Govt Increment down",
+      "why": "approved 7 Nov 2026, cleanup Stage 2: C19, Move up / Move down buttons beside each column"
+    },
+    {
+      "text": "aria-label: Move Govt Increment up",
+      "why": "approved 7 Nov 2026, cleanup Stage 2: C19, Move up / Move down buttons beside each column"
+    },
+    {
+      "text": "aria-label: Move Gross Pay down",
+      "why": "approved 7 Nov 2026, cleanup Stage 2: C19, Move up / Move down buttons beside each column"
+    },
+    {
+      "text": "aria-label: Move Gross Pay up",
+      "why": "approved 7 Nov 2026, cleanup Stage 2: C19, Move up / Move down buttons beside each column"
+    },
+    {
+      "text": "aria-label: Move Internal Note down",
+      "why": "approved 7 Nov 2026, cleanup Stage 2: C19, Move up / Move down buttons beside each column"
+    },
+    {
+      "text": "aria-label: Move Internal Note up",
+      "why": "approved 7 Nov 2026, cleanup Stage 2: C19, Move up / Move down buttons beside each column"
+    },
+    {
+      "text": "aria-label: Move Levy down",
+      "why": "approved 7 Nov 2026, cleanup Stage 2: C19, Move up / Move down buttons beside each column"
+    },
+    {
+      "text": "aria-label: Move Levy up",
+      "why": "approved 7 Nov 2026, cleanup Stage 2: C19, Move up / Move down buttons beside each column"
+    },
+    {
+      "text": "aria-label: Move NSF down",
+      "why": "approved 7 Nov 2026, cleanup Stage 2: C19, Move up / Move down buttons beside each column"
+    },
+    {
+      "text": "aria-label: Move NSF up",
+      "why": "approved 7 Nov 2026, cleanup Stage 2: C19, Move up / Move down buttons beside each column"
+    },
+    {
+      "text": "aria-label: Move Net Pay down",
+      "why": "approved 7 Nov 2026, cleanup Stage 2: C19, Move up / Move down buttons beside each column"
+    },
+    {
+      "text": "aria-label: Move Net Pay up",
+      "why": "approved 7 Nov 2026, cleanup Stage 2: C19, Move up / Move down buttons beside each column"
+    },
+    {
+      "text": "aria-label: Move New Basic Salary down",
+      "why": "approved 7 Nov 2026, cleanup Stage 2: C19, Move up / Move down buttons beside each column"
+    },
+    {
+      "text": "aria-label: Move New Basic Salary up",
+      "why": "approved 7 Nov 2026, cleanup Stage 2: C19, Move up / Move down buttons beside each column"
+    },
+    {
+      "text": "aria-label: Move PAYE down",
+      "why": "approved 7 Nov 2026, cleanup Stage 2: C19, Move up / Move down buttons beside each column"
+    },
+    {
+      "text": "aria-label: Move PAYE up",
+      "why": "approved 7 Nov 2026, cleanup Stage 2: C19, Move up / Move down buttons beside each column"
+    },
+    {
+      "text": "aria-label: Move PRGF down",
+      "why": "approved 7 Nov 2026, cleanup Stage 2: C19, Move up / Move down buttons beside each column"
+    },
+    {
+      "text": "aria-label: Move PRGF up",
+      "why": "approved 7 Nov 2026, cleanup Stage 2: C19, Move up / Move down buttons beside each column"
+    },
+    {
+      "text": "aria-label: Move Total MRA contributions down",
+      "why": "approved 7 Nov 2026, cleanup Stage 2: C19, Move up / Move down buttons beside each column"
+    },
+    {
+      "text": "aria-label: Move Total MRA contributions up",
+      "why": "approved 7 Nov 2026, cleanup Stage 2: C19, Move up / Move down buttons beside each column"
+    },
+    {
+      "text": "aria-label: Move Total deductions down",
+      "why": "approved 7 Nov 2026, cleanup Stage 2: C19, Move up / Move down buttons beside each column"
+    },
+    {
+      "text": "aria-label: Move Total deductions up",
+      "why": "approved 7 Nov 2026, cleanup Stage 2: C19, Move up / Move down buttons beside each column"
+    },
+    {
+      "text": "aria-label: Move Total down",
+      "why": "approved 7 Nov 2026, cleanup Stage 2: C19, Move up / Move down buttons beside each column"
+    },
+    {
+      "text": "aria-label: Move Total up",
+      "why": "approved 7 Nov 2026, cleanup Stage 2: C19, Move up / Move down buttons beside each column"
+    },
+    {
+      "text": "aria-label: Move Travelling down",
+      "why": "approved 7 Nov 2026, cleanup Stage 2: C19, Move up / Move down buttons beside each column"
+    },
+    {
+      "text": "aria-label: Move Travelling up",
+      "why": "approved 7 Nov 2026, cleanup Stage 2: C19, Move up / Move down buttons beside each column"
+    },
+    {
+      "text": "aria-label: Select all columns",
+      "why": "approved 7 Nov 2026, cleanup Stage 2: C15, Select All / Clear All for the columns to copy"
+    },
+    {
+      "text": "text: An empty cell counts as 0. Fill them in, or send anyway.",
+      "why": "approved 7 Nov 2026, cleanup Stage 2: C3, the note before Send for an empty Basic Salary"
+    },
+    {
+      "text": "text: At or below",
+      "why": "approved 7 Nov 2026, cleanup Stage 2: C6, the new \"At or below\" tier"
+    },
+    {
+      "text": "text: Basic Salary: F006 Blank Zeta Fake.",
+      "why": "approved 7 Nov 2026, cleanup Stage 2: C3, the note before Send names the employee (fake data)",
+      "onlyOn": [
+        "60b embedded: send, asked first"
+      ]
+    },
+    {
+      "text": "text: Clear All",
+      "why": "approved 7 Nov 2026, cleanup Stage 2: C15, Select All / Clear All for the columns to copy"
+    },
+    {
+      "text": "text: Copy 4 Employees",
+      "why": "approved 7 Nov 2026, cleanup Stage 2: C15, Copy from Previous Month opens with every employee ticked, so the preview shows (fake data)",
+      "onlyOn": [
+        "10 copy from previous month"
+      ]
+    },
+    {
+      "text": "text: Create new",
+      "why": "approved 7 Nov 2026, cleanup Stage 2: C15, Copy from Previous Month opens with every employee ticked, so the preview shows (fake data)",
+      "onlyOn": [
+        "10 copy from previous month"
+      ]
+    },
+    {
+      "text": "text: F001 Testeur Alpha Fake",
+      "why": "approved 7 Nov 2026, cleanup Stage 2: C15, Copy from Previous Month opens with every employee ticked, so the preview shows (fake data)",
+      "onlyOn": [
+        "10 copy from previous month"
+      ]
+    },
+    {
+      "text": "text: F002 Exemple, Jr Beta \"B\" Fake",
+      "why": "approved 7 Nov 2026, cleanup Stage 2: C15, Copy from Previous Month opens with every employee ticked, so the preview shows (fake data)",
+      "onlyOn": [
+        "10 copy from previous month"
+      ]
+    },
+    {
+      "text": "text: F007 Leaver Eta Fake",
+      "why": "approved 7 Nov 2026, cleanup Stage 2: C15, Copy from Previous Month opens with every employee ticked, so the preview shows (fake data)",
+      "onlyOn": [
+        "10 copy from previous month"
+      ]
+    },
+    {
+      "text": "text: If Emoluments is below 10,000, apply 1%. If Emoluments is below 29,710, apply 2%. Where \"below 29,710\" and \"below 10,000\" both hold, \"below 10,000\" applies. Capped at a maximum Emoluments value of 29,710.",
+      "why": "approved 7 Nov 2026, cleanup Stage 2: C21, the tier summary says which of two overlapping tiers applies",
+      "onlyOn": [
+        "24c add column (tiered, a cap that cuts off the tiers)"
+      ]
+    },
+    {
+      "text": "text: If Emoluments is below 20,000, apply 0%. If Emoluments is above 20,000, apply 1.5%. If Emoluments is equal to 50,000, apply 2%. Where \"above 20,000\" and \"equal to 50,000\" both hold, \"equal to 50,000\" applies. Exactly 20,000 matches no tier, so the rate there is 0%. Capped at a maximum Emoluments value of 100,000.",
+      "why": "approved 7 Nov 2026, cleanup Stage 2: C21, the tier summary says which of two overlapping tiers applies",
+      "onlyOn": [
+        "41 edit company column: Levy",
+        "41b edit company column, scope changed to global"
+      ]
+    },
+    {
+      "text": "text: Required figures left empty",
+      "why": "approved 7 Nov 2026, cleanup Stage 2: C3, the note before Send for an empty Basic Salary"
+    },
+    {
+      "text": "text: Select All",
+      "why": "approved 7 Nov 2026, cleanup Stage 2: C15, Select All / Clear All for the columns to copy"
+    },
+    {
+      "text": "text: Stays hidden from the Export Preview and the visible spreadsheet - it still shows in the app's Employee Table, marked as not exported, and Export for PDF fill and Send to dashboard still include it. If a Live-Formula export still needs its value, it's written as a hidden column.",
+      "why": "approved 7 Nov 2026, cleanup Stage 2: C12, the column form hint no longer mentions payslips"
+    },
+    {
+      "text": "text: Unnumbered Theta Fake",
+      "why": "approved 7 Nov 2026, cleanup Stage 2: C15, Copy from Previous Month opens with every employee ticked, so the preview shows (fake data)",
+      "onlyOn": [
+        "10 copy from previous month"
+      ]
+    },
+    {
+      "text": "text: Update existing",
+      "why": "approved 7 Nov 2026, cleanup Stage 2: C15, Copy from Previous Month opens with every employee ticked, so the preview shows (fake data)",
+      "onlyOn": [
+        "10 copy from previous month"
+      ]
+    },
+    {
+      "text": "title: Move down",
+      "why": "approved 7 Nov 2026, cleanup Stage 2: C19, Move up / Move down buttons beside each column"
+    },
+    {
+      "text": "title: Move up",
+      "why": "approved 7 Nov 2026, cleanup Stage 2: C19, Move up / Move down buttons beside each column"
+    },
+    {
+      "text": "title: Not included in Excel exports. Export for PDF fill and Send to dashboard still include it.",
+      "why": "approved 7 Nov 2026, cleanup Stage 2: C12, the \"not exported\" badge no longer mentions payslips"
     }
   ],
   "removed": [
@@ -5447,6 +5730,35 @@
       "onlyOn": [
         "70d date fields, import summary"
       ]
+    },
+    {
+      "text": "text: Copy 0 Employees",
+      "why": "approved 7 Nov 2026, cleanup Stage 2: C15, Copy from Previous Month opens with every employee ticked, so the preview shows (fake data)",
+      "onlyOn": [
+        "10 copy from previous month"
+      ]
+    },
+    {
+      "text": "text: If Emoluments is below 10,000, apply 1%. If Emoluments is below 29,710, apply 2%. Capped at a maximum Emoluments value of 29,710.",
+      "why": "approved 7 Nov 2026, cleanup Stage 2: C21, the tier summary says which of two overlapping tiers applies",
+      "onlyOn": [
+        "24c add column (tiered, a cap that cuts off the tiers)"
+      ]
+    },
+    {
+      "text": "text: Select employees and columns above to see a preview.",
+      "why": "approved 7 Nov 2026, cleanup Stage 2: C15, Copy from Previous Month opens with every employee ticked, so the preview shows (fake data)",
+      "onlyOn": [
+        "10 copy from previous month"
+      ]
+    },
+    {
+      "text": "text: Stays hidden from the Export Preview, the visible spreadsheet, and payslips - it still shows in the app's Employee Table, marked as not exported. If a Live-Formula export still needs its value, it's written as a hidden column.",
+      "why": "approved 7 Nov 2026, cleanup Stage 2: C12, the column form hint no longer mentions payslips"
+    },
+    {
+      "text": "title: Not included in Excel exports or payslips",
+      "why": "approved 7 Nov 2026, cleanup Stage 2: C12, the \"not exported\" badge no longer mentions payslips"
     }
   ]
 }
