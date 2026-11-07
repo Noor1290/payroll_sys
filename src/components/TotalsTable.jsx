@@ -61,7 +61,7 @@ export default function TotalsTable({ identityFields, idFieldKey, effectiveColum
                     {col.name}
                     {col.type === 'formula' && <span className="badge badge-glow">fx</span>}
                     {col.excludeFromExport && (
-                      <span title="Not included in Excel exports or payslips" className="badge">
+                      <span title="Not included in Excel exports. Export for PDF fill and Send to dashboard still include it." className="badge">
                         not exported
                       </span>
                     )}

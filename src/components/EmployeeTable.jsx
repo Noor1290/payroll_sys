@@ -447,7 +447,7 @@ export default function EmployeeTable({
                     <span className="max-w-full overflow-hidden text-ellipsis leading-tight">{col.name}</span>
                     {col.type === 'formula' && <span className="badge badge-glow">fx</span>}
                     {col.excludeFromExport && (
-                      <span title="Not included in Excel exports or payslips" className="badge">
+                      <span title="Not included in Excel exports. Export for PDF fill and Send to dashboard still include it." className="badge">
                         not exported
                       </span>
                     )}

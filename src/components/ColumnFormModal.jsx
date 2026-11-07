@@ -487,7 +487,7 @@ export default function ColumnFormModal({
           <p className="hint">
             {includeInExport
               ? 'Appears in the Export Preview and the downloaded file, like any other column.'
-              : "Stays hidden from the Export Preview, the visible spreadsheet, and payslips - it still shows in the app's Employee Table, marked as not exported. If a Live-Formula export still needs its value, it's written as a hidden column."}
+              : "Stays hidden from the Export Preview and the visible spreadsheet - it still shows in the app's Employee Table, marked as not exported, and Export for PDF fill and Send to dashboard still include it. If a Live-Formula export still needs its value, it's written as a hidden column."}
           </p>
         </div>
 

@@ -3,15 +3,19 @@
 // TODO C21, the Payroll System's small notes from the rehearsal of 17 October 2026:
 //   2.14 the delete question told two "CSG" columns apart only by their keys;
 //   5.x  the CSV export had no byte order mark, so Excel showed accents garbled;
-//   2.9  the summary of overlapping tiers did not say which one applies.
+//   2.9  the summary of overlapping tiers did not say which one applies;
+//   5.3  (TODO C12) a column left out of Excel exports said "Not included in Excel exports or
+//        payslips", in an app with no payslips, and it IS in Export for PDF fill.
 // TEST data only.
 
 import { act } from 'react'
 import { createRoot } from 'react-dom/client'
 import { afterEach, describe, expect, test, vi } from 'vitest'
 import ColumnManager from '../../src/components/ColumnManager'
+import EmployeeTable from '../../src/components/EmployeeTable'
+import { computeGridForEmployees } from '../../src/lib/formulaEngine'
 import { getColumnsByKey } from '../../src/lib/model'
-import { buildCsvContent, CSV_BOM, csvFileContent } from '../../src/lib/pdfFillExport'
+import { buildCsvContent, buildPdfFillColumns, CSV_BOM, csvFileContent } from '../../src/lib/pdfFillExport'
 import { describeTieredRule } from '../../src/lib/tieredFormula'
 import { EMPLOYEE, EMPLOYER, input, simple } from './build'
 
@@ -134,5 +138,40 @@ describe('the summary of overlapping tiers says which one applies (2.9)', () => 
         { operator: 'below', threshold: 100000, rate: 3 },
       ])
     ).toBe('If Basic Salary is below 50,000, apply 3%. If Basic Salary is below 100,000, apply 3%.')
+  })
+})
+
+describe('a column left out of Excel exports says where it still goes (5.3, TODO C12)', () => {
+  const columns = [input('Basic Salary', 'basicSalary'), input('Bonus Base', 'bonusBase', { excludeFromExport: true })]
+
+  test('the badge in the Employee Table says so, without "payslips"', async () => {
+    const employees = [{ id: 'e1', values: { id: 'TST001', basicSalary: 1000, bonusBase: 5 } }]
+    container = document.createElement('div')
+    document.body.appendChild(container)
+    root = createRoot(container)
+    await act(async () =>
+      root.render(
+        <EmployeeTable
+          employees={employees}
+          identityFields={[{ id: 'f1', name: 'Employee ID', key: 'id' }]}
+          idFieldKey="id"
+          effectiveColumns={columns}
+          computedGrid={computeGridForEmployees(employees, columns, getColumnsByKey(columns))}
+          columnWidths={{}}
+          onResizeColumn={vi.fn()}
+          onUpdateValue={vi.fn()}
+          onSetForEveryone={vi.fn()}
+          onAddEmployee={vi.fn()}
+          onDeleteEmployee={vi.fn()}
+          onOpenBreakdown={vi.fn()}
+        />
+      )
+    )
+    const badge = [...container.querySelectorAll('.badge')].find((b) => b.textContent.trim() === 'not exported')
+    expect(badge.title).toBe('Not included in Excel exports. Export for PDF fill and Send to dashboard still include it.')
+  })
+
+  test('which is true: Export for PDF fill (and so Send to dashboard) has the column', () => {
+    expect(buildPdfFillColumns([], columns).map((c) => c.name)).toEqual(['Basic Salary', 'Bonus Base'])
   })
 })
