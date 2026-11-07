@@ -172,6 +172,14 @@ export function buildCsvContent(headers, rows) {
   return [headerLine, ...lines].join('\r\n')
 }
 
+// The CSV file as written: a byte order mark first, so that Excel reads it as UTF-8 and an
+// accent ("Hélène") is not shown garbled (TODO C21). A reader that decodes UTF-8 (the PDF
+// Editor's file.text(), any spreadsheet) drops the mark.
+export const CSV_BOM = '\uFEFF'
+export function csvFileContent(headers, rows) {
+  return CSV_BOM + buildCsvContent(headers, rows)
+}
+
 export function buildJsonContent(rows) {
   return JSON.stringify(rows, null, 2)
 }
@@ -204,7 +212,7 @@ export function downloadPdfFillExport(format, columns, employees, computedGrid, 
   const rows = buildPdfFillRows(columns, employees, computedGrid, resolvedCompanyFields)
   const filename = buildPdfFillFilename(format, companyName, year, month)
   if (format === 'csv') {
-    downloadTextFile(buildCsvContent(headers, rows), filename, 'text/csv;charset=utf-8')
+    downloadTextFile(csvFileContent(headers, rows), filename, 'text/csv;charset=utf-8')
   } else {
     downloadTextFile(buildJsonContent(rows), filename, 'application/json')
   }

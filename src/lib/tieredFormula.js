@@ -267,6 +267,27 @@ export function describeTierStop(baseName, stop) {
   return `Anyone with ${baseName} ${who} gets 0%, because the ${stop.tierCount === 1 ? 'tier stops' : 'tiers stop'} at ${formatNum(stop.at)}.`
 }
 
+// Pairs of tiers that both hold for some figure, at different rates, and the
+// one that applies there (TODO C21, rehearsal 2.9: "If Basic Salary is 0 or
+// above, apply 3%. If Basic Salary is above 50,000, apply 6%." did not say
+// which applies above 50,000). Checked on each threshold and on either side
+// of it: between two thresholds, which tiers hold does not change.
+function overlappingTiers(tiers) {
+  const thresholds = [...new Set(tiers.map((t) => Number(t.threshold) || 0))].sort((a, b) => a - b)
+  const points = thresholds.flatMap((t) => [t - 0.005, t, t + 0.005])
+  const pairs = new Map()
+  for (const value of points) {
+    const holding = tiers.filter((t) => testTierCondition(t.operator, Number(t.threshold) || 0, value))
+    const winner = resolveMatchedTier(tiers, value)
+    for (const other of holding) {
+      if (other === winner || (Number(other.rate) || 0) === (Number(winner.rate) || 0)) continue
+      const key = `${tiers.indexOf(other)}>${tiers.indexOf(winner)}`
+      if (!pairs.has(key)) pairs.set(key, { winner, other })
+    }
+  }
+  return [...pairs.values()]
+}
+
 // Live, rule-level plain-language summary shown above the builder as the
 // user fills it in, e.g.
 // "If Basic Salary is below 50,000, apply 3%. If Basic Salary is equal to
@@ -285,6 +306,9 @@ export function describeTieredRule(baseName, tiers, cap) {
 
   const ascending = [...validTiers].sort((a, b) => (Number(a.threshold) || 0) - (Number(b.threshold) || 0))
   const sentences = ascending.map((t) => `If ${baseName} is ${tierConditionText(t.operator, t.threshold)}, apply ${t.rate || 0}%.`)
+  for (const { winner, other } of overlappingTiers(validTiers)) {
+    sentences.push(`Where "${tierConditionText(other.operator, other.threshold)}" and "${tierConditionText(winner.operator, winner.threshold)}" both hold, "${tierConditionText(winner.operator, winner.threshold)}" applies.`)
+  }
   for (const t of uncoveredThresholds(validTiers)) sentences.push(`Exactly ${formatNum(t)} matches no tier, so the rate there is 0%.`)
   if (hasCap) sentences.push(`Capped at a maximum ${baseName} value of ${formatNum(cap)}.`)
   return sentences.join(' ')

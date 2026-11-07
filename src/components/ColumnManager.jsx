@@ -6,6 +6,7 @@ import MoveToIdentityDialog from './MoveToIdentityDialog'
 import ColumnSetupImportModal from './ColumnSetupImportModal'
 import { SELECTABLE_CATEGORIES, DEFAULT_CATEGORY, labelColumnsForHelper } from '../lib/categories'
 import { buildColumnSetupExport, buildColumnSetupFilename, downloadColumnSetup, parseColumnSetupFile } from '../lib/columnSetup'
+import { findFormulasUsingColumn } from '../lib/columnUsage'
 import { formatFormulaForDisplay } from '../lib/formulaEngine'
 import { OUTDATED_RULE_NOTES, outdatedTieredRule } from '../lib/outdatedRules'
 import { describeTierStop, tierStopsBeforeCap } from '../lib/tieredFormula'
@@ -218,6 +219,15 @@ export default function ColumnManager({
     return Object.fromEntries(labeled.map((c) => [c.key, c.helperLabel]))
   }, [allColumnsForCycleCheck])
 
+  // TODO C21 (rehearsal 2.13): two columns called "CSG" were told apart only by their keys. The
+  // column is named as the formula list names it, "CSG (Employee Contribution)", with the
+  // formulas that use it.
+  function deleteQuestion(column) {
+    const users = findFormulasUsingColumn(column.key, Object.values(allColumnsForCycleCheck)).map((c) => formulaLabels[c.key] ?? c.name)
+    const usedBy = users.length > 0 ? ` It is used by ${users.join(', ')}.` : ''
+    return `Delete column "${formulaLabels[column.key] ?? column.name}"? Any formulas referencing "${column.key}" will break.${usedBy}`
+  }
+
   function existingKeysExcluding(col) {
     return allKeysInScope.filter((k) => k !== col?.key)
   }
@@ -385,7 +395,7 @@ export default function ColumnManager({
       {deleting && (
         <ConfirmDialog
           title="Delete column"
-          message={`Delete column "${deleting.name}"? Any formulas referencing "${deleting.key}" will break.`}
+          message={deleteQuestion(deleting)}
           onCancel={() => setDeleting(null)}
           onConfirm={() => {
             onDelete(deleting.id)

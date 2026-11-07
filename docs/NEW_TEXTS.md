@@ -18,3 +18,7 @@ Branch `cleanup`, Stage 2 of the big cleanup (November 2026). Each line says whe
 | C15 | Copy from Previous Month, the preview | ID, Name and Surname blank | ID, Name and Surname shown |
 | C18 | Edit identity field, under Key, while the name is changed and the key is not | (nothing) | Renaming keeps the key "surname", so the saved values stay where they are. Change the key too only if you want it to match the new name. |
 | C19 | Column lists (Global and Company Columns), beside the drag handle of each column (new buttons) | (drag only) | Up and down arrow buttons; tooltip "Move up" / "Move down"; screen reader "Move Basic Salary up" / "Move Basic Salary down" |
+| C21 | Delete column question, a column whose name another column also has | Delete column "CSG"? Any formulas referencing "csg" will break. | Delete column "CSG (Employee Contribution)"? Any formulas referencing "csg" will break. It is used by Total deductions. |
+| C21 | The same, any column used by a formula (new last sentence) | (nothing) | It is used by CSG (Employee Contribution), CSG (Employer Contribution). |
+| C21 | Tier rule summary, two tiers that both hold for some figure at different rates (new sentence, one per pair) | (nothing) | Where "0 or above" and "above 50,000" both hold, "above 50,000" applies. |
+| C21 | Export for PDF fill (CSV): the file starts with a byte order mark | (no mark) | (not visible; accents now show right in Excel) |
