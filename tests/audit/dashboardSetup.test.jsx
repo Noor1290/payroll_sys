@@ -8,6 +8,7 @@ import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest'
 import { createFakeSetupHub, installFakeBridge } from '../helpers/fakeSetupHub'
 import {
   IMPORTED_KEY,
+  OFFLINE_KEY,
   PREFS_KEY,
   connectDashboard,
   dashboardStore,
@@ -322,5 +323,47 @@ describe('who may change what', () => {
     const state = dashboardStore.loadState()
     expect(state.globalColumns.map((c) => c.key)).toContain('bonus')
     expect(state.companies.find((c) => c.id === state.activeCompanyId).details.brn).toBe('TEST-BRN-B')
+  })
+})
+
+// TODO C1 (rehearsal 2.18): the offline copy was the setup as last LOADED, so after a working
+// session it lacked every column saved since. It is now written again after each save the
+// dashboard confirms, and never with what was not saved.
+describe('the offline copy follows each save', () => {
+  const copyOf = () => JSON.parse(localStorage.getItem(OFFLINE_KEY))['TEST-BRN-A']
+
+  test('a Global column and a company column saved are in the copy, with their revisions and a newer time', async () => {
+    vi.setSystemTime(new Date('2026-10-17T14:57:00Z'))
+    await open()
+    expect(copyOf().loadedAt).toBe('2026-10-17T14:57:00.000Z')
+    expect(copyOf().shared.revision).toBe(1)
+
+    vi.setSystemTime(new Date('2026-10-17T16:10:00Z'))
+    change((s) => {
+      s.globalColumns[0].name = 'Basic pay'
+    })
+    await settle()
+    expect(copyOf().shared).toMatchObject({ revision: 2 })
+    expect(copyOf().shared.body.globalColumns[0].name).toBe('Basic pay')
+    expect(Date.parse(copyOf().loadedAt)).toBeGreaterThanOrEqual(Date.parse('2026-10-17T16:10:00Z'))
+
+    change((s) => {
+      s.companies.find((c) => c.details.brn === A.brn).columns[0].name = 'Renamed here'
+    })
+    await settle()
+    expect(copyOf().company).toMatchObject({ name: 'TEST Co A', revision: 2 })
+    expect(copyOf().company.body.columns[0].name).toBe('Renamed here')
+  })
+
+  test('a change that was not saved is not in the copy', async () => {
+    await open()
+    hub.state.down = true
+    change((s) => {
+      s.globalColumns[0].name = 'Never saved'
+    })
+    await settle()
+    expect(setupStatus.get().state).not.toBe('saved')
+    expect(copyOf().shared.revision).toBe(1)
+    expect(JSON.stringify(copyOf())).not.toContain('Never saved')
   })
 })

@@ -377,10 +377,25 @@ async function saveNow() {
 const confirmShared = (body, revision) => {
   shared.saved = body
   shared.revision = revision
+  refreshOfflineCopy()
 }
 const confirmCompany = (item, body, revision) => {
   item.saved = body
   item.revision = revision
+  refreshOfflineCopy()
+}
+
+// The offline copy, kept as last SAVED, not only as last loaded (TODO C1, rehearsal 2.18: after a
+// working session it was the setup of the morning). Written from what the dashboard has confirmed,
+// for the selected company only, so it never holds anything that was not saved.
+function refreshOfflineCopy() {
+  const selected = [...held.values()].find((item) => item.selected)
+  if (!company || !shared || !selected) return
+  keepOfflineCopy(
+    company,
+    { name: shared.name, revision: shared.revision, body: shared.saved },
+    { name: selected.name, address: selected.address, revision: selected.revision, body: selected.saved }
+  )
 }
 
 async function saveOnce(changes) {

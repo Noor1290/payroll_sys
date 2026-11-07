@@ -5,7 +5,8 @@
 // dashboard, behind its password gate.
 //
 // The copy is written by dashboardSetup.js each time a company's setup is
-// loaded from the dashboard, one per company.
+// loaded from the dashboard, and again after each save the dashboard
+// confirms (TODO C1), one per company.
 
 import { getCurrentPeriod } from './periods'
 import { companyBodyOf, readOfflineNote, sharedBodyOf } from './dashboardSetup'
