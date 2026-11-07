@@ -1,5 +1,5 @@
 import { useMemo, useRef, useState } from 'react'
-import { CircleAlert, Download, GripVertical, Upload, X } from 'lucide-react'
+import { ChevronDown, ChevronUp, CircleAlert, Download, GripVertical, Upload, X } from 'lucide-react'
 import ColumnFormModal from './ColumnFormModal'
 import ConfirmDialog from './ConfirmDialog'
 import MoveToIdentityDialog from './MoveToIdentityDialog'
@@ -17,7 +17,9 @@ function tierStopOf(col) {
   return outdatedTieredRule(col) ? null : tierStopsBeforeCap(col.tiered)
 }
 
-function CategorySection({ category, ownColumns, otherColumns, onEdit, onDelete, onMove, onDragStart, onDrop, draggingId, formulaLabels, readOnly }) {
+// onStep(id, otherId): the same as a drop of `id` just before `otherId` (TODO C19: the
+// Move up / Move down buttons, for a keyboard or without dragging).
+function CategorySection({ category, ownColumns, otherColumns, onEdit, onDelete, onMove, onDragStart, onDrop, onStep, draggingId, formulaLabels, readOnly }) {
   return (
     <section className="card mb-5 overflow-hidden">
       <div className="border-b border-line px-4 py-3">
@@ -27,7 +29,7 @@ function CategorySection({ category, ownColumns, otherColumns, onEdit, onDelete,
         <table className="w-full min-w-160 text-sm">
           <thead className="text-left text-xs font-medium text-muted">
             <tr className="border-b border-line">
-              <th className="w-8 px-2 py-2.5"></th>
+              <th className={`${readOnly ? 'w-8' : 'w-24'} px-2 py-2.5`}></th>
               <th className="px-4 py-2.5">Name</th>
               <th className="px-4 py-2.5">Key</th>
               <th className="px-4 py-2.5">Type</th>
@@ -48,7 +50,7 @@ function CategorySection({ category, ownColumns, otherColumns, onEdit, onDelete,
                 </td>
               </tr>
             ))}
-            {ownColumns.map((col) => (
+            {ownColumns.map((col, index) => (
               <tr
                 key={col.id}
                 draggable={!readOnly}
@@ -63,8 +65,32 @@ function CategorySection({ category, ownColumns, otherColumns, onEdit, onDelete,
                 {readOnly ? (
                   <td className="px-2 py-2.5"></td>
                 ) : (
-                  <td className="cursor-grab px-2 py-2.5 text-center text-subtle active:cursor-grabbing" title="Drag to reorder">
-                    <GripVertical className="mx-auto h-4 w-4" aria-hidden="true" />
+                  <td className="px-2 py-2.5 text-subtle">
+                    <div className="flex items-center gap-0.5">
+                      <span className="cursor-grab px-1 active:cursor-grabbing" title="Drag to reorder">
+                        <GripVertical className="h-4 w-4" aria-hidden="true" />
+                      </span>
+                      <button
+                        type="button"
+                        onClick={() => onStep(col.id, ownColumns[index - 1].id)}
+                        disabled={index === 0}
+                        aria-label={`Move ${col.name} up`}
+                        title="Move up"
+                        className="btn btn-ghost btn-icon btn-sm"
+                      >
+                        <ChevronUp aria-hidden="true" />
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => onStep(ownColumns[index + 1].id, col.id)}
+                        disabled={index === ownColumns.length - 1}
+                        aria-label={`Move ${col.name} down`}
+                        title="Move down"
+                        className="btn btn-ghost btn-icon btn-sm"
+                      >
+                        <ChevronDown aria-hidden="true" />
+                      </button>
+                    </div>
                   </td>
                 )}
                 <td className="px-4 py-2.5 font-medium text-fg">
@@ -319,6 +345,7 @@ export default function ColumnManager({
             if (draggingId) onReorder?.(draggingId, targetId)
             setDraggingId(null)
           }}
+          onStep={(id, otherId) => onReorder?.(id, otherId)}
           formulaLabels={formulaLabels}
           readOnly={readOnly}
         />

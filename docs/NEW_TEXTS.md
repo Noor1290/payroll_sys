@@ -17,3 +17,4 @@ Branch `cleanup`, Stage 2 of the big cleanup (November 2026). Each line says whe
 | C15 | Copy from Previous Month, "Columns to copy" (new buttons, the same words as the employees' ones) | (none) | **Select All** / **Clear All** (screen reader: "Select all columns" / "Clear all columns") |
 | C15 | Copy from Previous Month, the preview | ID, Name and Surname blank | ID, Name and Surname shown |
 | C18 | Edit identity field, under Key, while the name is changed and the key is not | (nothing) | Renaming keeps the key "surname", so the saved values stay where they are. Change the key too only if you want it to match the new name. |
+| C19 | Column lists (Global and Company Columns), beside the drag handle of each column (new buttons) | (drag only) | Up and down arrow buttons; tooltip "Move up" / "Move down"; screen reader "Move Basic Salary up" / "Move Basic Salary down" |
