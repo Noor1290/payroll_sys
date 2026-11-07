@@ -353,6 +353,8 @@ describe('the same as from this browser', () => {
     await click(button('Copy from Previous Month'))
     await vi.waitFor(() => expect(document.body.textContent).toContain('Employees in September 2026'))
     const employeeBox = (label) => all('label').find((l) => l.textContent.includes(label)).querySelector('input')
+    // Every employee starts ticked (TODO C15); start from none.
+    await click(button('Clear All'))
     for (const label of ['F001', 'F002', 'F007']) await click(employeeBox(label))
     const columnBox = (name) => all('label').find((l) => l.textContent.trim() === name).querySelector('input')
     for (const name of ['Basic Salary', 'Govt Increment', 'Full time / Part time', 'Allowances', 'Age 60+']) await click(columnBox(name))

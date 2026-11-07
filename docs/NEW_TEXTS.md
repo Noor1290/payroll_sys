@@ -13,3 +13,6 @@ Branch `cleanup`, Stage 2 of the big cleanup (November 2026). Each line says whe
 | C6 | Rule summary and breakdown, an "At or below" tier | (new) | `If Basic Salary is 50,000 or below, apply 3%.` / `This is 50,000.00 or below → rate: 3%.` |
 | C6 | Breakdown, a figure no tier holds for (a rule with two tiers or more) | `Basic Salary: 50,000.00. 50,000.00 × 0% = 0.00.` | `Basic Salary: 50,000.00. This matches no tier → rate: 0%. 50,000.00 × 0% = 0.00.` |
 | C6 | Employee Table, a figure on a threshold no tier covers (the case the rule summary already warns about): the cell is amber with a warning sign; its tooltip, and the screen-reader text | "Click to see calculation breakdown" | "Matches no tier, so the rate is 0%. Click to see calculation breakdown" / (screen reader) "Matches no tier, so the rate is 0%." |
+| C15 | Copy from Previous Month, opening | nothing ticked ("Copy 0 Employees") | every employee ticked; every column ticked too when this month is empty (nothing to overwrite), none when it has employees |
+| C15 | Copy from Previous Month, "Columns to copy" (new buttons, the same words as the employees' ones) | (none) | **Select All** / **Clear All** (screen reader: "Select all columns" / "Clear all columns") |
+| C15 | Copy from Previous Month, the preview | ID, Name and Surname blank | ID, Name and Surname shown |

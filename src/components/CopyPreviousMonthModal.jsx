@@ -8,6 +8,8 @@ import { buildCopyableColumnGroups, matchPreviousEmployees, applyCopyFromPreviou
 
 function displayValue(raw, col) {
   if (col?.valueType === 'date') return showDate(raw)
+  // An identifier is text unless it is a date (TODO C15: the preview showed it blank).
+  if (col?.kind === 'identity') return raw === undefined || raw === null ? '' : String(raw)
   if (col.valueType === 'checkbox') return raw ? 'Yes' : 'No'
   if (col.valueType === 'text' || !col) return raw === undefined || raw === null ? '' : String(raw)
   const n = Number(raw)
@@ -41,8 +43,12 @@ export default function CopyPreviousMonthModal({
   const columnGroups = useMemo(() => buildCopyableColumnGroups(identityFields, effectiveColumns), [identityFields, effectiveColumns])
   const columnsByKey = useMemo(() => Object.fromEntries(columnGroups.flatMap((g) => g.columns).map((c) => [c.key, c])), [columnGroups])
 
-  const [selectedEmployeeIds, setSelectedEmployeeIds] = useState(() => new Set())
-  const [selectedColumnKeys, setSelectedColumnKeys] = useState(() => new Set())
+  // TODO C15: it opened with nothing ticked. Every employee is ticked; every column too when this
+  // month is still empty (nothing can be overwritten), none when it has employees.
+  const [selectedEmployeeIds, setSelectedEmployeeIds] = useState(() => new Set(previousEmployees.map((e) => e.id)))
+  const [selectedColumnKeys, setSelectedColumnKeys] = useState(() =>
+    currentEmployees.length === 0 ? new Set(columnGroups.flatMap((g) => g.columns).map((c) => c.key)) : new Set()
+  )
   const [pendingOverwriteCount, setPendingOverwriteCount] = useState(null) // number | null
 
   function toggleEmployee(id) {
@@ -68,6 +74,12 @@ export default function CopyPreviousMonthModal({
   }
   function clearAllEmployees() {
     setSelectedEmployeeIds(new Set())
+  }
+  function selectAllColumns() {
+    setSelectedColumnKeys(new Set(columnGroups.flatMap((g) => g.columns).map((c) => c.key)))
+  }
+  function clearAllColumns() {
+    setSelectedColumnKeys(new Set())
   }
 
   const selectedColumns = columnGroups.flatMap((g) => g.columns).filter((c) => selectedColumnKeys.has(c.key))
@@ -143,9 +155,17 @@ export default function CopyPreviousMonthModal({
             </div>
 
             <div>
-              <h3 className="mb-1.5 flex min-h-8 items-center text-[11px] font-medium uppercase tracking-wider text-subtle">
-                Columns to copy
-              </h3>
+              <div className="mb-1.5 flex min-h-8 items-center justify-between gap-2">
+                <h3 className="text-[11px] font-medium uppercase tracking-wider text-subtle">Columns to copy</h3>
+                <div className="flex gap-1">
+                  <button onClick={selectAllColumns} aria-label="Select all columns" className="btn btn-ghost btn-sm text-xs text-accent">
+                    Select All
+                  </button>
+                  <button onClick={clearAllColumns} aria-label="Clear all columns" className="btn btn-ghost btn-sm text-xs text-accent">
+                    Clear All
+                  </button>
+                </div>
+              </div>
               <div className="max-h-64 space-y-3 overflow-y-auto rounded-xl border border-line bg-surface p-3">
                 {columnGroups.map((group) => (
                   <div key={group.label}>

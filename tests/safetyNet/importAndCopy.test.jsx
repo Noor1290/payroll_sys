@@ -189,6 +189,8 @@ test('"Copy from Previous Month": selected employees and columns, with overwrite
 
   // Every September employee except the one with no ID ("Unnumbered").
   const employeeBox = (label) => [...document.querySelectorAll('label')].find((l) => l.textContent.includes(label)).querySelector('input')
+  // Every employee starts ticked (TODO C15); start from none.
+  await click(buttonByText('Clear All'))
   for (const label of ['F001', 'F002', 'F007']) await click(employeeBox(label))
 
   // Some columns, not all: Travelling and EDF are deliberately left alone.

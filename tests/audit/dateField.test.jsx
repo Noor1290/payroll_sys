@@ -471,6 +471,8 @@ describe('Copy from Previous Month and Back up / Restore', () => {
     await click(button('Copy from Previous Month'))
     await vi.waitFor(() => expect(text()).toContain('Employees in September 2026'))
     const employeeBox = (label) => all('label').find((l) => l.textContent.includes(label)).querySelector('input')
+    // Every employee starts ticked (TODO C15); start from none.
+    await click(button('Clear All'))
     await click(employeeBox('F001'))
     const columnBox = (name) => all('label').find((l) => l.textContent.trim() === name).querySelector('input')
     await click(columnBox('Date of Employment'))
