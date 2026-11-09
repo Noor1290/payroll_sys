@@ -26,3 +26,7 @@ Branch `cleanup`. Each line says where the text is, what it said before and what
 | C21 | Export for PDF fill (CSV): the file starts with a byte order mark | (no mark) | (not visible; accents now show right in Excel) |
 | C12 | Employee Table and Totals, the tooltip of the "not exported" badge | Not included in Excel exports or payslips | Not included in Excel exports. Export for PDF fill and Send to dashboard still include it. |
 | C12 | Column form, the hint under "Include in Excel export" when unticked | Stays hidden from the Export Preview, the visible spreadsheet, and payslips - it still shows in the app's Employee Table, marked as not exported. If a Live-Formula export ... | Stays hidden from the Export Preview and the visible spreadsheet - it still shows in the app's Employee Table, marked as not exported, and Export for PDF fill and Send to dashboard still include it. If a Live-Formula export ... (the rest unchanged) |
+
+## Stage 4 (approved 9 November 2026)
+
+C17: the Global and Company Columns lists show, in the Formula column, the rule sentence the column form already shows (Tiered, Compare, Progressive, and any exemption); a typed formula with no exemption and a column still on an old rule keep their formula. The 7 sentences the text check records and the 7 code lines they replace are in `tests/textCheck/approved.json` ("cleanup Stage 4: C17").

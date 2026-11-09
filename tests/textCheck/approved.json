@@ -4450,6 +4450,34 @@
     {
       "text": "title: Not included in Excel exports. Export for PDF fill and Send to dashboard still include it.",
       "why": "approved 7 Nov 2026, cleanup Stage 2: C12, the \"not exported\" badge no longer mentions payslips"
+    },
+    {
+      "text": "text: First 30,000 taxed at 0%. Next 20,000 (30,000–50,000) taxed at 10%. Remainder above 50,000 taxed at 20%.",
+      "why": "approved 9 Nov 2026, cleanup Stage 4: C17, the column list shows the rule sentence the column form shows"
+    },
+    {
+      "text": "text: If \"Age 60+\" is ticked, this amount is 0. Otherwise: 1% of Emoluments, up to a maximum of 29,710.",
+      "why": "approved 9 Nov 2026, cleanup Stage 4: C17, the column list shows the rule sentence the column form shows"
+    },
+    {
+      "text": "text: If \"Emoluments\" is greater than 200,000 or \"Basic Salary\" is less than \"Allowances\", this amount is the value of \"Travelling\". Otherwise: Emoluments * 0.045",
+      "why": "approved 9 Nov 2026, cleanup Stage 4: C17, the column list shows the rule sentence the column form shows"
+    },
+    {
+      "text": "text: If EDF (monthly) is greater than Emoluments, use 0. Otherwise, use Emoluments − EDF (monthly).",
+      "why": "approved 9 Nov 2026, cleanup Stage 4: C17, the column list shows the rule sentence the column form shows"
+    },
+    {
+      "text": "text: If Emoluments is below 20,000, apply 0%. If Emoluments is above 20,000, apply 1.5%. If Emoluments is equal to 50,000, apply 2%. Where \"above 20,000\" and \"equal to 50,000\" both hold, \"equal to 50,000\" applies. Exactly 20,000 matches no tier, so the rate there is 0%. Capped at a maximum Emoluments value of 100,000.",
+      "why": "approved 9 Nov 2026, cleanup Stage 4: C17, the column list shows the rule sentence the column form shows"
+    },
+    {
+      "text": "text: If Emoluments is below 29,710, apply 1%. Capped at a maximum Emoluments value of 29,710.",
+      "why": "approved 9 Nov 2026, cleanup Stage 4: C17, the column list shows the rule sentence the column form shows"
+    },
+    {
+      "text": "text: If Emoluments is below 50,000, apply 1.5%. If Emoluments is 50,000 or above, apply 3%.",
+      "why": "approved 9 Nov 2026, cleanup Stage 4: C17, the column list shows the rule sentence the column form shows"
     }
   ],
   "removed": [
@@ -5759,6 +5787,34 @@
     {
       "text": "title: Not included in Excel exports or payslips",
       "why": "approved 7 Nov 2026, cleanup Stage 2: C12, the \"not exported\" badge no longer mentions payslips"
+    },
+    {
+      "text": "text: ((Age 60+ === 1)) ? (0) : ((Math.min(Emoluments, 29710)) * (0.01))",
+      "why": "approved 9 Nov 2026, cleanup Stage 4: C17, the column list shows the rule sentence the column form shows (the code it replaces)"
+    },
+    {
+      "text": "text: ((Emoluments > 200000) || (Basic Salary < Allowances)) ? (Travelling) : (Emoluments * 0.045)",
+      "why": "approved 9 Nov 2026, cleanup Stage 4: C17, the column list shows the rule sentence the column form shows (the code it replaces)"
+    },
+    {
+      "text": "text: (EDF (monthly) > Emoluments) ? (0) : (Emoluments - EDF (monthly))",
+      "why": "approved 9 Nov 2026, cleanup Stage 4: C17, the column list shows the rule sentence the column form shows (the code it replaces)"
+    },
+    {
+      "text": "text: (Emoluments) * (Emoluments < 50000 ? 0.015 : Emoluments >= 50000 ? 0.03 : 0)",
+      "why": "approved 9 Nov 2026, cleanup Stage 4: C17, the column list shows the rule sentence the column form shows (the code it replaces)"
+    },
+    {
+      "text": "text: (Math.max(0, Math.min(Emoluments, 30000) - 0)) * 0 + (Math.max(0, Math.min(Emoluments, 50000) - 30000)) * 0.1 + (Math.max(0, Emoluments - 50000)) * 0.2",
+      "why": "approved 9 Nov 2026, cleanup Stage 4: C17, the column list shows the rule sentence the column form shows (the code it replaces)"
+    },
+    {
+      "text": "text: (Math.min(Emoluments, 100000)) * (Emoluments === 50000 ? 0.02 : Emoluments < 20000 ? 0 : Emoluments > 20000 ? 0.015 : 0)",
+      "why": "approved 9 Nov 2026, cleanup Stage 4: C17, the column list shows the rule sentence the column form shows (the code it replaces)"
+    },
+    {
+      "text": "text: (Math.min(Emoluments, 29710)) * (Emoluments < 29710 ? 0.01 : 0)",
+      "why": "approved 9 Nov 2026, cleanup Stage 4: C17, the column list shows the rule sentence the column form shows (the code it replaces)"
     }
   ]
 }
