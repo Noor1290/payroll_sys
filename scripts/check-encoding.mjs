@@ -29,6 +29,8 @@ const SKIP = /^(package-lock\.json|node_modules\/|dist\/|hub_docs\/)/
 // those code pages render it; plus the replacement character and its own mojibake.
 const SECOND = '[\\u0080-\\u00BF\\u20AC\\u201A\\u0192\\u201E\\u2026\\u2020\\u2021\\u02C6\\u2030\\u0160\\u2039\\u0152\\u017D\\u2018\\u2019\\u201C\\u201D\\u2022\\u2013\\u2014\\u02DC\\u2122\\u0161\\u203A\\u0153\\u017E\\u0178]'
 const MOJIBAKE = new RegExp(`[\\u00C2-\\u00F4]${SECOND}|\\uFFFD|\\u00EF\\u00BF\\u00BD`)
+// Control characters are inside the plain-ASCII range on purpose.
+// oxlint-disable-next-line no-control-regex
 const NON_ASCII = /[^\x00-\x7F]/g
 
 const changed = new Set([

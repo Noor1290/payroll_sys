@@ -42,7 +42,8 @@ describe('one list of required names, the same as the other apps (rehearsal fix 
     const file = sibling('payslip', 'src/lib/payrollFile.ts')
     const template = sibling('payslip', 'src/lib/template.ts')
     const payslipNeeds = new Set()
-    for (const m of file.matchAll(/\$\{rowNumber\}: (\w+) is missing/g)) payslipNeeds.add(m[1])
+    // "Row N: ID is missing ..." and, since the payslip's C21 wording, 'Row N: the field "ID" is missing ...'.
+    for (const m of file.matchAll(/\$\{rowNumber\}: (?:the field "(\w+)"|(\w+)) is missing/g)) payslipNeeds.add(m[1] ?? m[2])
     const checks = template.match(/checks: \{ gross: '([^']+)', deductions: '([^']+)', net: '([^']+)' \}/)
     checks.slice(1).forEach((name) => payslipNeeds.add(name))
     for (const m of template.matchAll(/key: '([^']+)'[^}]*required: true/g)) payslipNeeds.add(m[1])

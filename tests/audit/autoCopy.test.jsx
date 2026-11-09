@@ -8,7 +8,7 @@
 
 import { act } from 'react'
 import { createRoot } from 'react-dom/client'
-import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest'
+import { afterEach, describe, expect, test, vi } from 'vitest'
 import App from '../../src/App'
 import { resetDataStore } from '../../src/lib/dataStore'
 import { companyBodyOf, forgetDashboardSetup, IMPORTED_KEY, PREFS_KEY } from '../../src/lib/dashboardSetup'

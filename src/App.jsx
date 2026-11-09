@@ -336,6 +336,7 @@ function PayrollApp({ onRestored, inDashboard = false, offline = null, onReloadD
   useEffect(() => {
     const saved = loadState()
     if (saved) {
+      // oxlint-disable-next-line react/set-state-in-effect -- reads the saved setup from storage once, on opening
       setIdentityFields(saved.identityFields)
       setIdFieldKey(saved.idFieldKey)
       setGlobalColumns(saved.globalColumns)
@@ -360,6 +361,7 @@ function PayrollApp({ onRestored, inDashboard = false, offline = null, onReloadD
     const saved = loadState()
     if (saved) {
       revertingState.current = true
+      // oxlint-disable-next-line react/set-state-in-effect -- puts back what storage holds after a failed save
       setIdentityFields(saved.identityFields)
       setIdFieldKey(saved.idFieldKey)
       setGlobalColumns(saved.globalColumns)
@@ -403,6 +405,7 @@ function PayrollApp({ onRestored, inDashboard = false, offline = null, onReloadD
   // moment, or not be readable at all (then nothing is shown or saved).
   useEffect(() => {
     if (!activeCompanyId || !selectedYear || !selectedMonth) {
+      // oxlint-disable-next-line react/set-state-in-effect -- no month chosen: clear what the last month showed
       setPeriodEmployees([])
       setLoadedPeriodKey(null)
       setMonthBlocked(null)
@@ -455,6 +458,7 @@ function PayrollApp({ onRestored, inDashboard = false, offline = null, onReloadD
     // Not saved: put the screen back to what is saved, and say so.
     revertingPeriod.current = true
     const saved = loadPeriod(activeCompanyId, selectedYear, selectedMonth)
+    // oxlint-disable-next-line react/set-state-in-effect -- puts back what storage holds after a failed save
     setPeriodEmployees(isPending(saved) ? loadedEmployees : saved.employees)
     setSaveFailed(true)
   }, [loadedPeriodKey, currentPeriodKey, activeCompanyId, selectedYear, selectedMonth, loadedEmployees])

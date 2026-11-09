@@ -7,7 +7,7 @@ import ColumnSetupImportModal from './ColumnSetupImportModal'
 import { SELECTABLE_CATEGORIES, DEFAULT_CATEGORY, labelColumnsForHelper } from '../lib/categories'
 import { buildColumnSetupExport, buildColumnSetupFilename, downloadColumnSetup, parseColumnSetupFile } from '../lib/columnSetup'
 import { findFormulasUsingColumn } from '../lib/columnUsage'
-import { formatFormulaForDisplay } from '../lib/formulaEngine'
+import { describeColumnRule } from '../lib/columnRule'
 import { OUTDATED_RULE_NOTES, outdatedTieredRule } from '../lib/outdatedRules'
 import { describeTierStop, tierStopsBeforeCap } from '../lib/tieredFormula'
 
@@ -18,9 +18,19 @@ function tierStopOf(col) {
   return outdatedTieredRule(col) ? null : tierStopsBeforeCap(col.tiered)
 }
 
+// The Formula cell: the rule's plain sentence, as the column form shows it, or the
+// readable formula for one typed by hand (TODO C17).
+function RuleCell({ col, formulaLabels, columnsByKey, muted = false }) {
+  const rule = describeColumnRule(col, formulaLabels, columnsByKey)
+  const tone = muted ? ' text-muted' : ''
+  if (!rule) return <td className={`num px-4 py-2.5 text-xs${tone}`}>—</td>
+  if (!rule.sentence) return <td className={`num px-4 py-2.5 text-xs${tone}`}>{rule.text}</td>
+  return <td className={`max-w-md px-4 py-2.5 text-xs${tone}`}>{rule.text}</td>
+}
+
 // onStep(id, otherId): the same as a drop of `id` just before `otherId` (TODO C19: the
 // Move up / Move down buttons, for a keyboard or without dragging).
-function CategorySection({ category, ownColumns, otherColumns, onEdit, onDelete, onMove, onDragStart, onDrop, onStep, draggingId, formulaLabels, readOnly }) {
+function CategorySection({ category, ownColumns, otherColumns, onEdit, onDelete, onMove, onDragStart, onDrop, onStep, draggingId, formulaLabels, columnsByKey, readOnly }) {
   return (
     <section className="card mb-5 overflow-hidden">
       <div className="border-b border-line px-4 py-3">
@@ -45,7 +55,7 @@ function CategorySection({ category, ownColumns, otherColumns, onEdit, onDelete,
                 <td className="px-4 py-2.5">{col.name}</td>
                 <td className="num px-4 py-2.5 text-xs">{col.key}</td>
                 <td className="px-4 py-2.5 capitalize">{col.type}</td>
-                <td className="num px-4 py-2.5 text-xs">{col.formula ? formatFormulaForDisplay(col.formula, formulaLabels) : '—'}</td>
+                <RuleCell col={col} formulaLabels={formulaLabels} columnsByKey={columnsByKey} />
                 <td className="px-4 py-2.5 text-right">
                   <span className="badge normal-case">inherited</span>
                 </td>
@@ -110,9 +120,7 @@ function CategorySection({ category, ownColumns, otherColumns, onEdit, onDelete,
                   {col.type}
                   {col.builderMode === 'tiered' && <span className="badge badge-glow ml-1.5 normal-case">tiered</span>}
                 </td>
-                <td className="num px-4 py-2.5 text-xs text-muted">
-                  {col.formula ? formatFormulaForDisplay(col.formula, formulaLabels) : '—'}
-                </td>
+                <RuleCell col={col} formulaLabels={formulaLabels} columnsByKey={columnsByKey} muted />
                 <td className="whitespace-nowrap px-4 py-2.5 text-right">
                   {!readOnly && (
                     <>
@@ -357,6 +365,7 @@ export default function ColumnManager({
           }}
           onStep={(id, otherId) => onReorder?.(id, otherId)}
           formulaLabels={formulaLabels}
+          columnsByKey={allColumnsForCycleCheck}
           readOnly={readOnly}
         />
       ))}

@@ -3,8 +3,9 @@
 Items 1 to 6 were found during the visual redesign (October 2026) and left unfixed on
 the `redesign` branch, which changed appearance only; later items were found during the
 migration and the backlog fixes. Each item says whether it is still open, fixed (with the
-date and the proving test) or obsolete. As of 17 October 2026: open are 1, 2, 8 and 9; 3, 4,
-5 and 6 are fixed; 7 is obsolete. The on-screen grand total was added on 1 November 2026
+date and the proving test) or obsolete. As of 9 November 2026: open are 1 (waits for the
+rounding decision, after the accountant) and 8 (watch only); 2, 3, 4, 5, 6 and 9 are fixed; 7 is
+obsolete. The on-screen grand total was added on 1 November 2026
 (`tests/audit/totalsTotalRow.test.jsx`).
 All evidence below uses the fake data in `tests/safetyNet/fixture.js`.
 
@@ -36,7 +37,7 @@ instead. The rounding policy itself is unchanged.)
 formulas. That changes calculated figures, so it needs a deliberate decision and a
 re-recorded safety-net test.
 
-## 2. Typing in the Employee Table is slow with many employees
+## 2. Typing in the Employee Table is slow with many employees (fixed 5 November 2026)
 
 **What happens.** Every keystroke in a cell recalculates every formula for every
 employee and re-renders every cell in the table.
@@ -67,6 +68,13 @@ Scrolling the same table was smooth.
 
 **To decide.** Fixing it means changing how the table recalculates and re-renders
 (for example only the edited employee's row), which is a code change, not a visual one.
+
+**Fixed (5 November 2026, commits 9b2756c and b8f8f3c, live).** One number formatter is made
+once instead of on every call, and only the rows that change are worked out and drawn again.
+Measured on the production build (Payroll\ARCHIVE_DONE\SPEED_CHECK): one digit typed, figures
+shown, 0.58 s → 0.05 s with 200 employees, 0.06 s → 0.01 s with 20. No figure changed:
+`tests/audit/speedFixes.test.jsx` compares every figure and TOTAL of TEST Co 20 and TEST Co 200 in
+all 12 months with a copy of the code before the fixes (`tests/audit/before/`).
 
 ## 3. "Import from Excel" accepts files that are not Excel workbooks
 

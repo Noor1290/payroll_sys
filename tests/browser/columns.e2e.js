@@ -234,9 +234,10 @@ describe('global columns, built in the forms', () => {
     const list = await readColumnList(page)
     const formula = (name, nth = 0) => list.filter((c) => c.name === name)[nth].formula
     expect(formula('New Basic')).toBe('Basic Salary + Govt Increment')
-    expect(formula('NSF')).toBe('((Age 60+ === 1)) ? (0) : ((Math.min(New Basic, 29710)) * (0.01))')
+    // TODO C17: a built rule shows its plain sentence, as the column form does; a typed formula stays a formula.
+    expect(formula('NSF')).toBe('If "Age 60+" is ticked, this amount is 0. Otherwise: 1% of New Basic, up to a maximum of 29,710.')
     expect(formula('CSG', 1)).toBe('New Basic * 0.03')
-    expect(formula('Chargeable')).toBe('(EDF > New Basic) ? (0) : (New Basic - EDF)')
+    expect(formula('Chargeable')).toBe('If EDF is greater than New Basic, use 0. Otherwise, use New Basic − EDF.')
     for (const column of list) expect(column.formula, column.name).not.toMatch(/newBasic|basicSalary|govtIncrement|age60/)
   })
 })
