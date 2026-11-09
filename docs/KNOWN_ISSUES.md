@@ -235,6 +235,13 @@ recorded figure changed. Tests: `tests/audit/formulaEngine.test.js` (the marked 
 a normal one, and "a tiered column saved before the "Equal to" fix") and
 `tests/audit/tierFixScreens.test.jsx`.
 
+## 10. The dashboard holds a copy of this app's rules for reading Excel cells (watch; both must change together)
+
+- **Where:** `parseNumberCell` and `parseCheckboxValue` (`src/lib/excelImport.js`) and `readDate`, `excelSerialToIso` and `readExcelDateCell` (`src/lib/dates.js`). The Payroll Hub dashboard has a copy of them, made on 9 November 2026, in `payroll_hub/src/features/company/employeeCells.ts`, for the Employees sheet of its "Import companies from Excel".
+- **Why:** an employee file must read the same in the dashboard as in this app's "Import from Excel" ("Rs 18,115.00" is 18115, "05/03/2024" is 5 March, "Yes" ticks a box).
+- **Rule:** a change to one of these rules here must be made in the dashboard too, in the same piece of work, and the other way round. The dashboard's `employeeCells.test.ts` pins every rule with examples; its `docs/KNOWN_ISSUES.md` (item 6) says the same from its side.
+- **Checked:** on 9 November 2026 the two copies gave the same answer for 68 inputs and 5 rules.
+
 ## The text check stopped working once the month changed (fixed 1 November 2026)
 
 The text check waited for "October 2026" on the screen, and the app opens on the current month, so
