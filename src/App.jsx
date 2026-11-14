@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState, useSyncExternalStore } from 'react'
-import { Building2, CircleAlert, CloudOff, Copy, CopyCheck, History, Info, LoaderCircle, LockKeyhole, Menu, RotateCw, Trash2, Upload, X } from 'lucide-react'
+import { Building2, CalendarRange, CircleAlert, CloudOff, Copy, CopyCheck, History, Info, LoaderCircle, LockKeyhole, Menu, RotateCw, Trash2, Upload, X } from 'lucide-react'
 import Sidebar from './components/Sidebar'
 import ColumnManager from './components/ColumnManager'
 import IdentityFieldsManager from './components/IdentityFieldsManager'
@@ -15,6 +15,7 @@ import SendToDashboardButton from './components/SendToDashboardButton'
 import ConfirmDialog from './components/ConfirmDialog'
 import CompanyDetailsModal from './components/CompanyDetailsModal'
 import CopyPreviousMonthModal from './components/CopyPreviousMonthModal'
+import CopyToMonthsModal from './components/CopyToMonthsModal'
 import AutoCopySettingsModal from './components/AutoCopySettingsModal'
 import { AUTO, copyFromPrevious, readAutoCopy, renameKeyInAutoCopy, untouchedSinceCopy } from './lib/autoCopy'
 import ExportErrorsDialog from './components/ExportErrorsDialog'
@@ -288,6 +289,7 @@ function PayrollApp({ onRestored, inDashboard = false, offline = null, onReloadD
   // handled this session, and what the banner says: { key, from, count, columnNames,
   // employees } after a copy, or { key, note }.
   const [autoCopyOpen, setAutoCopyOpen] = useState(false)
+  const [copyToMonthsOpen, setCopyToMonthsOpen] = useState(false)
   const [newMonthKey, setNewMonthKey] = useState(null)
   const autoCopyHandled = useRef(new Set())
   const [autoCopied, setAutoCopied] = useState(null)
@@ -539,7 +541,7 @@ function PayrollApp({ onRestored, inDashboard = false, offline = null, onReloadD
       }
       const copy = copyFromPrevious({ previousEmployees: result.employees, identityFields, setting: autoCopy, effectiveColumns })
       setPeriodEmployees(copy.employees)
-      setAutoCopied({ key, from, count: copy.employees.length, columnNames: copy.columnNames, employees: copy.employees })
+      setAutoCopied({ key, from, count: copy.employees.length, columnNames: copy.columnNames, employees: copy.employees, isDefault: autoCopy.isDefault })
     }
     const result = loadPeriod(activeCompanyId, prev.year, prev.month)
     if (isPending(result)) void result.then(apply)
@@ -1074,13 +1076,28 @@ function PayrollApp({ onRestored, inDashboard = false, offline = null, onReloadD
                     Copy from Previous Month
                   </button>
                   <button
+                    onClick={() => setCopyToMonthsOpen(true)}
+                    disabled={!monthReady || companyReadOnly || periodEmployees.length === 0}
+                    title={
+                      companyReadOnly
+                        ? 'Only an admin of this company can change this.'
+                        : periodEmployees.length === 0
+                          ? 'This month has no employees.'
+                          : undefined
+                    }
+                    className="btn btn-secondary"
+                  >
+                    <CalendarRange aria-hidden="true" />
+                    Copy this month to…
+                  </button>
+                  <button
                     onClick={() => setAutoCopyOpen(true)}
                     disabled={companyReadOnly}
                     title={companyReadOnly ? 'Only an admin of this company can change this.' : 'When I open a month with no employees yet'}
                     className="btn btn-secondary"
                   >
                     <CopyCheck aria-hidden="true" />
-                    {autoCopy.mode === AUTO ? 'Automatic copy: On' : 'Automatic copy: Off'}
+                    {autoCopy.mode !== AUTO ? 'Automatic copy: Off' : autoCopy.isDefault ? 'Automatic copy: On (default)' : 'Automatic copy: On'}
                   </button>
                   <button
                     onClick={() => setConfirmingDeleteAll(true)}
@@ -1101,7 +1118,7 @@ function PayrollApp({ onRestored, inDashboard = false, offline = null, onReloadD
                   {autoCopied.note ??
                     `Copied ${autoCopied.count} employee${autoCopied.count === 1 ? '' : 's'} from ${autoCopied.from} (${
                       autoCopied.columnNames.length > 0 ? autoCopied.columnNames.join(', ') : 'identity fields only'
-                    }).`}
+                    }).${autoCopied.isDefault ? ' Automatic copy is on by default for this company; change it with the Automatic copy button.' : ''}`}
                 </span>
                 {autoCopied.employees && untouchedSinceCopy(periodEmployees, autoCopied.employees) && (
                   <button onClick={handleUndoAutoCopy} className="btn btn-secondary btn-sm">
@@ -1389,6 +1406,22 @@ function PayrollApp({ onRestored, inDashboard = false, offline = null, onReloadD
           currentPeriodLabel={formatPeriodLabel(selectedYear, selectedMonth)}
           onConfirm={handleConfirmCopyPreviousMonth}
           onCancel={() => setCopyPreviousMonthData(null)}
+        />
+      )}
+
+      {copyToMonthsOpen && activeCompany && selectedYear && selectedMonth && (
+        <CopyToMonthsModal
+          // A new window per company and month: nothing chosen for one is carried to another.
+          key={`${activeCompany.id}:${selectedYear}-${selectedMonth}`}
+          companyId={activeCompanyId}
+          current={{ year: selectedYear, month: selectedMonth }}
+          employees={periodEmployees}
+          identityFields={identityFields}
+          idFieldKey={idFieldKey}
+          effectiveColumns={effectiveColumns}
+          inDashboard={monthsKept}
+          monthSaved={!monthsKept || months.state === 'saved'}
+          onCancel={() => setCopyToMonthsOpen(false)}
         />
       )}
 

@@ -17,7 +17,12 @@ import { act, createElement } from 'react'
 import { createRoot } from 'react-dom/client'
 import * as XLSX from 'xlsx'
 import { beforeAll, expect, test, vi } from 'vitest'
-import { identityFields, idFieldKey, globalColumns, company, effectiveColumns, octoberEmployees, septemberEmployees, octoberGrid } from '../safetyNet/fixture'
+import { identityFields, idFieldKey, globalColumns, company as fixtureCompany, effectiveColumns, octoberEmployees, septemberEmployees, octoberGrid } from '../safetyNet/fixture'
+
+// Four changes: a company that never chose now copies into an empty month by itself. The
+// screens here are about other things, so the fake company has chosen "Ask me" (which the
+// base version reads the same way); only steps 80f and 80g leave the choice out.
+const company = { ...fixtureCompany, autoCopy: { mode: 'ask' } }
 import { buildExportPlan, buildWorkbookBuffer } from '../../src/lib/excelExport'
 
 globalThis.IS_REACT_ACT_ENVIRONMENT = true
@@ -135,6 +140,7 @@ async function click(el) {
 const clickButton = (text, opts) => click(button(text, opts))
 const closeDialog = () => click(all('[aria-label="Close"]').pop())
 const cancel = () => clickButton('Cancel', { last: true })
+const closeOrCancel = () => (all('button').some((b) => textOf(b) === 'Cancel') ? cancel() : clickButton('Close', { last: true }))
 const tab = (name) => clickButton(name)
 
 async function setValue(el, value) {
@@ -761,7 +767,7 @@ test('collect every visible string', async () => {
   await start()
   await settle()
   snap('80c automatic copy, the previous month has no employees')
-  seed({ companies: november() })
+  seed({ companies: november({ autoCopy: { mode: 'ask' } }) })
   await start()
   await settle()
   if (findButton('Automatic copy: Off')) await click(findButton('Automatic copy: Off'))
@@ -770,6 +776,43 @@ test('collect every visible string', async () => {
   if (automaticChoice) await click(automaticChoice.querySelector('input'))
   snapTopDialog('80e automatic copy setting, automatically')
   while (all('[role="dialog"]').length > 0) await cancel()
+
+  // Four changes: a company that never chose copies automatically, with the default columns
+  // (the base version leaves November empty), and its setting window.
+  seed({ companies: november({ autoCopy: undefined }) })
+  await start()
+  await settle()
+  snap('80f automatic copy on by default, an empty month copied')
+  const onByDefault = findButton('Automatic copy: On (default)') ?? findButton('Automatic copy: Off')
+  if (onByDefault) await click(onByDefault)
+  snapTopDialog('80g automatic copy setting, the default')
+  while (all('[role="dialog"]').length > 0) await cancel()
+
+  // "Copy this month to…": October on screen, September saved; the window, a range, the
+  // preview and the end. The base version has no such button: nothing is recorded there.
+  seed({ companies: [{ ...company, viewMonth: 10, autoCopy: { mode: 'ask' } }] })
+  await start()
+  await settle()
+  const copyTo = findButton('Copy this month to…')
+  if (copyTo) {
+    await click(copyTo)
+    snapTopDialog('81 copy this month to other months, one month')
+    const range = all('label').find((l) => textOf(l) === 'A range of months')
+    await click(range.querySelector('input'))
+    const [from, to] = all('[role="dialog"] input[type="month"]')
+    await setValue(from, '2026-09')
+    await setValue(to, '2026-12')
+    snapTopDialog('81b copy this month to other months, a range')
+    await clickButton('Next')
+    await settle()
+    snapTopDialog('81c copy this month to other months, the preview')
+    await click(all('button').find((b) => /^Copy to \d+ months?$/.test(textOf(b))))
+    await settle()
+    snapTopDialog('81d copy this month to other months, done')
+  } else {
+    for (const name of ['81', '81b', '81c', '81d']) snapTopDialog(`${name} copy this month to other months${{ 81: ', one month', '81b': ', a range', '81c': ', the preview', '81d': ', done' }[name]}`)
+  }
+  while (all('[role="dialog"]').length > 0) await closeOrCancel()
 
   expect(OUT, 'TEXT_CHECK_OUT').toBeTruthy()
   fs.writeFileSync(OUT, JSON.stringify(collected, null, 2))

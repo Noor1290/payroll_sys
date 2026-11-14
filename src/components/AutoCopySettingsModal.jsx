@@ -1,7 +1,7 @@
 import { useMemo, useState } from 'react'
 import { CopyCheck } from 'lucide-react'
 import Modal from './Modal'
-import { ASK, AUTO, autoCopyColumnGroups, autoCopyToKeep, readAutoCopy } from '../lib/autoCopy'
+import { ASK, AUTO, autoCopyColumnGroups, autoCopyToKeep, defaultColumnKeys, ONE_OFF_WORDS, readAutoCopy } from '../lib/autoCopy'
 
 // "When I open a month with no employees yet": Ask me, or copy from the
 // previous month automatically with the input columns ticked here. Saved on
@@ -11,7 +11,7 @@ export default function AutoCopySettingsModal({ company, effectiveColumns, inDas
   const groups = useMemo(() => autoCopyColumnGroups(effectiveColumns), [effectiveColumns])
   const allKeys = groups.flatMap((g) => g.columns.map((c) => c.key))
   const [mode, setMode] = useState(start.mode)
-  const [ticked, setTicked] = useState(() => new Set(start.columns.filter((key) => allKeys.includes(key))))
+  const [ticked, setTicked] = useState(() => new Set(start.isDefault ? defaultColumnKeys(effectiveColumns) : start.columns.filter((key) => allKeys.includes(key))))
 
   function toggle(key) {
     setTicked((prev) => {
@@ -70,7 +70,7 @@ export default function AutoCopySettingsModal({ company, effectiveColumns, inDas
             </button>
           </div>
         </div>
-        <div className="max-h-64 space-y-3 overflow-y-auto rounded-xl border border-line bg-surface p-3">
+        <div className="max-h-48 space-y-3 overflow-y-auto rounded-xl border border-line bg-surface p-3">
           {groups.map((group) => (
             <div key={group.label}>
               <p className="mb-1.5 text-[11px] font-medium uppercase tracking-wider text-subtle">{group.label}</p>
@@ -86,6 +86,11 @@ export default function AutoCopySettingsModal({ company, effectiveColumns, inDas
           ))}
           {groups.length === 0 && <p className="text-sm text-muted">No input columns yet: only the identity fields would be copied.</p>}
         </div>
+        {start.isDefault && (
+          <p className="mt-2 text-xs text-muted">
+            {`These are the default columns: every input column except those whose name contains ${ONE_OFF_WORDS.slice(0, -1).join(', ')} or ${ONE_OFF_WORDS.at(-1)}. Save to keep your own choice.`}
+          </p>
+        )}
         <p className="mt-2 text-xs text-muted">A column added later starts unticked.</p>
       </div>
 

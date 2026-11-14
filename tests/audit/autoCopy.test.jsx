@@ -13,7 +13,9 @@ import App from '../../src/App'
 import { resetDataStore } from '../../src/lib/dataStore'
 import { companyBodyOf, forgetDashboardSetup, IMPORTED_KEY, PREFS_KEY } from '../../src/lib/dashboardSetup'
 import { forgetDashboardMonths } from '../../src/lib/dashboardMonths'
-import { autoCopyToKeep, chosenColumns, copyFromPrevious, readAutoCopy, renameKeyInAutoCopy } from '../../src/lib/autoCopy'
+import { autoCopyToKeep, chosenColumns, copyFromPrevious, defaultColumnKeys, isOneOffName, readAutoCopy, renameKeyInAutoCopy } from '../../src/lib/autoCopy'
+import fs from 'node:fs'
+import path from 'node:path'
 import { createFakeSetupHub, installFakeBridge } from '../helpers/fakeSetupHub'
 import { identityFields, idFieldKey, globalColumns, company, effectiveColumns, octoberEmployees } from '../safetyNet/fixture'
 
@@ -35,12 +37,59 @@ const copiedValues = (employees) =>
   }))
 
 describe('the rules', () => {
-  test('anything but a readable "auto" is Ask me, and Ask me is not kept on the company at all', () => {
-    expect(readAutoCopy(undefined)).toEqual({ mode: 'ask', columns: [] })
-    expect(readAutoCopy({ mode: 'sometimes', columns: ['x'] })).toEqual({ mode: 'ask', columns: [] })
-    expect(readAutoCopy({ mode: 'auto', columns: ['a', 'a', '', 3] })).toEqual({ mode: 'auto', columns: ['a'] })
-    expect(autoCopyToKeep({ mode: 'ask', columns: ['a'] })).toBeUndefined()
+  test('never chose (nothing stored) is ON with the default columns; anything else unreadable is Ask me', () => {
+    expect(readAutoCopy(undefined)).toEqual({ mode: 'auto', columns: [], isDefault: true })
+    expect(readAutoCopy(null)).toEqual({ mode: 'auto', columns: [], isDefault: true })
+    expect(readAutoCopy({ mode: 'ask' })).toEqual({ mode: 'ask', columns: [], isDefault: false })
+    expect(readAutoCopy({ mode: 'sometimes', columns: ['x'] })).toEqual({ mode: 'ask', columns: [], isDefault: false })
+    expect(readAutoCopy('auto')).toEqual({ mode: 'ask', columns: [], isDefault: false })
+    expect(readAutoCopy({ mode: 'auto', columns: ['a', 'a', '', 3] })).toEqual({ mode: 'auto', columns: ['a'], isDefault: false })
+    // Reading what was read already gives the same answer (the app passes the read setting on).
+    expect(readAutoCopy(readAutoCopy(undefined))).toEqual(readAutoCopy(undefined))
+  })
+
+  test('"Ask me" is kept on the company from now on, so it is never taken for "never chose"; never chose keeps nothing', () => {
+    expect(autoCopyToKeep({ mode: 'ask', columns: ['a'] })).toEqual({ mode: 'ask' })
     expect(autoCopyToKeep({ mode: 'auto', columns: ['a'] })).toEqual({ mode: 'auto', columns: ['a'] })
+    expect(autoCopyToKeep(undefined)).toBeUndefined()
+    expect(autoCopyToKeep(readAutoCopy(undefined))).toBeUndefined()
+  })
+
+  test('the default columns leave out every name containing bonus, allowance, overtime, increment, arrears, commission or leave', () => {
+    for (const name of ['Bonus', 'Annual BONUS', 'Allowances', 'Meal allowance', 'Overtime 1.5', 'Govt Increment', 'Arrears', 'Commission', 'Annual leave pay', 'Leave']) {
+      expect(isOneOffName(name), name).toBe(true)
+    }
+    for (const name of ['Basic Salary', 'Travelling', 'EDF', 'Full time / Part time', 'Age 60+', 'Over time']) {
+      expect(isOneOffName(name), name).toBe(false)
+    }
+    // Formulas are never copied; on the test setup:
+    expect(defaultColumnKeys(effectiveColumns)).not.toContain('govtIncrement')
+    expect(defaultColumnKeys(effectiveColumns)).not.toContain('allowances')
+    expect(defaultColumnKeys(effectiveColumns)).not.toContain('emoluments')
+    expect(chosenColumns(undefined, effectiveColumns).map((c) => c.key)).toEqual(defaultColumnKeys(effectiveColumns))
+  })
+
+  // The input columns of the owner's setup (column-setup-new.json, outside this repo), as
+  // they are on 14 Nov 2026: names, keys and kinds only.
+  const OWNER_INPUTS = [
+    { key: 'basicSalary', name: 'Basic Salary', category: 'general', type: 'input', valueType: 'number' },
+    { key: 'govtIncrement', name: 'Govt Increment', category: 'general', type: 'input', valueType: 'number' },
+    { key: 'Fulltime', name: 'Full time / Part time', category: 'general', type: 'input', valueType: 'text' },
+    { key: 'allowances', name: 'Allowances', category: 'general', type: 'input', valueType: 'number' },
+    { key: 'travelling', name: 'Travelling', category: 'general', type: 'input', valueType: 'number' },
+    { key: 'age60', name: 'Age 60+', category: 'general', type: 'input', valueType: 'checkbox' },
+    { key: 'edf', name: 'EDF', category: 'otherDeductions', type: 'input', valueType: 'number' },
+  ]
+  const OWNER_DEFAULT = ['Basic Salary', 'Full time / Part time', 'Travelling', 'Age 60+', 'EDF']
+
+  test("the owner's setup: Basic Salary, Full time / Part time, Travelling, Age 60+ and EDF are copied by default", () => {
+    expect(chosenColumns(undefined, OWNER_INPUTS).map((c) => c.name)).toEqual(OWNER_DEFAULT)
+  })
+
+  const ownerFile = path.resolve(import.meta.dirname, '../../../column-setup-new.json')
+  test.runIf(fs.existsSync(ownerFile))('the same list from column-setup-new.json itself, when it is on this laptop', () => {
+    const setup = JSON.parse(fs.readFileSync(ownerFile, 'utf8'))
+    expect(chosenColumns(undefined, setup.columns).map((c) => c.name)).toEqual(OWNER_DEFAULT)
   })
 
   test('only input columns still in the company are copied; a formula or a column gone is not', () => {
@@ -66,7 +115,11 @@ describe('the rules', () => {
   test('inside the dashboard the setting is part of the company\'s column setup; a company that never chose keeps the body it always had', () => {
     expect(companyBodyOf(company)).toEqual({ columns: json(company.columns), customFields: company.details.customFields })
     expect(companyBodyOf({ ...company, autoCopy: AUTO })).toEqual({ columns: json(company.columns), customFields: company.details.customFields, autoCopy: AUTO })
-    expect(companyBodyOf({ ...company, autoCopy: { mode: 'ask', columns: [] } })).not.toHaveProperty('autoCopy')
+    expect(companyBodyOf({ ...company, autoCopy: { mode: 'ask', columns: [] } })).toEqual({
+      columns: json(company.columns),
+      customFields: company.details.customFields,
+      autoCopy: { mode: 'ask' },
+    })
   })
 })
 
@@ -133,8 +186,8 @@ describe('on its own, in this browser', () => {
     await vi.waitFor(() => expect(text()).toContain('November 2026'))
   }
 
-  test('Ask me (the default): nothing is copied, and Copy from Previous Month is there as today', async () => {
-    seed()
+  test('Ask me (stored): nothing is copied, and Copy from Previous Month is there as today', async () => {
+    seed({ autoCopy: { mode: 'ask' } })
     await start()
     expect(rows()).toHaveLength(0)
     expect(text()).not.toContain('Copied')
@@ -211,8 +264,45 @@ describe('on its own, in this browser', () => {
     expect(text()).toContain('Copied 6 employees from October 2026')
   })
 
-  test('the setting: Ask me or automatic, with the input columns ticked; kept on the company, in table order', async () => {
+  test('never chose: ON with the default columns, saved like any copy, and the banner says it is the default', async () => {
     seed()
+    await start()
+    await vi.waitFor(() => expect(rows()).toHaveLength(octoberEmployees.length))
+    const names = chosenColumns(undefined, effectiveColumns).map((c) => c.name).join(', ')
+    expect(text()).toContain(
+      `Copied 6 employees from October 2026 (${names}). Automatic copy is on by default for this company; change it with the Automatic copy button.`
+    )
+    expect(button('Automatic copy: On (default)')).toBeTruthy()
+    expect(button('Undo')).toBeTruthy()
+    // Nothing is written on the company for the default.
+    expect(stored('payroll_app_state_v1').companies[0]).not.toHaveProperty('autoCopy')
+    await vi.waitFor(() => expect(stored(NOVEMBER_KEY).employees).toHaveLength(6))
+    expect(Object.keys(stored(NOVEMBER_KEY).employees[0].values)).not.toContain('allowances')
+    expect(Object.keys(stored(NOVEMBER_KEY).employees[0].values)).not.toContain('govtIncrement')
+  })
+
+  test('the setting window on the default: the default columns ticked, the note, and Save keeps the choice', async () => {
+    seed({ october: [] })
+    await start()
+    await click(button('Automatic copy: On (default)'))
+    const dialog = () => document.querySelector('[role="dialog"]')
+    expect(dialog().textContent).toContain(
+      'These are the default columns: every input column except those whose name contains bonus, allowance, overtime, increment, arrears, commission or leave. Save to keep your own choice.'
+    )
+    const labelled = (name) => [...dialog().querySelectorAll('label')].find((l) => l.textContent.trim() === name || l.textContent.startsWith(name))
+    expect(labelled('Basic Salary').querySelector('input').checked).toBe(true)
+    expect(labelled('Travelling').querySelector('input').checked).toBe(true)
+    expect(labelled('Allowances').querySelector('input').checked).toBe(false)
+    expect(labelled('Govt Increment').querySelector('input').checked).toBe(false)
+    await click(button('Save'))
+    expect(button('Automatic copy: On')).toBeTruthy()
+    await vi.waitFor(() =>
+      expect(stored('payroll_app_state_v1').companies[0].autoCopy).toEqual({ mode: 'auto', columns: defaultColumnKeys(effectiveColumns) })
+    )
+  })
+
+  test('the setting: Ask me or automatic, with the input columns ticked; kept on the company, in table order', async () => {
+    seed({ autoCopy: { mode: 'ask' } })
     await start()
     await click(button('Automatic copy: Off'))
     const dialog = () => document.querySelector('[role="dialog"]')
@@ -234,7 +324,8 @@ describe('on its own, in this browser', () => {
     expect(labelled('Basic Salary').querySelector('input').checked).toBe(true)
     await click(labelled('Ask me').querySelector('input'))
     await click(button('Save'))
-    await vi.waitFor(() => expect(stored('payroll_app_state_v1').companies[0]).not.toHaveProperty('autoCopy'))
+    await vi.waitFor(() => expect(stored('payroll_app_state_v1').companies[0].autoCopy).toEqual({ mode: 'ask' }))
+    expect(button('Automatic copy: Off')).toBeTruthy()
   })
 })
 
@@ -300,8 +391,26 @@ describe('inside the dashboard, which keeps the months', () => {
     expect(button('Automatic copy: On').disabled).toBe(true)
   })
 
+  test('a company of the dashboard that never chose: ON by default, the copy saved there as month revision 1', async () => {
+    await start(seed({ autoCopy: null }))
+    await vi.waitFor(() => expect(rows()).toHaveLength(6))
+    expect(text()).toContain('Automatic copy is on by default for this company')
+    await vi.waitFor(() => expect(hub.state.months.get(NOV)?.revision).toBe(1), { timeout: 4000 })
+    expect(hub.state.setups.get(A.brn).revision).toBe(1)
+    expect(hub.state.setups.get(A.brn).body).not.toHaveProperty('autoCopy')
+  })
+
+  test('"Ask me" saved in the dashboard stays Off: nothing is copied', async () => {
+    await start(seed({ autoCopy: { mode: 'ask' } }))
+    await act(async () => {})
+    await new Promise((resolve) => setTimeout(resolve, 50))
+    expect(rows()).toHaveLength(0)
+    expect(text()).not.toContain('Copied')
+    expect(button('Automatic copy: Off')).toBeTruthy()
+  })
+
   test('the setting is saved in the dashboard with the company\'s columns, as a new revision', async () => {
-    await start(seed({ autoCopy: null, months: {} }))
+    await start(seed({ autoCopy: { mode: 'ask' }, months: {} }))
     await click(button('Automatic copy: Off'))
     const dialog = document.querySelector('[role="dialog"]')
     expect(dialog.textContent).toContain('Saved in the dashboard with this company\'s columns')

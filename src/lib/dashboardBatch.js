@@ -92,7 +92,7 @@ export function checkCompanies(file) {
 
 // A month replaced keeps, for each person still in it (matched by the ID field), the place they
 // had in the dashboard's month, so its History shows the same people changed, not new ones.
-async function keepPeople(company, months) {
+export async function keepPeople(company, months) {
   const replaced = months.filter((m) => m.replace)
   if (replaced.length === 0 || !company.idFieldKey) return { ok: true, months }
   const answer = await askHub(
@@ -113,7 +113,7 @@ async function keepPeople(company, months) {
 }
 
 // No clear answer: whether the company's months are now as sent decides.
-async function confirmImport(company, months) {
+export async function confirmImport(company, months) {
   const answer = await askHub(
     { action: 'check', brn: selectedBrn(), from: months[0].period, to: months.at(-1).period, companies: [company.brn] },
     { dataType: IMPORT, waitMs: IMPORT_WAIT_MS }

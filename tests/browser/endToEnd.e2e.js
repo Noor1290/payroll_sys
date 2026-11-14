@@ -461,6 +461,14 @@ describe('the flow with the column names the payslip app and the dashboard expec
 describe('a second month with one change', () => {
   test('payroll app: October is copied from September, one Basic Salary is changed, and only that employee\'s figures differ', async () => {
     const { page } = flow.payroll
+    // The company was made on screen and never chose, so October would be copied by itself
+    // with the default columns (Four changes). This flow copies every column by hand: "Ask me".
+    await page.getByRole('button', { name: 'Automatic copy: On (default)' }).click()
+    const setting = dialog(page, 'When I open a month with no employees yet')
+    await setting.getByLabel('Ask me').check()
+    await setting.getByRole('button', { name: 'Save' }).click()
+    await setting.waitFor({ state: 'hidden' })
+    await page.getByRole('button', { name: 'Automatic copy: Off' }).waitFor()
     await goToMonth(page, /October →/)
     await page.getByRole('button', { name: 'Copy from Previous Month' }).click()
     const box = dialog(page, 'Copy from Previous Month')

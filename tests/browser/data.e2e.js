@@ -52,9 +52,15 @@ function seedWith(change) {
   return seed
 }
 
+// The test companies choose "Ask me": nothing is copied into an empty month by itself.
+function askMe(seed) {
+  return { ...seed, state: { ...seed.state, companies: seed.state.companies.map((c) => ({ ...c, autoCopy: { mode: 'ask' } })) } }
+}
+
 describe('months', () => {
   test('moving between months; each month starts empty; one month never changes another', async () => {
-    const seed = seededState()
+    // "Ask me" chosen: a company that never chose copies the previous month by itself (Four changes).
+    const seed = askMe(seededState())
     const { context, page } = await openSeeded(app, seed)
     const september = seed.periods[periodStorageKey(A, '2026-09')].employees
 
@@ -96,6 +102,32 @@ describe('months', () => {
     await context.close()
   })
 
+  test('Copy this month to…: September into October to December; each month gets the copy, September is not changed', async () => {
+    const seed = askMe(seededState())
+    const { context, page } = await openSeeded(app, seed)
+    const september = seed.periods[periodStorageKey(A, '2026-09')].employees
+    await page.getByRole('button', { name: 'Copy this month to…' }).click()
+    const box = dialog(page, 'Copy September 2026 to other months')
+    await box.getByLabel('A range of months').check()
+    expect(await box.getByLabel('From').inputValue()).toBe('2026-10')
+    await box.getByLabel('To').fill('2026-12')
+    await box.getByRole('button', { name: 'Next' }).click()
+    await box.getByText('3 employees into 3 months.').waitFor()
+    await box.getByRole('button', { name: 'Copy to 3 months' }).click()
+    await box.getByText('Copied to 3 months.').waitFor()
+    for (const period of ['2026-10', '2026-11', '2026-12']) {
+      const month = await storedPeriod(page, A, period)
+      expect(month.map((e) => e.values.id)).toEqual(september.map((e) => e.values.id))
+      expect(month.map((e) => e.values.basicSalary)).toEqual(september.map((e) => e.values.basicSalary))
+      expect(month.map((e) => e.id)).not.toEqual(september.map((e) => e.id))
+    }
+    expect(await storedPeriod(page, A, '2026-09')).toEqual(september)
+    await box.getByRole('button', { name: 'Close' }).last().click()
+    await goToMonth(page, /October →/)
+    expect(await ids(page)).toEqual(['TST001', 'TST002', 'TST003'])
+    await context.close()
+  })
+
   test('the month a company was on is remembered after a reload', async () => {
     const { context, page } = await openSeeded(app)
     await goToMonth(page, /October →/)
@@ -108,7 +140,7 @@ describe('months', () => {
   // The month being left must never be written under the key of the month
   // being entered, not even for a moment.
   test('changing month writes only the new month\'s own data under its key', async () => {
-    const { context, page } = await openSeeded(app, seededState(), {
+    const { context, page } = await openSeeded(app, askMe(seededState()), {
       initScript: () => {
         window.__writes = []
         const original = Storage.prototype.setItem

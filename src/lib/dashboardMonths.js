@@ -290,6 +290,23 @@ export function periodHasEmployees(companyId, year, month) {
   return (lists.get(normaliseBrn(brn))?.get(period)?.employee_count ?? 0) > 0
 }
 
+// Months of a company saved by something else of this app ("Copy this month to…"):
+// what is held of them is dropped, unless typed into and not saved yet, and the
+// company's list of months is read again.
+export async function monthsSavedElsewhere(brn, periods) {
+  for (const period of periods) {
+    const key = keyOf(brn, period)
+    const entry = months.get(key)
+    if (entry && !pending(entry) && !entry.saving && !entry.problem) {
+      clearTimeout(entry.timer)
+      months.delete(key)
+    }
+  }
+  const answer = await askHub({ action: 'list', brn: selectedBrn(), ...companyParam(brn) }, { dataType: MONTH })
+  if (answer.ok) lists.set(normaliseBrn(brn), new Map(answer.rows.map((row) => [row.period, row])))
+  publish()
+}
+
 // Whether the dashboard has ever saved a month, even with no one in it.
 export function periodIsSaved(companyId, year, month) {
   const brn = brnOf(companyId)
