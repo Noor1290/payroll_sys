@@ -256,6 +256,20 @@ export function deletePeriodsForCompany(companyId) {
   for (const key of periodKeysForCompany(companyId)) localStorage.removeItem(key)
 }
 
+// The newest month saved for a company that has anyone in it, as "YYYY-MM", or
+// null; months in `excluding` do not count. What the automatic copy fills is
+// only the month right after it.
+export function newestPeriodWithEmployees(companyId, excluding = []) {
+  const skip = new Set(excluding)
+  const prefix = `${PERIOD_KEY_PREFIX}${companyId}_`
+  const keys = periodKeysForCompany(companyId).sort().reverse()
+  for (const key of keys) {
+    const period = key.slice(prefix.length)
+    if (!skip.has(period) && readEmployees(key).length > 0) return period
+  }
+  return null
+}
+
 function readEmployees(storageKey) {
   try {
     const parsed = JSON.parse(localStorage.getItem(storageKey))

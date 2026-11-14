@@ -173,6 +173,19 @@ describe('on its own, in this browser', () => {
     if (november) localStorage.setItem(NOVEMBER_KEY, JSON.stringify({ employees: november }))
   }
 
+  async function start2027() {
+    window.PayrollHubBridge = {
+      isEmbedded: () => false,
+      isConnected: () => false,
+      init: () => false,
+      onStatus: () => () => {},
+      requestData: () => Promise.resolve({ ok: false, error: 'Not embedded.' }),
+      sendToDashboard: () => Promise.resolve({ ok: false, error: 'Not embedded.' }),
+    }
+    await render()
+    await vi.waitFor(() => expect(text()).toContain('January 2027'))
+  }
+
   async function start() {
     window.PayrollHubBridge = {
       isEmbedded: () => false,
@@ -227,11 +240,47 @@ describe('on its own, in this browser', () => {
     expect(stored(NOVEMBER_KEY).employees).toEqual([])
   })
 
-  test('the previous month has no employees: a short note, and nothing is copied', async () => {
+  test('the previous month has no employees: it is not the newest month with anyone in it, so nothing is copied or saved', async () => {
     seed({ autoCopy: AUTO, october: [] })
     await start()
-    await vi.waitFor(() => expect(text()).toContain('Nothing was copied: October 2026 has no employees.'))
+    await act(async () => {})
+    await new Promise((resolve) => setTimeout(resolve, 50))
     expect(rows()).toHaveLength(0)
+    expect(text()).not.toContain('Copied')
+    expect(localStorage.getItem(NOVEMBER_KEY) === null || stored(NOVEMBER_KEY).employees.length === 0).toBe(true)
+  })
+
+  test('only the month right after the newest month with employees is filled: looking further ahead shows empty months', async () => {
+    seed({ autoCopy: AUTO })
+    await start()
+    await vi.waitFor(() => expect(rows()).toHaveLength(6)) // November, right after October
+    for (const label of ['December 2026', 'January 2027', 'February 2027', 'March 2027']) {
+      await click(all('button').find((b) => /→/.test(b.textContent)))
+      await vi.waitFor(() => expect(text()).toContain(label))
+      await act(async () => {})
+      await new Promise((resolve) => setTimeout(resolve, 30))
+      expect(rows(), label).toHaveLength(0)
+    }
+    for (const period of ['2026-12', '2027-01', '2027-02', '2027-03']) {
+      const raw = localStorage.getItem(`payroll_period_${company.id}_${period}`)
+      expect(raw === null || JSON.parse(raw).employees.length === 0, period).toBe(true)
+    }
+  })
+
+  test('a later visit: the month after the newest month with employees is filled, never one further ahead', async () => {
+    // November was filled and saved before; December is opened now, January was looked at and left empty.
+    seed({ autoCopy: AUTO, november: octoberEmployees })
+    localStorage.setItem(`payroll_period_${company.id}_2027-01`, JSON.stringify({ employees: [] }))
+    const state = stored('payroll_app_state_v1')
+    state.companies[0].viewYear = 2027
+    state.companies[0].viewMonth = 1
+    localStorage.setItem('payroll_app_state_v1', JSON.stringify(state))
+    await start2027()
+    await act(async () => {})
+    await new Promise((resolve) => setTimeout(resolve, 50))
+    expect(rows()).toHaveLength(0) // January: December has no one, so not right after the newest
+    await click(all('button').find((b) => /←/.test(b.textContent)))
+    await vi.waitFor(() => expect(rows()).toHaveLength(6)) // December, right after November
   })
 
   test('Undo empties the month again, and it is not copied again when opened next time', async () => {
@@ -398,6 +447,21 @@ describe('inside the dashboard, which keeps the months', () => {
     await vi.waitFor(() => expect(hub.state.months.get(NOV)?.revision).toBe(1), { timeout: 4000 })
     expect(hub.state.setups.get(A.brn).revision).toBe(1)
     expect(hub.state.setups.get(A.brn).body).not.toHaveProperty('autoCopy')
+  })
+
+  test('looking ahead in the dashboard: only November (after October, the newest month with employees) is filled and saved; December to March stay empty and unsaved', async () => {
+    await start(seed({ autoCopy: null }))
+    await vi.waitFor(() => expect(hub.state.months.get(NOV)?.revision).toBe(1), { timeout: 4000 })
+    for (const label of ['December 2026', 'January 2027', 'February 2027', 'March 2027']) {
+      await click(all('button').find((b) => /→/.test(b.textContent)))
+      await vi.waitFor(() => expect(text()).toContain(label))
+      await new Promise((resolve) => setTimeout(resolve, 30))
+      expect(rows(), label).toHaveLength(0)
+    }
+    // Waits past the app's save delay: nothing more is saved.
+    await new Promise((resolve) => setTimeout(resolve, 1500))
+    expect([...hub.state.months.keys()].sort()).toEqual([OCT, NOV])
+    expect(text()).not.toContain('Copied 6 employees from November 2026')
   })
 
   test('"Ask me" saved in the dashboard stays Off: nothing is copied', async () => {

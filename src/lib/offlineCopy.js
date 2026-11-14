@@ -85,6 +85,7 @@ export function offlineStore(brn) {
       savePeriod: () => false,
       periodHasEmployees: () => false,
       periodIsSaved: () => false,
+      newestPeriodWithEmployees: () => null,
       deletePeriodsForCompany: () => {},
       countPeriodsHoldingKey: () => ({ periods: 0, companies: 0, unknown: true }),
       renameValueKeyInPeriods: () => false,

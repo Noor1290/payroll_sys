@@ -32,6 +32,7 @@ export const STORE_OPERATIONS = [
   'savePeriod',
   'periodHasEmployees',
   'periodIsSaved',
+  'newestPeriodWithEmployees',
   'deletePeriodsForCompany',
   'countPeriodsHoldingKey',
   'renameValueKeyInPeriods',

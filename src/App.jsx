@@ -292,6 +292,8 @@ function PayrollApp({ onRestored, inDashboard = false, offline = null, onReloadD
   const [copyToMonthsOpen, setCopyToMonthsOpen] = useState(false)
   const [newMonthKey, setNewMonthKey] = useState(null)
   const autoCopyHandled = useRef(new Set())
+  // `${companyId}|YYYY-MM` of every month the automatic copy filled since the app opened.
+  const autoFilled = useRef(new Set())
   const [autoCopied, setAutoCopied] = useState(null)
   const [loaded, setLoaded] = useState(false)
   // Display only: the message shown when an Excel file can't be read, and
@@ -529,8 +531,13 @@ function PayrollApp({ onRestored, inDashboard = false, offline = null, onReloadD
     const key = currentPeriodKey
     if (!key || loadedPeriodKey !== key || newMonthKey !== key || !monthReady || companyReadOnly) return
     if (autoCopy.mode !== AUTO || periodEmployees.length > 0 || autoCopyHandled.current.has(key)) return
-    autoCopyHandled.current.add(key)
+    // Only the month right after the company's newest saved month with anyone in it; a month
+    // the automatic copy filled since the app opened does not count, so looking further ahead
+    // shows an empty month and saves nothing.
     const prev = shiftPeriod(selectedYear, selectedMonth, -1)
+    const filledHere = [...autoFilled.current].filter((k) => k.startsWith(`${activeCompanyId}|`)).map((k) => k.slice(activeCompanyId.length + 1))
+    if (dataStore.newestPeriodWithEmployees(activeCompanyId, filledHere) !== periodKey(prev.year, prev.month)) return
+    autoCopyHandled.current.add(key)
     const from = formatPeriodLabel(prev.year, prev.month)
     const apply = (result) => {
       // Moved on, or something was typed meanwhile: nothing is copied.
@@ -540,6 +547,7 @@ function PayrollApp({ onRestored, inDashboard = false, offline = null, onReloadD
         return
       }
       const copy = copyFromPrevious({ previousEmployees: result.employees, identityFields, setting: autoCopy, effectiveColumns })
+      autoFilled.current.add(`${activeCompanyId}|${periodKey(selectedYear, selectedMonth)}`)
       setPeriodEmployees(copy.employees)
       setAutoCopied({ key, from, count: copy.employees.length, columnNames: copy.columnNames, employees: copy.employees, isDefault: autoCopy.isDefault })
     }

@@ -796,6 +796,7 @@ export const dashboardStore = {
   savePeriod: months('savePeriod'),
   periodHasEmployees: months('periodHasEmployees'),
   periodIsSaved: months('periodIsSaved'),
+  newestPeriodWithEmployees: months('newestPeriodWithEmployees'),
   deletePeriodsForCompany: months('deletePeriodsForCompany'),
   countPeriodsHoldingKey: months('countPeriodsHoldingKey'),
   renameValueKeyInPeriods: months('renameValueKeyInPeriods'),

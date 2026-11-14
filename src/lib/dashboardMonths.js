@@ -307,6 +307,23 @@ export async function monthsSavedElsewhere(brn, periods) {
   publish()
 }
 
+// The newest month the dashboard has saved with anyone in it ("YYYY-MM"), or null
+// (also when the company's months could not be listed); months in `excluding` do
+// not count. Months held here count as they are saved, not as typed.
+export function newestPeriodWithEmployees(companyId, excluding = []) {
+  const brn = brnOf(companyId)
+  if (!brn) return null
+  const list = lists.get(normaliseBrn(brn))
+  if (!list) return null
+  const counts = new Map([...list.values()].map((row) => [row.period, row.employee_count ?? 0]))
+  for (const entry of months.values()) {
+    if (normaliseBrn(entry.brn) === normaliseBrn(brn) && entry.revision > 0) counts.set(entry.period, entry.saved.length)
+  }
+  const skip = new Set(excluding)
+  const filled = [...counts].filter(([period, count]) => count > 0 && !skip.has(period)).map(([period]) => period)
+  return filled.sort().at(-1) ?? null
+}
+
 // Whether the dashboard has ever saved a month, even with no one in it.
 export function periodIsSaved(companyId, year, month) {
   const brn = brnOf(companyId)
@@ -731,6 +748,7 @@ export const monthOperations = {
   savePeriod,
   periodHasEmployees,
   periodIsSaved,
+  newestPeriodWithEmployees,
   countPeriodsHoldingKey,
   renameValueKeyInPeriods,
   readSavedValues,
