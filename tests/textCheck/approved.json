@@ -4478,6 +4478,630 @@
     {
       "text": "text: If Emoluments is below 50,000, apply 1.5%. If Emoluments is 50,000 or above, apply 3%.",
       "why": "approved 9 Nov 2026, cleanup Stage 4: C17, the column list shows the rule sentence the column form shows"
+    },
+    {
+      "text": "text: Copy this month to…",
+      "why": "approved 14 Nov 2026, Four changes Stage 2: C1"
+    },
+    {
+      "text": "title: This month has no employees.",
+      "why": "approved 14 Nov 2026, Four changes Stage 2: C2"
+    },
+    {
+      "text": "text: Basic Salary",
+      "why": "not wording, Four changes Stage 2: the fake data, column names, month names and existing buttons now shown where the automatic copy fills a month by default (80f), on the new setting and Copy this month to… steps (80g, 81-81d), and in the dialogs whose list of screens grew; the base version shows them empty or not at all",
+      "onlyOn": [
+        "70c date fields, import mapping",
+        "80d automatic copy setting, ask me",
+        "80e automatic copy setting, automatically",
+        "80g automatic copy setting, the default",
+        "81 copy this month to other months, one month",
+        "81b copy this month to other months, a range"
+      ]
+    },
+    {
+      "text": "text: Govt Increment",
+      "why": "not wording, Four changes Stage 2: the fake data, column names, month names and existing buttons now shown where the automatic copy fills a month by default (80f), on the new setting and Copy this month to… steps (80g, 81-81d), and in the dialogs whose list of screens grew; the base version shows them empty or not at all",
+      "onlyOn": [
+        "70c date fields, import mapping",
+        "80d automatic copy setting, ask me",
+        "80e automatic copy setting, automatically",
+        "80g automatic copy setting, the default",
+        "81 copy this month to other months, one month",
+        "81b copy this month to other months, a range"
+      ]
+    },
+    {
+      "text": "text: Full time / Part time",
+      "why": "not wording, Four changes Stage 2: the fake data, column names, month names and existing buttons now shown where the automatic copy fills a month by default (80f), on the new setting and Copy this month to… steps (80g, 81-81d), and in the dialogs whose list of screens grew; the base version shows them empty or not at all",
+      "onlyOn": [
+        "70c date fields, import mapping",
+        "80d automatic copy setting, ask me",
+        "80e automatic copy setting, automatically",
+        "80g automatic copy setting, the default",
+        "81 copy this month to other months, one month",
+        "81b copy this month to other months, a range"
+      ]
+    },
+    {
+      "text": "text: Allowances",
+      "why": "not wording, Four changes Stage 2: the fake data, column names, month names and existing buttons now shown where the automatic copy fills a month by default (80f), on the new setting and Copy this month to… steps (80g, 81-81d), and in the dialogs whose list of screens grew; the base version shows them empty or not at all",
+      "onlyOn": [
+        "70c date fields, import mapping",
+        "80d automatic copy setting, ask me",
+        "80e automatic copy setting, automatically",
+        "80g automatic copy setting, the default",
+        "81 copy this month to other months, one month",
+        "81b copy this month to other months, a range"
+      ]
+    },
+    {
+      "text": "text: Travelling",
+      "why": "not wording, Four changes Stage 2: the fake data, column names, month names and existing buttons now shown where the automatic copy fills a month by default (80f), on the new setting and Copy this month to… steps (80g, 81-81d), and in the dialogs whose list of screens grew; the base version shows them empty or not at all",
+      "onlyOn": [
+        "70c date fields, import mapping",
+        "80d automatic copy setting, ask me",
+        "80e automatic copy setting, automatically",
+        "80g automatic copy setting, the default",
+        "81 copy this month to other months, one month",
+        "81b copy this month to other months, a range"
+      ]
+    },
+    {
+      "text": "text: Age 60+",
+      "why": "not wording, Four changes Stage 2: the fake data, column names, month names and existing buttons now shown where the automatic copy fills a month by default (80f), on the new setting and Copy this month to… steps (80g, 81-81d), and in the dialogs whose list of screens grew; the base version shows them empty or not at all",
+      "onlyOn": [
+        "70c date fields, import mapping",
+        "80d automatic copy setting, ask me",
+        "80e automatic copy setting, automatically",
+        "80g automatic copy setting, the default",
+        "81 copy this month to other months, one month",
+        "81b copy this month to other months, a range"
+      ]
+    },
+    {
+      "text": "text: EDF",
+      "why": "not wording, Four changes Stage 2: the fake data, column names, month names and existing buttons now shown where the automatic copy fills a month by default (80f), on the new setting and Copy this month to… steps (80g, 81-81d), and in the dialogs whose list of screens grew; the base version shows them empty or not at all",
+      "onlyOn": [
+        "70c date fields, import mapping",
+        "80d automatic copy setting, ask me",
+        "80e automatic copy setting, automatically",
+        "80g automatic copy setting, the default",
+        "81 copy this month to other months, one month",
+        "81b copy this month to other months, a range"
+      ]
+    },
+    {
+      "text": "text: Internal Note",
+      "why": "not wording, Four changes Stage 2: the fake data, column names, month names and existing buttons now shown where the automatic copy fills a month by default (80f), on the new setting and Copy this month to… steps (80g, 81-81d), and in the dialogs whose list of screens grew; the base version shows them empty or not at all",
+      "onlyOn": [
+        "70c date fields, import mapping",
+        "80d automatic copy setting, ask me",
+        "80e automatic copy setting, automatically",
+        "80g automatic copy setting, the default",
+        "81 copy this month to other months, one month",
+        "81b copy this month to other months, a range"
+      ]
+    },
+    {
+      "text": "text: Save",
+      "why": "not wording, Four changes Stage 2: the fake data, column names, month names and existing buttons now shown where the automatic copy fills a month by default (80f), on the new setting and Copy this month to… steps (80g, 81-81d), and in the dialogs whose list of screens grew; the base version shows them empty or not at all",
+      "onlyOn": [
+        "66 embedded: company details from the dashboard",
+        "70e date fields, add identity field, Date",
+        "70f date fields, edit the ID field",
+        "70g date fields, add column, Date",
+        "70h date fields, a formula using a Date column",
+        "70i date fields, a column formulas use made a Date",
+        "80d automatic copy setting, ask me",
+        "80e automatic copy setting, automatically",
+        "80g automatic copy setting, the default"
+      ]
+    },
+    {
+      "text": "text: General",
+      "why": "not wording, Four changes Stage 2: the fake data, column names, month names and existing buttons now shown where the automatic copy fills a month by default (80f), on the new setting and Copy this month to… steps (80g, 81-81d), and in the dialogs whose list of screens grew; the base version shows them empty or not at all",
+      "onlyOn": [
+        "70g date fields, add column, Date",
+        "70h date fields, a formula using a Date column",
+        "70i date fields, a column formulas use made a Date",
+        "80d automatic copy setting, ask me",
+        "80e automatic copy setting, automatically",
+        "80g automatic copy setting, the default",
+        "81 copy this month to other months, one month",
+        "81b copy this month to other months, a range"
+      ]
+    },
+    {
+      "text": "text: Other Deductions",
+      "why": "not wording, Four changes Stage 2: the fake data, column names, month names and existing buttons now shown where the automatic copy fills a month by default (80f), on the new setting and Copy this month to… steps (80g, 81-81d), and in the dialogs whose list of screens grew; the base version shows them empty or not at all",
+      "onlyOn": [
+        "70g date fields, add column, Date",
+        "70h date fields, a formula using a Date column",
+        "70i date fields, a column formulas use made a Date",
+        "80d automatic copy setting, ask me",
+        "80e automatic copy setting, automatically",
+        "80g automatic copy setting, the default",
+        "81 copy this month to other months, one month",
+        "81b copy this month to other months, a range"
+      ]
+    },
+    {
+      "text": "text: 0",
+      "why": "not wording, Four changes Stage 2: the fake data, column names, month names and existing buttons now shown where the automatic copy fills a month by default (80f), on the new setting and Copy this month to… steps (80g, 81-81d), and in the dialogs whose list of screens grew; the base version shows them empty or not at all",
+      "onlyOn": [
+        "70h date fields, a formula using a Date column",
+        "80 automatic copy, an empty month copied from the previous one",
+        "80f automatic copy on by default, an empty month copied"
+      ]
+    },
+    {
+      "text": "text: fx",
+      "why": "not wording, Four changes Stage 2: the fake data, column names, month names and existing buttons now shown where the automatic copy fills a month by default (80f), on the new setting and Copy this month to… steps (80g, 81-81d), and in the dialogs whose list of screens grew; the base version shows them empty or not at all",
+      "onlyOn": [
+        "80 automatic copy, an empty month copied from the previous one",
+        "80f automatic copy on by default, an empty month copied"
+      ]
+    },
+    {
+      "text": "title: Click to see calculation breakdown",
+      "why": "not wording, Four changes Stage 2: the fake data, column names, month names and existing buttons now shown where the automatic copy fills a month by default (80f), on the new setting and Copy this month to… steps (80g, 81-81d), and in the dialogs whose list of screens grew; the base version shows them empty or not at all",
+      "onlyOn": [
+        "80 automatic copy, an empty month copied from the previous one",
+        "80f automatic copy on by default, an empty month copied"
+      ]
+    },
+    {
+      "text": "text: 18,115.00",
+      "why": "not wording, Four changes Stage 2: the fake data, column names, month names and existing buttons now shown where the automatic copy fills a month by default (80f), on the new setting and Copy this month to… steps (80g, 81-81d), and in the dialogs whose list of screens grew; the base version shows them empty or not at all",
+      "onlyOn": [
+        "80 automatic copy, an empty month copied from the previous one",
+        "80f automatic copy on by default, an empty month copied"
+      ]
+    },
+    {
+      "text": "text: 0.00",
+      "why": "not wording, Four changes Stage 2: the fake data, column names, month names and existing buttons now shown where the automatic copy fills a month by default (80f), on the new setting and Copy this month to… steps (80g, 81-81d), and in the dialogs whose list of screens grew; the base version shows them empty or not at all",
+      "onlyOn": [
+        "80 automatic copy, an empty month copied from the previous one",
+        "80f automatic copy on by default, an empty month copied"
+      ]
+    },
+    {
+      "text": "text: Delete",
+      "why": "not wording, Four changes Stage 2: the fake data, column names, month names and existing buttons now shown where the automatic copy fills a month by default (80f), on the new setting and Copy this month to… steps (80g, 81-81d), and in the dialogs whose list of screens grew; the base version shows them empty or not at all",
+      "onlyOn": [
+        "80 automatic copy, an empty month copied from the previous one",
+        "80f automatic copy on by default, an empty month copied"
+      ]
+    },
+    {
+      "text": "text: 297.10",
+      "why": "not wording, Four changes Stage 2: the fake data, column names, month names and existing buttons now shown where the automatic copy fills a month by default (80f), on the new setting and Copy this month to… steps (80g, 81-81d), and in the dialogs whose list of screens grew; the base version shows them empty or not at all",
+      "onlyOn": [
+        "80 automatic copy, an empty month copied from the previous one",
+        "80f automatic copy on by default, an empty month copied"
+      ]
+    },
+    {
+      "text": "text: 2,250.00",
+      "why": "not wording, Four changes Stage 2: the fake data, column names, month names and existing buttons now shown where the automatic copy fills a month by default (80f), on the new setting and Copy this month to… steps (80g, 81-81d), and in the dialogs whose list of screens grew; the base version shows them empty or not at all",
+      "onlyOn": [
+        "80 automatic copy, an empty month copied from the previous one",
+        "80f automatic copy on by default, an empty month copied"
+      ]
+    },
+    {
+      "text": "text: 250,000.00",
+      "why": "not wording, Four changes Stage 2: the fake data, column names, month names and existing buttons now shown where the automatic copy fills a month by default (80f), on the new setting and Copy this month to… steps (80g, 81-81d), and in the dialogs whose list of screens grew; the base version shows them empty or not at all",
+      "onlyOn": [
+        "80 automatic copy, an empty month copied from the previous one",
+        "80f automatic copy on by default, an empty month copied"
+      ]
+    },
+    {
+      "text": "text: 1,500.000",
+      "why": "not wording, Four changes Stage 2: the fake data, column names, month names and existing buttons now shown where the automatic copy fills a month by default (80f), on the new setting and Copy this month to… steps (80g, 81-81d), and in the dialogs whose list of screens grew; the base version shows them empty or not at all",
+      "onlyOn": [
+        "80 automatic copy, an empty month copied from the previous one",
+        "80f automatic copy on by default, an empty month copied"
+      ]
+    },
+    {
+      "text": "text: 0.000",
+      "why": "not wording, Four changes Stage 2: the fake data, column names, month names and existing buttons now shown where the automatic copy fills a month by default (80f), on the new setting and Copy this month to… steps (80g, 81-81d), and in the dialogs whose list of screens grew; the base version shows them empty or not at all",
+      "onlyOn": [
+        "80 automatic copy, an empty month copied from the previous one",
+        "80f automatic copy on by default, an empty month copied"
+      ]
+    },
+    {
+      "text": "text: For Fake Co Ltd.",
+      "why": "not wording, Four changes Stage 2: the fake data, column names, month names and existing buttons now shown where the automatic copy fills a month by default (80f), on the new setting and Copy this month to… steps (80g, 81-81d), and in the dialogs whose list of screens grew; the base version shows them empty or not at all",
+      "onlyOn": [
+        "80d automatic copy setting, ask me",
+        "80e automatic copy setting, automatically",
+        "80g automatic copy setting, the default"
+      ]
+    },
+    {
+      "text": "text: The first time a month with no employees is opened, every employee of the month before is copied with their identity fields and the columns ticked below. The other columns stay empty; calculated columns are worked out as usual. A month that has employees is never changed.",
+      "why": "not wording, Four changes Stage 2: the fake data, column names, month names and existing buttons now shown where the automatic copy fills a month by default (80f), on the new setting and Copy this month to… steps (80g, 81-81d), and in the dialogs whose list of screens grew; the base version shows them empty or not at all",
+      "onlyOn": [
+        "80d automatic copy setting, ask me",
+        "80e automatic copy setting, automatically",
+        "80g automatic copy setting, the default"
+      ]
+    },
+    {
+      "text": "text: Automatic copy: On (default)",
+      "why": "approved 14 Nov 2026, Four changes Stage 2: A1"
+    },
+    {
+      "text": "text: Copied 6 employees from October 2026 (Basic Salary, Full time / Part time, Travelling, Age 60+, Internal Note, EDF). Automatic copy is on by default for this company; change it with the Automatic copy button.",
+      "why": "approved 14 Nov 2026, Four changes Stage 2: A2 (the banner's first sentence is existing wording, filled in with the fake data)",
+      "onlyOn": [
+        "80f automatic copy on by default, an empty month copied"
+      ]
+    },
+    {
+      "text": "text: 19,615.00",
+      "why": "not wording, Four changes Stage 2: the fake data, column names, month names and existing buttons now shown where the automatic copy fills a month by default (80f), on the new setting and Copy this month to… steps (80g, 81-81d), and in the dialogs whose list of screens grew; the base version shows them empty or not at all",
+      "onlyOn": [
+        "80f automatic copy on by default, an empty month copied"
+      ]
+    },
+    {
+      "text": "text: 19,162.13",
+      "why": "not wording, Four changes Stage 2: the fake data, column names, month names and existing buttons now shown where the automatic copy fills a month by default (80f), on the new setting and Copy this month to… steps (80g, 81-81d), and in the dialogs whose list of screens grew; the base version shows them empty or not at all",
+      "onlyOn": [
+        "80f automatic copy on by default, an empty month copied"
+      ]
+    },
+    {
+      "text": "text: 271.73",
+      "why": "not wording, Four changes Stage 2: the fake data, column names, month names and existing buttons now shown where the automatic copy fills a month by default (80f), on the new setting and Copy this month to… steps (80g, 81-81d), and in the dialogs whose list of screens grew; the base version shows them empty or not at all",
+      "onlyOn": [
+        "80f automatic copy on by default, an empty month copied"
+      ]
+    },
+    {
+      "text": "text: 181.15",
+      "why": "not wording, Four changes Stage 2: the fake data, column names, month names and existing buttons now shown where the automatic copy fills a month by default (80f), on the new setting and Copy this month to… steps (80g, 81-81d), and in the dialogs whose list of screens grew; the base version shows them empty or not at all",
+      "onlyOn": [
+        "80f automatic copy on by default, an empty month copied"
+      ]
+    },
+    {
+      "text": "text: 452.88",
+      "why": "not wording, Four changes Stage 2: the fake data, column names, month names and existing buttons now shown where the automatic copy fills a month by default (80f), on the new setting and Copy this month to… steps (80g, 81-81d), and in the dialogs whose list of screens grew; the base version shows them empty or not at all",
+      "onlyOn": [
+        "80f automatic copy on by default, an empty month copied"
+      ]
+    },
+    {
+      "text": "text: 815.18",
+      "why": "not wording, Four changes Stage 2: the fake data, column names, month names and existing buttons now shown where the automatic copy fills a month by default (80f), on the new setting and Copy this month to… steps (80g, 81-81d), and in the dialogs whose list of screens grew; the base version shows them empty or not at all",
+      "onlyOn": [
+        "80f automatic copy on by default, an empty month copied"
+      ]
+    },
+    {
+      "text": "text: 1,268.05",
+      "why": "not wording, Four changes Stage 2: the fake data, column names, month names and existing buttons now shown where the automatic copy fills a month by default (80f), on the new setting and Copy this month to… steps (80g, 81-81d), and in the dialogs whose list of screens grew; the base version shows them empty or not at all",
+      "onlyOn": [
+        "80f automatic copy on by default, an empty month copied"
+      ]
+    },
+    {
+      "text": "text: 30,000.00",
+      "why": "not wording, Four changes Stage 2: the fake data, column names, month names and existing buttons now shown where the automatic copy fills a month by default (80f), on the new setting and Copy this month to… steps (80g, 81-81d), and in the dialogs whose list of screens grew; the base version shows them empty or not at all",
+      "onlyOn": [
+        "80f automatic copy on by default, an empty month copied"
+      ]
+    },
+    {
+      "text": "text: 48,000.00",
+      "why": "not wording, Four changes Stage 2: the fake data, column names, month names and existing buttons now shown where the automatic copy fills a month by default (80f), on the new setting and Copy this month to… steps (80g, 81-81d), and in the dialogs whose list of screens grew; the base version shows them empty or not at all",
+      "onlyOn": [
+        "80f automatic copy on by default, an empty month copied"
+      ]
+    },
+    {
+      "text": "text: 45,182.90",
+      "why": "not wording, Four changes Stage 2: the fake data, column names, month names and existing buttons now shown where the automatic copy fills a month by default (80f), on the new setting and Copy this month to… steps (80g, 81-81d), and in the dialogs whose list of screens grew; the base version shows them empty or not at all",
+      "onlyOn": [
+        "80f automatic copy on by default, an empty month copied"
+      ]
+    },
+    {
+      "text": "text: 720.00",
+      "why": "not wording, Four changes Stage 2: the fake data, column names, month names and existing buttons now shown where the automatic copy fills a month by default (80f), on the new setting and Copy this month to… steps (80g, 81-81d), and in the dialogs whose list of screens grew; the base version shows them empty or not at all",
+      "onlyOn": [
+        "80f automatic copy on by default, an empty month copied"
+      ]
+    },
+    {
+      "text": "text: 1,800",
+      "why": "not wording, Four changes Stage 2: the fake data, column names, month names and existing buttons now shown where the automatic copy fills a month by default (80f), on the new setting and Copy this month to… steps (80g, 81-81d), and in the dialogs whose list of screens grew; the base version shows them empty or not at all",
+      "onlyOn": [
+        "80f automatic copy on by default, an empty month copied"
+      ]
+    },
+    {
+      "text": "text: 2,817.10",
+      "why": "not wording, Four changes Stage 2: the fake data, column names, month names and existing buttons now shown where the automatic copy fills a month by default (80f), on the new setting and Copy this month to… steps (80g, 81-81d), and in the dialogs whose list of screens grew; the base version shows them empty or not at all",
+      "onlyOn": [
+        "80f automatic copy on by default, an empty month copied"
+      ]
+    },
+    {
+      "text": "text: 720.000",
+      "why": "not wording, Four changes Stage 2: the fake data, column names, month names and existing buttons now shown where the automatic copy fills a month by default (80f), on the new setting and Copy this month to… steps (80g, 81-81d), and in the dialogs whose list of screens grew; the base version shows them empty or not at all",
+      "onlyOn": [
+        "80f automatic copy on by default, an empty month copied"
+      ]
+    },
+    {
+      "text": "text: 2,160.00",
+      "why": "not wording, Four changes Stage 2: the fake data, column names, month names and existing buttons now shown where the automatic copy fills a month by default (80f), on the new setting and Copy this month to… steps (80g, 81-81d), and in the dialogs whose list of screens grew; the base version shows them empty or not at all",
+      "onlyOn": [
+        "80f automatic copy on by default, an empty month copied"
+      ]
+    },
+    {
+      "text": "text: 5,697.10",
+      "why": "not wording, Four changes Stage 2: the fake data, column names, month names and existing buttons now shown where the automatic copy fills a month by default (80f), on the new setting and Copy this month to… steps (80g, 81-81d), and in the dialogs whose list of screens grew; the base version shows them empty or not at all",
+      "onlyOn": [
+        "80f automatic copy on by default, an empty month copied"
+      ]
+    },
+    {
+      "text": "text: 200,202.90",
+      "why": "not wording, Four changes Stage 2: the fake data, column names, month names and existing buttons now shown where the automatic copy fills a month by default (80f), on the new setting and Copy this month to… steps (80g, 81-81d), and in the dialogs whose list of screens grew; the base version shows them empty or not at all",
+      "onlyOn": [
+        "80f automatic copy on by default, an empty month copied"
+      ]
+    },
+    {
+      "text": "text: 7,500.00",
+      "why": "not wording, Four changes Stage 2: the fake data, column names, month names and existing buttons now shown where the automatic copy fills a month by default (80f), on the new setting and Copy this month to… steps (80g, 81-81d), and in the dialogs whose list of screens grew; the base version shows them empty or not at all",
+      "onlyOn": [
+        "80f automatic copy on by default, an empty month copied"
+      ]
+    },
+    {
+      "text": "text: 42,000",
+      "why": "not wording, Four changes Stage 2: the fake data, column names, month names and existing buttons now shown where the automatic copy fills a month by default (80f), on the new setting and Copy this month to… steps (80g, 81-81d), and in the dialogs whose list of screens grew; the base version shows them empty or not at all",
+      "onlyOn": [
+        "80f automatic copy on by default, an empty month copied"
+      ]
+    },
+    {
+      "text": "text: 49,797.10",
+      "why": "not wording, Four changes Stage 2: the fake data, column names, month names and existing buttons now shown where the automatic copy fills a month by default (80f), on the new setting and Copy this month to… steps (80g, 81-81d), and in the dialogs whose list of screens grew; the base version shows them empty or not at all",
+      "onlyOn": [
+        "80f automatic copy on by default, an empty month copied"
+      ]
+    },
+    {
+      "text": "text: 51,297.10",
+      "why": "not wording, Four changes Stage 2: the fake data, column names, month names and existing buttons now shown where the automatic copy fills a month by default (80f), on the new setting and Copy this month to… steps (80g, 81-81d), and in the dialogs whose list of screens grew; the base version shows them empty or not at all",
+      "onlyOn": [
+        "80f automatic copy on by default, an empty month copied"
+      ]
+    },
+    {
+      "text": "text: 38,461.54",
+      "why": "not wording, Four changes Stage 2: the fake data, column names, month names and existing buttons now shown where the automatic copy fills a month by default (80f), on the new setting and Copy this month to… steps (80g, 81-81d), and in the dialogs whose list of screens grew; the base version shows them empty or not at all",
+      "onlyOn": [
+        "80f automatic copy on by default, an empty month copied"
+      ]
+    },
+    {
+      "text": "text: 211,538.46",
+      "why": "not wording, Four changes Stage 2: the fake data, column names, month names and existing buttons now shown where the automatic copy fills a month by default (80f), on the new setting and Copy this month to… steps (80g, 81-81d), and in the dialogs whose list of screens grew; the base version shows them empty or not at all",
+      "onlyOn": [
+        "80f automatic copy on by default, an empty month copied"
+      ]
+    },
+    {
+      "text": "text: 30,000.01",
+      "why": "not wording, Four changes Stage 2: the fake data, column names, month names and existing buttons now shown where the automatic copy fills a month by default (80f), on the new setting and Copy this month to… steps (80g, 81-81d), and in the dialogs whose list of screens grew; the base version shows them empty or not at all",
+      "onlyOn": [
+        "80f automatic copy on by default, an empty month copied"
+      ]
+    },
+    {
+      "text": "text: 30,750.51",
+      "why": "not wording, Four changes Stage 2: the fake data, column names, month names and existing buttons now shown where the automatic copy fills a month by default (80f), on the new setting and Copy this month to… steps (80g, 81-81d), and in the dialogs whose list of screens grew; the base version shows them empty or not at all",
+      "onlyOn": [
+        "80f automatic copy on by default, an empty month copied"
+      ]
+    },
+    {
+      "text": "text: 30,300.50",
+      "why": "not wording, Four changes Stage 2: the fake data, column names, month names and existing buttons now shown where the automatic copy fills a month by default (80f), on the new setting and Copy this month to… steps (80g, 81-81d), and in the dialogs whose list of screens grew; the base version shows them empty or not at all",
+      "onlyOn": [
+        "80f automatic copy on by default, an empty month copied"
+      ]
+    },
+    {
+      "text": "text: 450.00",
+      "why": "not wording, Four changes Stage 2: the fake data, column names, month names and existing buttons now shown where the automatic copy fills a month by default (80f), on the new setting and Copy this month to… steps (80g, 81-81d), and in the dialogs whose list of screens grew; the base version shows them empty or not at all",
+      "onlyOn": [
+        "80f automatic copy on by default, an empty month copied"
+      ]
+    },
+    {
+      "text": "text: 450.000",
+      "why": "not wording, Four changes Stage 2: the fake data, column names, month names and existing buttons now shown where the automatic copy fills a month by default (80f), on the new setting and Copy this month to… steps (80g, 81-81d), and in the dialogs whose list of screens grew; the base version shows them empty or not at all",
+      "onlyOn": [
+        "80f automatic copy on by default, an empty month copied"
+      ]
+    },
+    {
+      "text": "text: 1,350.00",
+      "why": "not wording, Four changes Stage 2: the fake data, column names, month names and existing buttons now shown where the automatic copy fills a month by default (80f), on the new setting and Copy this month to… steps (80g, 81-81d), and in the dialogs whose list of screens grew; the base version shows them empty or not at all",
+      "onlyOn": [
+        "80f automatic copy on by default, an empty month copied"
+      ]
+    },
+    {
+      "text": "text: 76,923.08",
+      "why": "not wording, Four changes Stage 2: the fake data, column names, month names and existing buttons now shown where the automatic copy fills a month by default (80f), on the new setting and Copy this month to… steps (80g, 81-81d), and in the dialogs whose list of screens grew; the base version shows them empty or not at all",
+      "onlyOn": [
+        "80f automatic copy on by default, an empty month copied"
+      ]
+    },
+    {
+      "text": "text: 300.00",
+      "why": "not wording, Four changes Stage 2: the fake data, column names, month names and existing buttons now shown where the automatic copy fills a month by default (80f), on the new setting and Copy this month to… steps (80g, 81-81d), and in the dialogs whose list of screens grew; the base version shows them empty or not at all",
+      "onlyOn": [
+        "80f automatic copy on by default, an empty month copied"
+      ]
+    },
+    {
+      "text": "text: These are the default columns: every input column except those whose name contains bonus, allowance, overtime, increment, arrears, commission or leave. Save to keep your own choice.",
+      "why": "approved 14 Nov 2026, Four changes Stage 2: A3",
+      "onlyOn": [
+        "80g automatic copy setting, the default"
+      ]
+    },
+    {
+      "text": "text: Copy October 2026 to other months",
+      "why": "approved 14 Nov 2026, Four changes Stage 2: C4",
+      "onlyOn": [
+        "81 copy this month to other months, one month",
+        "81b copy this month to other months, a range",
+        "81c copy this month to other months, the preview",
+        "81d copy this month to other months, done"
+      ]
+    },
+    {
+      "text": "text: Months",
+      "why": "approved 14 Nov 2026, Four changes Stage 2: C22",
+      "onlyOn": [
+        "81 copy this month to other months, one month",
+        "81b copy this month to other months, a range"
+      ]
+    },
+    {
+      "text": "text: One month",
+      "why": "approved 14 Nov 2026, Four changes Stage 2: C5",
+      "onlyOn": [
+        "81 copy this month to other months, one month",
+        "81b copy this month to other months, a range"
+      ]
+    },
+    {
+      "text": "text: A range of months",
+      "why": "approved 14 Nov 2026, Four changes Stage 2: C5",
+      "onlyOn": [
+        "81 copy this month to other months, one month",
+        "81b copy this month to other months, a range"
+      ]
+    },
+    {
+      "text": "text: Month",
+      "why": "approved 14 Nov 2026, Four changes Stage 2: C6",
+      "onlyOn": [
+        "81 copy this month to other months, one month"
+      ]
+    },
+    {
+      "text": "text: Columns to copy",
+      "why": "approved 14 Nov 2026, Four changes Stage 2: C8 (existing wording)",
+      "onlyOn": [
+        "81 copy this month to other months, one month",
+        "81b copy this month to other months, a range"
+      ]
+    },
+    {
+      "text": "text: The identity fields are always copied. Calculated columns are worked out as usual.",
+      "why": "approved 14 Nov 2026, Four changes Stage 2: C9",
+      "onlyOn": [
+        "81 copy this month to other months, one month",
+        "81b copy this month to other months, a range"
+      ]
+    },
+    {
+      "text": "text: Next",
+      "why": "approved 14 Nov 2026, Four changes Stage 2: C10",
+      "onlyOn": [
+        "81 copy this month to other months, one month",
+        "81b copy this month to other months, a range"
+      ]
+    },
+    {
+      "text": "aria-label: The months",
+      "why": "approved 14 Nov 2026, Four changes Stage 2: C22",
+      "onlyOn": [
+        "81c copy this month to other months, the preview"
+      ]
+    },
+    {
+      "text": "text: Saved already: skipped",
+      "why": "approved 14 Nov 2026, Four changes Stage 2: C12",
+      "onlyOn": [
+        "81c copy this month to other months, the preview"
+      ]
+    },
+    {
+      "text": "text: November 2026",
+      "why": "not wording, Four changes Stage 2: the fake data, column names, month names and existing buttons now shown where the automatic copy fills a month by default (80f), on the new setting and Copy this month to… steps (80g, 81-81d), and in the dialogs whose list of screens grew; the base version shows them empty or not at all",
+      "onlyOn": [
+        "81c copy this month to other months, the preview"
+      ]
+    },
+    {
+      "text": "text: Will be added (6 employees)",
+      "why": "approved 14 Nov 2026, Four changes Stage 2: C11",
+      "onlyOn": [
+        "81c copy this month to other months, the preview"
+      ]
+    },
+    {
+      "text": "text: December 2026",
+      "why": "not wording, Four changes Stage 2: the fake data, column names, month names and existing buttons now shown where the automatic copy fills a month by default (80f), on the new setting and Copy this month to… steps (80g, 81-81d), and in the dialogs whose list of screens grew; the base version shows them empty or not at all",
+      "onlyOn": [
+        "81c copy this month to other months, the preview"
+      ]
+    },
+    {
+      "text": "text: 6 employees into 2 months. 1 month skipped.",
+      "why": "approved 14 Nov 2026, Four changes Stage 2: C13",
+      "onlyOn": [
+        "81c copy this month to other months, the preview"
+      ]
+    },
+    {
+      "text": "text: On its own, this app never replaces a saved month: there is no History here to bring it back.",
+      "why": "approved 14 Nov 2026, Four changes Stage 2: C14",
+      "onlyOn": [
+        "81c copy this month to other months, the preview"
+      ]
+    },
+    {
+      "text": "text: Back",
+      "why": "approved 14 Nov 2026, Four changes Stage 2: C16",
+      "onlyOn": [
+        "81c copy this month to other months, the preview"
+      ]
+    },
+    {
+      "text": "text: Copy to 2 months",
+      "why": "approved 14 Nov 2026, Four changes Stage 2: C16",
+      "onlyOn": [
+        "81c copy this month to other months, the preview"
+      ]
+    },
+    {
+      "text": "text: Copied to 2 months; 1 skipped.",
+      "why": "approved 14 Nov 2026, Four changes Stage 2: C18",
+      "onlyOn": [
+        "81d copy this month to other months, done"
+      ]
     }
   ],
   "removed": [
