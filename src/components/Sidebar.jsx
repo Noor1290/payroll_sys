@@ -208,6 +208,7 @@ export default function Sidebar({
       {several && severalCompanies && (
         <SeveralCompaniesModal
           period={severalCompanies.period}
+          keep={severalCompanies.keep ?? null}
           onClose={() => setSeveral(false)}
           onImported={() => {
             setSeveral(false)

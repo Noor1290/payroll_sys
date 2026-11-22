@@ -735,3 +735,30 @@ input[type='number'] {
     transform: none;
   }
 }
+.company-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: 8px;
+}
+.company-tag {
+  padding: 1px 8px;
+  border-radius: 9999px;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+}
+/* The company selected in the dashboard, not on the list: one more card, marked. */
+.company-tag.warn {
+  border: 1px solid color-mix(in srgb, var(--warn) 40%, transparent);
+  background: color-mix(in srgb, var(--warn) 12%, transparent);
+  color: var(--warn);
+}
+.company-extra {
+  position: relative;
+}
+.company-extra .company-add {
+  position: absolute;
+  right: 40px;
+  bottom: 12px;
+}

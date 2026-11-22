@@ -43,6 +43,16 @@ export async function loadCompanyList() {
   return { ok: true, companies, selected: one, open: one.open ? { period: one.openPeriod } : null }
 }
 
+// "Several companies…" offers only the companies on the Payroll list, and the one
+// selected in the dashboard. With a dashboard from before the lists, or while the
+// list is not known: every company, as before (null).
+export function keepOnList(list) {
+  if (!list?.ok) return null
+  const listed = new Set(list.companies.filter((one) => one.listed).map((one) => normaliseBrn(one.brn)))
+  const selected = normaliseBrn(list.selected.brn)
+  return (brn) => listed.has(normaliseBrn(brn)) || normaliseBrn(brn) === selected
+}
+
 // Shows the dashboard's company picker. When a change is saved there, this app is reloaded.
 //   { ok: true } | { ok: false, code, error }
 export async function openPicker(selectedBrn) {

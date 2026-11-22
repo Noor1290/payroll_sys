@@ -172,6 +172,37 @@ describe('Your companies', () => {
     await vi.waitFor(() => expect(hub.state.pickerOpened).toBe(1))
   })
 
+  test('the selected company is not on the list: one more card, first, marked "Not on the list"; Add opens the picker, the card opens it', async () => {
+    await startApp(createFakeSetupHub(seed({ listed: [B.brn] })))
+    await vi.waitFor(() => expect(cardNames()).toEqual(['TEST Alpha Ltd', 'TEST Beta Ltd']))
+    const extra = container.querySelector('[data-testid="extra-card"]')
+    expect(extra.textContent).toContain('TEST Alpha Ltd')
+    expect(extra.textContent).toContain('Not on the list')
+    await click(buttonIn(extra, 'Add'))
+    await vi.waitFor(() => expect(hub.state.pickerOpened).toBe(1))
+    await click(extra.querySelector('.company-card'))
+    await vi.waitFor(() => expect(companyShown()).toBe(true))
+    expect(container.querySelector('[data-testid="not-listed"]')).toBeTruthy()
+  })
+
+  test('the selected company not on the list, for someone who is not its admin: the card, without Add', async () => {
+    await startApp(createFakeSetupHub(seed({ listed: [B.brn] }, { companies: [{ ...A, role: 'member' }, B, C] })))
+    await vi.waitFor(() => expect(container.querySelector('[data-testid="extra-card"]')).toBeTruthy())
+    expect(buttonIn(container.querySelector('[data-testid="extra-card"]'), 'Add')).toBeUndefined()
+  })
+
+  test('"Several companies…" offers only the companies on the list and the selected one', async () => {
+    await startApp(createFakeSetupHub(seed({ listed: [C.brn], open: { period: null } }, { monthsSupported: true })))
+    await vi.waitFor(() => expect(companyShown()).toBe(true))
+    await click(buttonIn(container, 'Several companies…'))
+    const modal = () => document.querySelector('[role="dialog"]')
+    await vi.waitFor(() => expect(modal().querySelectorAll('li input[type="checkbox"]').length).toBeGreaterThan(0))
+    const offered = modal().querySelector('ul').textContent
+    expect(offered).toContain('TEST Alpha Ltd')
+    expect(offered).toContain('TEST Coral Ltd')
+    expect(offered).not.toContain('TEST Beta Ltd')
+  })
+
   test('the list cannot be read: the reason and Try again, which reads it again', async () => {
     const theHub = createFakeSetupHub(seed({ listed: [A.brn] }))
     theHub.state.companyList.down = true

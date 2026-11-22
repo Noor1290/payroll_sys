@@ -30,9 +30,37 @@ export function Avatar({ name, hueKey }) {
 //   opening    the company_id of the card being opened, or null
 //   problem    a sentence: reading the list, or opening a company or the picker, went wrong
 //   onRetry    reads the list again, when that is what failed
-export default function CompanyHome({ companies, loading, canChoose, months, period, onPeriod, opening, onOpen, onChoose, problem, onRetry }) {
+//   extra      the company selected in the dashboard when it is not on the Payroll list:
+//              { company, onAdd } (onAdd null when not an admin), or null. One more card,
+//              first, marked "Not on the list"; Add opens the picker.
+export default function CompanyHome({ companies, loading, canChoose, months, period, onPeriod, opening, onOpen, onChoose, problem, onRetry, extra = null }) {
   const monthId = useId()
   const empty = !loading && !problem && companies.length === 0
+
+  function card(company, offList) {
+    const busy = opening === company.company_id
+    return (
+      <button
+        type="button"
+        className="company-card"
+        aria-busy={busy || undefined}
+        disabled={opening !== null && !busy}
+        onClick={() => onOpen(company)}
+      >
+        <Avatar name={company.name} hueKey={company.brn || company.company_id} />
+        <span className="company-text">
+          <span className="company-name">{company.name}</span>
+          <span className="company-brn">{company.brn}</span>
+          {offList && (
+            <span className="company-tags">
+              <span className="company-tag warn">Not on the list</span>
+            </span>
+          )}
+        </span>
+        {busy ? <LoaderCircle className="go motion-safe:animate-spin" aria-hidden="true" /> : <ChevronRight className="go" aria-hidden="true" />}
+      </button>
+    )
+  }
   return (
     <main className="relative z-10 flex min-h-0 flex-1 flex-col overflow-y-auto p-4 sm:p-8">
       <section className="home rise-in" aria-labelledby="home-title" data-testid="company-home">
@@ -99,33 +127,22 @@ export default function CompanyHome({ companies, loading, canChoose, months, per
           </div>
         )}
 
-        {!loading && companies.length > 0 && (
+        {!loading && (companies.length > 0 || extra) && (
           <ul className="company-grid" aria-label="Your companies">
-            {companies.map((company) => {
-              const busy = opening === company.company_id
-              return (
-                <li key={company.company_id}>
-                  <button
-                    type="button"
-                    className="company-card"
-                    aria-busy={busy || undefined}
-                    disabled={opening !== null && !busy}
-                    onClick={() => onOpen(company)}
-                  >
-                    <Avatar name={company.name} hueKey={company.brn || company.company_id} />
-                    <span className="company-text">
-                      <span className="company-name">{company.name}</span>
-                      <span className="company-brn">{company.brn}</span>
-                    </span>
-                    {busy ? (
-                      <LoaderCircle className="go motion-safe:animate-spin" aria-hidden="true" />
-                    ) : (
-                      <ChevronRight className="go" aria-hidden="true" />
-                    )}
+            {extra && (
+              <li key={extra.company.company_id} className="company-extra" data-testid="extra-card">
+                {card(extra.company, true)}
+                {extra.onAdd && (
+                  <button type="button" className="btn btn-ghost btn-sm company-add" onClick={extra.onAdd} disabled={opening !== null}>
+                    <Plus aria-hidden="true" />
+                    Add
                   </button>
-                </li>
-              )
-            })}
+                )}
+              </li>
+            )}
+            {companies.map((company) => (
+              <li key={company.company_id}>{card(company, false)}</li>
+            ))}
           </ul>
         )}
       </section>

@@ -14,7 +14,9 @@ const isMonth = (value) => /^\d{4}-(0[1-9]|1[0-2])$/.test(value)
 // Import reads such a file back (SeveralCompaniesImport.jsx).
 //   period      "YYYY-MM": the month offered first, as From and To (the one on screen)
 //   onImported  after an import: the app loads again what the dashboard now has
-export default function SeveralCompaniesModal({ period, onClose, onImported }) {
+// `keep`: (brn) => whether Export offers that company (the Payroll list and the selected
+// company), or null for every company.
+export default function SeveralCompaniesModal({ period, onClose, onImported, keep = null }) {
   const [tab, setTab] = useState('export')
   const [working, setWorking] = useState(false)
   const tabButton = (id, label) => (
@@ -41,7 +43,7 @@ export default function SeveralCompaniesModal({ period, onClose, onImported }) {
         {tabButton('import', 'Import')}
       </div>
       {tab === 'export' ? (
-        <ExportSeveral period={period} onClose={onClose} onWorking={setWorking} />
+        <ExportSeveral period={period} onClose={onClose} onWorking={setWorking} keep={keep} />
       ) : (
         <SeveralCompaniesImport onWorking={setWorking} onClose={onClose} onImported={onImported} />
       )}
@@ -52,7 +54,7 @@ export default function SeveralCompaniesModal({ period, onClose, onImported }) {
 // Export: the companies are the ones the user is an admin of, as the dashboard's
 // database says; the dashboard asks once, naming the months and every company,
 // before anything is read.
-function ExportSeveral({ period: firstPeriod, onClose, onWorking }) {
+function ExportSeveral({ period: firstPeriod, onClose, onWorking, keep }) {
   const [list, setList] = useState(null) // the dashboard's answer to `companies`
   const [from, setFrom] = useState(firstPeriod)
   const [to, setTo] = useState(firstPeriod)
@@ -71,7 +73,7 @@ function ExportSeveral({ period: firstPeriod, onClose, onWorking }) {
     }
   }, [])
 
-  const companies = list?.ok ? list.rows : []
+  const companies = list?.ok ? (keep ? list.rows.filter((c) => keep(c.brn)) : list.rows) : []
   const count = chosen.size
   const working = progress !== null
   // What is wrong with the months chosen, or null.

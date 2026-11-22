@@ -31,7 +31,7 @@ import { MonthHistoryModal, SetupHistoryModal } from './components/HistoryModal'
 import UnreadableSetup from './components/UnreadableSetup'
 import { dataStore, renameValueKey, resetDataStore, setDataStore } from './lib/dataStore'
 import { brnOf, connectDashboard, dashboardCompany, dashboardStore, onSetupReplaced, openOnMonth, readImported, sharedAccess } from './lib/dashboardSetup'
-import { loadCompanyList, openCompany, openPicker } from './lib/companyList'
+import { keepOnList, loadCompanyList, openCompany, openPicker } from './lib/companyList'
 import { formatLoadedAt, listOfflineCopies, offlineStore } from './lib/offlineCopy'
 import { hasSomethingToImport } from './lib/dashboardImport'
 import { askToUnlock, gateChanged, monthStatus, onMonthsChanged } from './lib/dashboardMonths'
@@ -254,6 +254,7 @@ export default function App() {
 
   const homeOn = mode !== 'browser' && list.status !== 'legacy' && showHome
   const loaded = list.status === 'loaded' ? list : null
+  const keep = keepOnList(loaded ? { ok: true, ...loaded } : null)
 
   function openCard(company) {
     if (!loaded) return
@@ -297,6 +298,7 @@ export default function App() {
         onChoose={choose}
         problem={list.status === 'failed' ? list.problem : homeProblem}
         onRetry={list.status === 'failed' ? () => setListReload((n) => n + 1) : null}
+        extra={loaded && !loaded.selected.listed ? { company: loaded.selected, onAdd: loaded.selected.admin ? choose : null } : null}
       />
     </div>
   ) : null
@@ -345,6 +347,7 @@ export default function App() {
         {severalOpen && (
           <SeveralCompaniesModal
             period={periodKey(getCurrentPeriod().year, getCurrentPeriod().month)}
+            keep={keep}
             onClose={() => setSeveralOpen(false)}
             onImported={() => {
               setSeveralOpen(false)
@@ -380,6 +383,7 @@ export default function App() {
       <PayrollApp
         key={startedFrom}
         home={mode === 'dashboard' ? homeBar : null}
+        keepOnList={keep}
         showMonth={showMonth}
         onRestored={handleRestored}
         inDashboard={mode === 'dashboard'}
@@ -405,7 +409,7 @@ export default function App() {
 }
 
 // `offline`: the read-only copy of the dashboard's column setup, { brn, label, loadedAt }, or null.
-function PayrollApp({ home = null, showMonth = null, onRestored, inDashboard = false, offline = null, onReloadDashboard, onOpenImport, onOpenImportMonths }) {
+function PayrollApp({ home = null, keepOnList = null, showMonth = null, onRestored, inDashboard = false, offline = null, onReloadDashboard, onOpenImport, onOpenImportMonths }) {
   const [identityFields, setIdentityFields] = useState([])
   const [idFieldKey, setIdFieldKey] = useState(null)
   const [globalColumns, setGlobalColumns] = useState([])
@@ -1127,7 +1131,7 @@ function PayrollApp({ home = null, showMonth = null, onRestored, inDashboard = f
         }
         severalCompanies={
           monthsKept && companyRole === 'admin' && activeCompany
-            ? { period: periodKey(selectedYear, selectedMonth), onImported: onReloadDashboard }
+            ? { period: periodKey(selectedYear, selectedMonth), onImported: onReloadDashboard, keep: keepOnList }
             : null
         }
         open={sidebarOpen}
