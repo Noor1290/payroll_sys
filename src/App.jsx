@@ -23,13 +23,15 @@ import SaveFailedDialog from './components/SaveFailedDialog'
 import BackupMessage from './components/BackupMessage'
 import DashboardBar from './components/DashboardBar'
 import DashboardStart from './components/DashboardStart'
+import CompanyHome, { HomeBar } from './components/CompanyHome'
 import ImportToDashboardModal from './components/ImportToDashboardModal'
 import ImportMonthsModal from './components/ImportMonthsModal'
 import SeveralCompaniesModal from './components/SeveralCompaniesModal'
 import { MonthHistoryModal, SetupHistoryModal } from './components/HistoryModal'
 import UnreadableSetup from './components/UnreadableSetup'
 import { dataStore, renameValueKey, resetDataStore, setDataStore } from './lib/dataStore'
-import { brnOf, connectDashboard, dashboardCompany, dashboardStore, onSetupReplaced, readImported, sharedAccess } from './lib/dashboardSetup'
+import { brnOf, connectDashboard, dashboardCompany, dashboardStore, onSetupReplaced, openOnMonth, readImported, sharedAccess } from './lib/dashboardSetup'
+import { loadCompanyList, openCompany, openPicker } from './lib/companyList'
 import { formatLoadedAt, listOfflineCopies, offlineStore } from './lib/offlineCopy'
 import { hasSomethingToImport } from './lib/dashboardImport'
 import { askToUnlock, gateChanged, monthStatus, onMonthsChanged } from './lib/dashboardMonths'
@@ -50,7 +52,7 @@ import {
   makeId,
 } from './lib/model'
 import { reorderWithinCategory, labelColumnsForHelper } from './lib/categories'
-import { formatPeriodLabel, getCurrentPeriod, periodKey, shiftPeriod } from './lib/periods'
+import { formatPeriodLabel, getCurrentPeriod, parsePeriodKey, periodKey, shiftPeriod } from './lib/periods'
 import { useComputedGrid } from './hooks/useComputedGrid'
 import { buildExportPlan } from './lib/excelExport'
 import {
@@ -66,6 +68,12 @@ import {
 
 // Shown while the selected month is still being loaded.
 const NO_EMPLOYEES = []
+
+// The months "Your companies" offers: next month, this month and the 23 before.
+const HOME_MONTHS = Array.from({ length: 25 }, (_, i) => {
+  const { year, month } = shiftPeriod(getCurrentPeriod().year, getCurrentPeriod().month, 1 - i)
+  return periodKey(year, month)
+})
 
 const TABS = [
   { id: 'global', label: 'Global Columns' },
@@ -124,6 +132,21 @@ export default function App() {
   const [severalOpen, setSeveralOpen] = useState(false)
   // The offline copy on screen: { brn, label, loadedAt } | null.
   const [offline, setOffline] = useState(null)
+  // Inside the dashboard: "Your companies", the companies on the Payroll list
+  // (company-list, the dashboard's migration 0024).
+  //   list: { status: 'loading' } | { status: 'legacy' } (a dashboard from before the lists:
+  //   the app opens on the company, as it did) | { status: 'failed', problem }
+  //   | { status: 'loaded', companies, selected }
+  const [list, setList] = useState({ status: 'loading' })
+  const [listReload, setListReload] = useState(0)
+  const [showHome, setShowHome] = useState(true)
+  const [homeMonth, setHomeMonth] = useState(() => periodKey(getCurrentPeriod().year, getCurrentPeriod().month))
+  const [opening, setOpening] = useState(null)
+  const [homeProblem, setHomeProblem] = useState(null)
+  // The month to show when the company on screen is opened again from its card: { year, month, n }.
+  const [showMonth, setShowMonth] = useState(null)
+  // Whether the selected company's setup has been asked for (it is not, while only the cards show).
+  const connecting = useRef(false)
 
   // No-op unless this app is running inside the Payroll Hub dashboard's iframe.
   useEffect(() => {
@@ -162,9 +185,45 @@ export default function App() {
 
   // Inside the dashboard, the setup comes from there. (After the bridge has
   // started, above.) The app starts in 'starting', so only the answer is applied.
-  useEffect(() => {
-    if (window.PayrollHubBridge.isEmbedded()) void connectDashboard().then(applyResult)
+  const connect = useCallback(() => {
+    connecting.current = true
+    void connectDashboard().then(applyResult)
   }, [applyResult])
+
+  // First the companies on the Payroll list: the app opens on them, or straight on
+  // the company a card was tapped for (the dashboard then reloaded this app). Read
+  // again, quietly, each time the cards are shown.
+  useEffect(() => {
+    if (!window.PayrollHubBridge.isEmbedded()) return
+    let live = true
+    void loadCompanyList().then((answer) => {
+      if (!live) return
+      if (answer.ok) {
+        setList({ status: 'loaded', companies: answer.companies, selected: answer.selected })
+        if (answer.open && !connecting.current) {
+          if (answer.open.period) {
+            const { year, month } = parsePeriodKey(answer.open.period)
+            openOnMonth(answer.selected.brn, year, month)
+            setHomeMonth(answer.open.period)
+          }
+          setShowHome(false)
+          connect()
+        }
+        return
+      }
+      // A dashboard from before the lists, or an account with no company: as before.
+      if (answer.legacy || answer.code === 'no-company') {
+        setList({ status: 'legacy' })
+        setShowHome(false)
+        if (!connecting.current) connect()
+        return
+      }
+      setList({ status: 'failed', problem: answer.error || 'The dashboard could not be reached.' })
+    })
+    return () => {
+      live = false
+    }
+  }, [connect, listReload])
 
   useEffect(() => onSetupReplaced(applyResult), [applyResult])
 
@@ -193,9 +252,85 @@ export default function App() {
     />
   )
 
+  const homeOn = mode !== 'browser' && list.status !== 'legacy' && showHome
+  const loaded = list.status === 'loaded' ? list : null
+
+  function openCard(company) {
+    if (!loaded) return
+    setHomeProblem(null)
+    setOpening(company.company_id)
+    void openCompany(loaded.selected.brn, company.company_id, homeMonth).then((answer) => {
+      // Switched: the dashboard reloads this app, which then opens that company.
+      if (answer.ok && answer.switched) return
+      setOpening(null)
+      if (!answer.ok) return setHomeProblem(answer.error || 'The dashboard could not be reached.')
+      const { year, month } = parsePeriodKey(homeMonth)
+      openOnMonth(loaded.selected.brn, year, month)
+      if (connecting.current) setShowMonth((now) => ({ year, month, n: (now?.n ?? 0) + 1 }))
+      else connect()
+      setShowHome(false)
+    })
+  }
+
+  function choose() {
+    if (!loaded) return
+    setHomeProblem(null)
+    void openPicker(loaded.selected.brn).then((answer) => setHomeProblem(answer.ok ? null : answer.error || 'The dashboard could not be reached.'))
+  }
+
+  const home = homeOn ? (
+    <div className="relative isolate flex h-dvh overflow-hidden bg-canvas text-fg">
+      <div className="aurora" aria-hidden="true">
+        <span />
+        <span />
+        <span />
+      </div>
+      <CompanyHome
+        companies={loaded ? loaded.companies.filter((one) => one.listed) : []}
+        loading={list.status === 'loading'}
+        canChoose={loaded ? loaded.companies.some((one) => one.admin) : false}
+        months={HOME_MONTHS}
+        period={homeMonth}
+        onPeriod={setHomeMonth}
+        opening={opening}
+        onOpen={openCard}
+        onChoose={choose}
+        problem={list.status === 'failed' ? list.problem : homeProblem}
+        onRetry={list.status === 'failed' ? () => setListReload((n) => n + 1) : null}
+      />
+    </div>
+  ) : null
+
+  // On a company's screen: back to the cards (the company stays open behind them).
+  const homeBar = loaded
+    ? {
+        onBack: () => {
+          setHomeProblem(null)
+          setShowHome(true)
+          setListReload((n) => n + 1)
+        },
+        notListed: !loaded.selected.listed,
+        onAdd: loaded.selected.admin ? choose : null,
+        problem: homeProblem,
+      }
+    : null
+
+  return (
+    <>
+      {home}
+      <div hidden={homeOn}>{screenFor()}</div>
+    </>
+  )
+
+  function screenFor() {
   if (mode !== 'browser' && mode !== 'dashboard' && mode !== 'offline') {
     return (
       <div className="relative isolate flex h-dvh overflow-hidden bg-canvas text-fg">
+        {homeBar && (
+          <div className="absolute left-4 top-4 z-20">
+            <HomeBar home={homeBar} />
+          </div>
+        )}
         <DashboardStart
           mode={mode}
           problem={startProblem}
@@ -244,6 +379,8 @@ export default function App() {
     <>
       <PayrollApp
         key={startedFrom}
+        home={mode === 'dashboard' ? homeBar : null}
+        showMonth={showMonth}
         onRestored={handleRestored}
         inDashboard={mode === 'dashboard'}
         offline={mode === 'offline' ? offline : null}
@@ -264,10 +401,11 @@ export default function App() {
       )}
     </>
   )
+  }
 }
 
 // `offline`: the read-only copy of the dashboard's column setup, { brn, label, loadedAt }, or null.
-function PayrollApp({ onRestored, inDashboard = false, offline = null, onReloadDashboard, onOpenImport, onOpenImportMonths }) {
+function PayrollApp({ home = null, showMonth = null, onRestored, inDashboard = false, offline = null, onReloadDashboard, onOpenImport, onOpenImportMonths }) {
   const [identityFields, setIdentityFields] = useState([])
   const [idFieldKey, setIdFieldKey] = useState(null)
   const [globalColumns, setGlobalColumns] = useState([])
@@ -617,6 +755,13 @@ function PayrollApp({ onRestored, inDashboard = false, offline = null, onReloadD
 
   function handleChangeMonth(year, month) {
     updateCompany(activeCompanyId, (c) => ({ ...c, viewYear: year, viewMonth: month }))
+  }
+
+  // Opened again from its card on "Your companies": the month chosen there.
+  const [shownMonth, setShownMonth] = useState(showMonth)
+  if (showMonth !== shownMonth) {
+    setShownMonth(showMonth)
+    if (showMonth && activeCompanyId) updateCompany(activeCompanyId, (c) => ({ ...c, viewYear: showMonth.year, viewMonth: showMonth.month }))
   }
 
   // ---- Identity fields ----
@@ -1000,6 +1145,8 @@ function PayrollApp({ onRestored, inDashboard = false, offline = null, onReloadD
         </button>
 
         {offline && <OfflineBar copy={offline} onRetry={onReloadDashboard} />}
+
+        {home && <HomeBar home={home} />}
 
         {inDashboard && dashboardCompany() && (
           <DashboardBar

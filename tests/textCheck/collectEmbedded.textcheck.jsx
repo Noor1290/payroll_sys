@@ -101,10 +101,12 @@ async function answerSetup(message) {
   const dataType = message.payload?.dataType
   if (
     (message.type !== 'request-data' && message.type !== 'send-data') ||
-    (dataType !== 'payroll-setup' && dataType !== 'payroll-month' && dataType !== 'payroll-batch' && dataType !== 'payroll-import')
+    (dataType !== 'payroll-setup' && dataType !== 'payroll-month' && dataType !== 'payroll-batch' && dataType !== 'payroll-import' && dataType !== 'company-list')
   )
     return
-  const answer = setupHub
+  // The Payroll list (company-list): turned away, as by a dashboard from before the lists,
+  // unless the stand-in keeps it.
+  const answer = setupHub && (dataType !== 'company-list' || setupHub.state.companyList)
     ? await setupHub.handle(message.type, structuredClone(message.payload))
     : { ok: false, error: `This app is not registered to ${message.type === 'request-data' ? 'receive' : 'send'} this kind of data.` }
   if (answer !== undefined) await reply(message.type === 'request-data' ? 'response-data' : 'received', message.id, answer)
@@ -133,6 +135,8 @@ async function start({ october = octoberEmployees, details = company.details, wa
   document.body.appendChild(container)
   root = createRoot(container)
   await act(async () => root.render(createElement(App)))
+  // Not while "Your companies" is still reading the list (its month chooser names October too).
+  await vi.waitFor(() => expect(document.querySelector('[data-testid="company-home"] [role="status"]')).toBeNull())
   await vi.waitFor(() => expect(document.body.textContent).toContain(waitFor))
 }
 
@@ -627,6 +631,29 @@ test('collect every visible string (inside the dashboard)', async () => {
     snapDialog('97q embedded: several companies, import: not a file made by Export')
     }
     anchorClick.mockRestore()
+  }
+
+  // Company lists, Stage 3: "Your companies", the app's main page inside the dashboard.
+  const KNOWS_HOME = fs.existsSync(path.join(SRC, 'components/CompanyHome.jsx'))
+  if (KNOWS_HOME) {
+    const home = () => document.querySelector('[data-testid="company-home"]')
+    const snapHome = (name) => {
+      expect(home(), `the cards for ${name}`).toBeTruthy()
+      // The months offered depend on the day the check runs: left out, they are not wording.
+      const copy = home().cloneNode(true)
+      for (const option of copy.querySelectorAll('option')) option.remove()
+      collected[name] = textOf(copy)
+    }
+    const THIRD = { brn: 'C00000003', name: 'TEST Coral Ltd', address: '3 Test Street', role: 'admin' }
+    await start({ hub: attachedHub({ companies: [FAKE, OTHER, THIRD], companyList: { listed: ['C00000001', 'C00000003'] } }), waitFor: 'TEST Coral Ltd' })
+    snapHome('98a embedded: Your companies')
+    await start({ hub: attachedHub({ companyList: { listed: [] } }), waitFor: 'No companies yet' })
+    snapHome('98b embedded: Your companies, none chosen')
+    const member = (one) => ({ ...one, role: 'member' })
+    await start({ hub: attachedHub({ companies: [member(FAKE), member(OTHER)], companyList: { listed: [] } }), waitFor: 'An admin can choose them.' })
+    snapHome('98c embedded: Your companies, none chosen, not an admin')
+    await start({ hub: attachedHub({ companyList: { listed: [], open: { period: '2026-10' } } }), waitFor: 'Not on the list' })
+    collected['98d embedded: a company not on the list, the bar above it'] = textOf(document.querySelector('[data-testid="home-bar"]'))
   }
 
   expect(OUT, 'TEXT_CHECK_OUT_EMBEDDED').toBeTruthy()

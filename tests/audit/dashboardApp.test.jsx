@@ -231,7 +231,11 @@ describe('inside the dashboard', () => {
 
   test('inside a dashboard that does not keep payroll setups yet, it works from this browser, as before', async () => {
     await startInDashboard({ ...attachedSeed(), supported: false }, { waitFor: /\+ New Company/ })
-    expect(hub.state.log).toEqual([{ type: 'request-data', action: 'load' }])
+    // First the Payroll list (company-list), which such a dashboard turns away too.
+    expect(hub.state.log).toEqual([
+      { type: 'request-data', action: 'companies' },
+      { type: 'request-data', action: 'load' },
+    ])
     expect(text()).not.toContain('kept in the dashboard')
   })
 })

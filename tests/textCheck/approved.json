@@ -5102,6 +5102,58 @@
       "onlyOn": [
         "81d copy this month to other months, done"
       ]
+    },
+    {
+      "text": "aria-label: Your companies",
+      "why": "approved by the owner 22 Nov 2026 (company lists M1: the list of company cards, the same texts as in Payslip and MRA Returns, approved with Stage 2); Payroll System, Stage 3"
+    },
+    {
+      "text": "text: Your companies",
+      "why": "approved by the owner 22 Nov 2026 (company lists M1/M5: main page title, and the way back to it, the same texts as in Payslip and MRA Returns, approved with Stage 2); Payroll System, Stage 3"
+    },
+    {
+      "text": "text: Choose companies",
+      "why": "approved by the owner 22 Nov 2026 (company lists M2, the same texts as in Payslip and MRA Returns, approved with Stage 2); Payroll System, Stage 3"
+    },
+    {
+      "text": "text: No companies yet",
+      "why": "approved by the owner 22 Nov 2026 (company lists M3, the same texts as in Payslip and MRA Returns, approved with Stage 2); Payroll System, Stage 3"
+    },
+    {
+      "text": "text: An admin can choose them.",
+      "why": "approved by the owner 22 Nov 2026 (company lists M3, when you are not an admin, the same texts as in Payslip and MRA Returns, approved with Stage 2); Payroll System, Stage 3"
+    },
+    {
+      "text": "text: Not on the list",
+      "why": "approved by the owner 22 Nov 2026 (company lists M4, the same texts as in Payslip and MRA Returns, approved with Stage 2); Payroll System, Stage 3"
+    },
+    {
+      "text": "text: Add",
+      "why": "approved by the owner 22 Nov 2026 (company lists M4, for admins, the same texts as in Payslip and MRA Returns, approved with Stage 2); Payroll System, Stage 3"
+    },
+    {
+      "text": "text: Month",
+      "why": "approved by the owner 22 Nov 2026 (company lists M1: the month chooser, for screen readers, the same texts as in Payslip and MRA Returns, approved with Stage 2); Payroll System, Stage 3"
+    },
+    {
+      "text": "text: C00000001",
+      "why": "not wording: the fake companies on the Your companies cards (98a), their names, BRNs and initials"
+    },
+    {
+      "text": "text: C00000003",
+      "why": "not wording: the fake companies on the Your companies cards (98a), their names, BRNs and initials"
+    },
+    {
+      "text": "text: FA",
+      "why": "not wording: the fake companies on the Your companies cards (98a), their names, BRNs and initials"
+    },
+    {
+      "text": "text: TC",
+      "why": "not wording: the fake companies on the Your companies cards (98a), their names, BRNs and initials"
+    },
+    {
+      "text": "text: TEST Coral Ltd",
+      "why": "not wording: the fake companies on the Your companies cards (98a), their names, BRNs and initials"
     }
   ],
   "removed": [

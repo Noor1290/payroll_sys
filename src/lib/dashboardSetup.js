@@ -779,6 +779,14 @@ function keepPrefs(state) {
   if (JSON.stringify(prefs) !== JSON.stringify(before)) writePrefs(prefs)
 }
 
+// "Your companies": the month chosen there is the one a company opens on. Kept
+// with the display preferences, so it is read when the setup is loaded.
+export function openOnMonth(brn, year, month) {
+  const prefs = readPrefs()
+  const key = normaliseBrn(brn)
+  writePrefs({ ...prefs, [key]: { ...(prefs[key] ?? {}), viewYear: year, viewMonth: month } })
+}
+
 // The months: in the dashboard when it keeps them (dashboardMonths.js), in this browser otherwise.
 const months = (name) => (...args) => (monthsSupported() ? monthOperations : browserStore)[name](...args)
 

@@ -10,6 +10,11 @@
 // moves the values in every month it reaches, all or nothing. Without it, it is
 // a dashboard from before that: it turns the months' data type away.
 //
+// With `companyList: { listed: [BRN, ...], open: { period } | null }` it keeps
+// the Payroll list too ("Company lists", migration 0024): which companies the app
+// is used for, the picker (only counted here) and opening a company from its card.
+// Without it, it is a dashboard from before the lists: it turns them away.
+//
 // `createFakeSetupHub` must not use anything from outside itself: the browser
 // tests turn it into text and run it in a page.
 //
@@ -70,6 +75,14 @@ export function createFakeSetupHub(seed = {}) {
     otherBrns: (seed.otherBrns || []).map((brn) => String(brn).trim().toUpperCase()),
     // The summaries the app sent at the end of an import, for the dashboard's one toast.
     importSummaries: [],
+    // ---------- the Payroll list ("company-list", migration 0024) ----------
+    // null: a dashboard from before the lists. `open` is given once, as after a reload.
+    companyList: seed.companyList
+      ? { listed: seed.companyList.listed.map((brn) => String(brn).trim().toUpperCase()), open: seed.companyList.open ?? null }
+      : null,
+    // How many times the app asked for the picker, and every company it asked to open.
+    pickerOpened: 0,
+    opened: [],
   }
   for (const s of seed.shared || []) {
     state.shared.set(s.id, { mine: true, ...s, body: structuredClone(s.body) })
@@ -766,6 +779,57 @@ export function createFakeSetupHub(seed = {}) {
     state.monthHistory.push({ ...recordOf(key, saved), saved_at: stamp() })
   }
 
+  // The dashboard's id of a company: made up from its place in the list, the same every time.
+  const idOf = (company) => `20000000-0000-4000-8000-${String(state.companies.indexOf(company) + 1).padStart(12, '0')}`
+
+  function companyListRequest(params) {
+    const list = state.companyList
+    if (!list) return { ok: false, error: 'This app is not registered to receive this kind of data.' }
+    if (list.down) return refuse('unavailable', "Can't reach the database.")
+    if (params.brn !== undefined && norm(params.brn) !== norm(state.selectedBrn)) {
+      return refuse('wrong-company', 'The dashboard has a different company selected.')
+    }
+    const answer = (rows) => ({ ok: true, dataType: 'company-list', rows, meta: meta() })
+    switch (params.action) {
+      case 'companies': {
+        const open = list.open
+        list.open = null
+        const rows = [...state.companies]
+          .sort((a, b) => a.name.localeCompare(b.name))
+          .map((c) => {
+            const isSelected = norm(c.brn) === norm(state.selectedBrn)
+            return {
+              company_id: idOf(c),
+              brn: c.brn,
+              name: c.name,
+              admin: c.role === 'admin',
+              selected: isSelected,
+              lists: list.listed.includes(norm(c.brn)) ? ['payroll'] : [],
+              ...(open && isSelected ? { open: true, ...(open.period ? { open_period: open.period } : {}) } : {}),
+            }
+          })
+        return answer(rows)
+      }
+      case 'open-picker':
+        state.pickerOpened += 1
+        return answer([])
+      case 'open-company': {
+        const company = state.companies.find((c) => idOf(c) === params.company_id)
+        if (!company) return refuse('forbidden', 'You are not a member of that company.')
+        state.opened.push({ brn: company.brn, period: params.period ?? null })
+        const switched = norm(company.brn) !== norm(state.selectedBrn)
+        if (switched) {
+          // The dashboard selects it and reloads the app, which then asks again.
+          state.selectedBrn = company.brn
+          list.open = { period: params.period ?? null }
+        }
+        return answer([{ switched }])
+      }
+      default:
+        return refuse('invalid', 'Unknown action.')
+    }
+  }
+
   // As the dashboard would answer one message from the app. Undefined = no answer at all.
   async function handle(type, payload) {
     const isRequest = type === 'request-data'
@@ -777,6 +841,10 @@ export function createFakeSetupHub(seed = {}) {
       ...(command.company_brn ? { company_brn: command.company_brn } : {}),
       ...(command.period ? { period: command.period } : {}),
     })
+    if (payload.dataType === 'company-list') {
+      if (!isRequest) return { ok: false, error: 'This app is not registered to send this kind of data.' }
+      return JSON.parse(JSON.stringify(companyListRequest(command)))
+    }
     const isMonth = payload.dataType === 'payroll-month'
     const isBatch = payload.dataType === 'payroll-batch'
     const isImport = payload.dataType === 'payroll-import'
